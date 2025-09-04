@@ -18,7 +18,7 @@
   <div class="container">
     <!-- Barra lateral -->
     <aside class="sidebar">
-      <h2>VW Carregamento</h2>
+      <h2>VoltWay</h2>
       <nav>
         <a href="#" class="active">Início</a>
         <a href="#">Painel</a>
@@ -59,36 +59,55 @@
     </aside>
 
 
-    <!-- Conteúdo principal -->
-    <main class="main">
-      <!-- Cabeçalho -->
-      <section class="header">
-        <div class="header-top">
-          <h1>Bem-vindo</h1>
-        </div>
-        <p>Experimente o futuro da mobilidade com nossa rede de carregamento.</p>
+<!-- Conteúdo principal -->
+<main class="main">
+  <!-- Cabeçalho -->
+  <section class="header">
+    <div class="header-top">
+      <!-- Logo fictícia (pode trocar por outra imagem) -->
+      <img src="assets/logo.png" alt="Logo" class="header-logo" />
 
-        <div class="stats">
-          <div class="stat"><strong id="statPotencia">--</strong><span>Potência Máxima</span></div>
-          <div class="stat"><strong id="statEspera">--</strong><span>Tempo Médio de Espera</span></div>
-          <div class="stat"><strong id="statDisponibilidade">--</strong><span>Disponibilidade</span></div>
-          <div class="stat"><strong id="statEnergia">--</strong><span>Energia Verde</span></div>
-        </div>
+      <div class="header-text">
+        <h1 id="stationTitle">Bem-vindo</h1>
+        <p id="stationMsg">
+          Experimente o futuro da mobilidade com nossa rede de carregamento. 
+          Selecione uma estação para ver os detalhes.
+        </p>
+      </div>
+    </div>
 
-        <!-- Botão para selecionar estação -->
-        <button id="btnSelecionarEstacao">Selecionar Estação</button>
+    <!-- Estatísticas da estação -->
+    <div class="stats">
+      <div class="stat">
+        <strong id="statPotencia">--</strong>
+        <span>Potência Máxima</span>
+      </div>
+      <div class="stat">
+        <strong id="statEspera">--</strong>
+        <span>Tempo Médio de Espera</span>
+      </div>
+      <div class="stat">
+        <strong id="statDisponibilidade">--</strong>
+        <span>Disponibilidade</span>
+      </div>
+      <div class="stat">
+        <strong id="statEnergia">--</strong>
+        <span>Energia Verde</span>
+      </div>
+    </div>
 
-        <!-- Modal de seleção -->
-        <div id="stationModal" class="modal">
-          <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Selecione uma Estação</h3>
-            <ul id="listaEstacoes"></ul>
-          </div>
-        </div>
-      </section>
+    <!-- Botão -->
+    <button id="btnSelecionarEstacao">Selecionar Estação</button>
 
-
+    <!-- Modal de seleção -->
+    <div id="stationModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Selecione uma Estação</h3>
+        <ul id="listaEstacoes"></ul>
+      </div>
+    </div>
+  </section>
 
       <!-- Veículo -->
       <section class="card vehicle">

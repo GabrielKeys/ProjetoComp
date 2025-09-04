@@ -5,6 +5,30 @@ function logout() {
   window.location.href = "login.html";
 }
 
+// ---- Atualizar estatísticas da estação ----
+function atualizarEstacao() {
+  const estacao = JSON.parse(localStorage.getItem("estacaoSelecionada"));
+  const statPotencia = document.getElementById("statPotencia");
+  const statEspera = document.getElementById("statEspera");
+  const statDisponibilidade = document.getElementById("statDisponibilidade");
+  const statEnergia = document.getElementById("statEnergia");
+  const stationMsg = document.getElementById("stationMsg");
+
+  if (estacao) {
+    statPotencia.textContent = estacao.potencia || "--";
+    statEspera.textContent = estacao.tempoEspera || "--";
+    statDisponibilidade.textContent = estacao.disponibilidade || "--";
+    statEnergia.textContent = estacao.energia || "--";
+    stationMsg.textContent = `Estação selecionada: ${estacao.nome}`;
+  } else {
+    statPotencia.textContent = "--";
+    statEspera.textContent = "--";
+    statDisponibilidade.textContent = "--";
+    statEnergia.textContent = "--";
+    stationMsg.textContent = "Nenhuma estação de recarga selecionada.";
+  }
+}
+
 // ---- Inicialização geral ----
 document.addEventListener("DOMContentLoaded", () => {
   // -----------------------------
@@ -99,31 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------------
   // Estação
   // -----------------------------
-  function atualizarEstacao() {
-    const estacao = JSON.parse(localStorage.getItem("estacaoSelecionada"));
-    const statPotencia = document.getElementById("statPotencia");
-    const statEspera = document.getElementById("statEspera");
-    const statDisponibilidade = document.getElementById("statDisponibilidade");
-    const statEnergia = document.getElementById("statEnergia");
-    const stationMsg = document.getElementById("stationMsg");
-
-    if (estacao) {
-      statPotencia.textContent = estacao.potencia || "--";
-      statEspera.textContent = estacao.tempoEspera || "--";
-      statDisponibilidade.textContent = estacao.disponibilidade || "--";
-      statEnergia.textContent = estacao.energia || "--";
-      stationMsg.textContent = `Estação selecionada: ${estacao.nome}`;
-    } else {
-      statPotencia.textContent = "--";
-      statEspera.textContent = "--";
-      statDisponibilidade.textContent = "--";
-      statEnergia.textContent = "--";
-      stationMsg.textContent = "Nenhuma estação de recarga selecionada.";
-    }
-  }
-  atualizarEstacao();
+  atualizarEstacao(); // mostra ao carregar a página
 });
-
 
 // Lista de estações fictícias
 const estacoesFicticias = [
@@ -150,34 +151,38 @@ const estacoesFicticias = [
   }
 ];
 
+// Modal e seleção de estação
 document.addEventListener("DOMContentLoaded", () => {
   const btnSelecionar = document.getElementById("btnSelecionarEstacao");
   const modal = document.getElementById("stationModal");
-  const closeBtn = modal.querySelector(".close");
+  const closeBtn = modal ? modal.querySelector(".close") : null;
   const listaEstacoes = document.getElementById("listaEstacoes");
 
-  // Preenche lista de estações no modal
-  estacoesFicticias.forEach(estacao => {
-    const li = document.createElement("li");
-    li.textContent = estacao.nome;
-    li.addEventListener("click", () => {
-      // Salva no localStorage
-      localStorage.setItem("estacaoSelecionada", JSON.stringify(estacao));
-      modal.style.display = "none";
-      atualizarEstacao();
+  if (listaEstacoes) {
+    listaEstacoes.innerHTML = "";
+    estacoesFicticias.forEach(estacao => {
+      const li = document.createElement("li");
+      li.textContent = estacao.nome;
+      li.addEventListener("click", () => {
+        localStorage.setItem("estacaoSelecionada", JSON.stringify(estacao));
+        modal.style.display = "none";
+        atualizarEstacao();
+      });
+      listaEstacoes.appendChild(li);
     });
-    listaEstacoes.appendChild(li);
-  });
+  }
 
-  // Abrir modal
-  btnSelecionar.addEventListener("click", () => {
-    modal.style.display = "flex";
-  });
+  if (btnSelecionar) {
+    btnSelecionar.addEventListener("click", () => {
+      modal.style.display = "flex";
+    });
+  }
 
-  // Fechar modal
-  closeBtn.addEventListener("click", () => {
-    modal.style.display = "none";
-  });
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+  }
 
   window.addEventListener("click", (e) => {
     if (e.target === modal) modal.style.display = "none";
