@@ -63,17 +63,32 @@
     <main class="main">
       <!-- Cabeçalho -->
       <section class="header">
-        <div>
-          <h1>Bem-vindo ao VW Carregamento</h1>
-          <p>Experimente o futuro da mobilidade com a rede de carregamento da Volkswagen.</p>
+        <div class="header-top">
+          <h1>Bem-vindo</h1>
         </div>
+        <p>Experimente o futuro da mobilidade com nossa rede de carregamento.</p>
+
         <div class="stats">
-          <div class="stat"><strong>150 kW</strong><span>Potência Máxima</span></div>
-          <div class="stat"><strong>10 min</strong><span>Tempo Médio de Espera</span></div>
-          <div class="stat"><strong>24/7</strong><span>Disponibilidade</span></div>
-          <div class="stat"><strong>100%</strong><span>Energia Verde</span></div>
+          <div class="stat"><strong id="statPotencia">--</strong><span>Potência Máxima</span></div>
+          <div class="stat"><strong id="statEspera">--</strong><span>Tempo Médio de Espera</span></div>
+          <div class="stat"><strong id="statDisponibilidade">--</strong><span>Disponibilidade</span></div>
+          <div class="stat"><strong id="statEnergia">--</strong><span>Energia Verde</span></div>
+        </div>
+
+        <!-- Botão para selecionar estação -->
+        <button id="btnSelecionarEstacao">Selecionar Estação</button>
+
+        <!-- Modal de seleção -->
+        <div id="stationModal" class="modal">
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Selecione uma Estação</h3>
+            <ul id="listaEstacoes"></ul>
+          </div>
         </div>
       </section>
+
+
 
       <!-- Veículo -->
       <section class="card vehicle">
@@ -95,12 +110,19 @@
       <section class="grid">
         <div class="card">
           <h2>Minha Carteira</h2>
-          <p class="balance">R$150,00</p>
-          <div class="transactions">
-            <p class="neg">- R$25,00 (Última Recarga)</p>
-            <p class="pos">+ R$100,00 (Fundos Adicionados)</p>
+          <p class="balance" id="saldoCarteira">R$0,00</p>
+
+          <div class="transactions" id="listaTransacoes">
+            <p>Nenhuma transação ainda.</p>
+          </div>
+
+          <!-- Esboço recarga -->
+          <div class="wallet-recharge">
+            <input type="number" id="valorRecarga" placeholder="Valor (R$)" min="1">
+            <button id="btnRecarregar">Recarregar</button>
           </div>
         </div>
+
         <div class="card">
           <h2>Seu Status</h2>
           <p>Pontos: <strong>0 pts</strong></p>
