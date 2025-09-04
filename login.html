@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login / Registro</title>
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <div class="container">
+    <div class="tabs">
+      <button id="loginTab" class="active">Login</button>
+      <button id="registerTab">Registrar</button>
+    </div>
+
+    <!-- Formulário de Login -->
+    <form id="loginForm" class="form active">
+      <h2>Login</h2>
+      <input type="text" id="username" placeholder="Usuário" required>
+      <input type="password" id="password" placeholder="Senha" required>
+      <button type="submit">Entrar</button>
+      <p id="errorMsg" class="error"></p>
+    </form>
+
+    <!-- Formulário de Registro -->
+    <form id="registerForm" class="form">
+      <h2>Registrar</h2>
+      <input type="text" id="newUser" placeholder="Usuário" required>
+      <input type="password" id="newPass" placeholder="Senha" required>
+      <button type="submit">Criar Conta</button>
+      <p id="registerMsg"></p>
+    </form>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>
