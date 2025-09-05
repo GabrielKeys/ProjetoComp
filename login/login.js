@@ -33,7 +33,7 @@ if (loginForm) {
     if (userFound) {
       localStorage.setItem("logado", "true");
       localStorage.setItem("usuario", user);
-      window.location.href = "home.html";
+      window.location.href = "../home/home.html";
     } else {
       document.getElementById("errorMsg").innerText = "Usuário ou senha incorretos!";
     }
