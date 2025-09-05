@@ -1,13 +1,13 @@
 // ---- Função de logout ----
 function logout() {
-  sessionStorage.removeItem("logado");
-  sessionStorage.removeItem("usuario");
+  localStorage.removeItem("logado");
+  localStorage.removeItem("usuario");
   window.location.href = "login.html";
 }
 
 // ---- Atualizar estatísticas da estação ----
 function atualizarEstacao() {
-  const usuarioAtual = sessionStorage.getItem("usuario");
+  const usuarioAtual = localStorage.getItem("usuario");
   const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
 
   const statPotencia = document.getElementById("statPotencia");
@@ -33,8 +33,8 @@ function atualizarEstacao() {
 
 // ---- Inicialização geral ----
 document.addEventListener("DOMContentLoaded", () => {
-  const logado = sessionStorage.getItem("logado");
-  const usuario = sessionStorage.getItem("usuario");
+  const logado = localStorage.getItem("logado");
+  const usuario = localStorage.getItem("usuario");
 
   if (!logado || !usuario) {
     window.location.href = "login.html";
@@ -137,7 +137,7 @@ const estacoesFicticias = [
 
 // Modal e seleção de estação
 document.addEventListener("DOMContentLoaded", () => {
-  const usuarioAtual = sessionStorage.getItem("usuario");
+  const usuarioAtual = localStorage.getItem("usuario");
   const btnSelecionar = document.getElementById("btnSelecionarEstacao");
   const modal = document.getElementById("stationModal");
   const closeBtn = modal ? modal.querySelector(".close") : null;
