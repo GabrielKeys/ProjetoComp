@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const nomeFormatado = usuario.charAt(0).toUpperCase() + usuario.slice(1);
   const nomeUsuario = document.getElementById("nomeUsuario");
   if (nomeUsuario) {
-    nomeUsuario.innerHTML = `<span class="online-dot"></span> ${nomeFormatado} <span class="settings-icon">⚙️</span>`;
+    nomeUsuario.innerHTML = `<span class="online-dot"></span> ${nomeFormatado} <span class="settings-icon"><img src="../assets/engrenagem.png" alt="Logo" class="header-logo" /></span>`;
   }
 
   // Atualizar estação na carga inicial
