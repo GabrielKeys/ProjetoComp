@@ -31,8 +31,10 @@ if (loginForm) {
     const userFound = users.find(u => u.username === user && u.password === pass);
 
     if (userFound) {
-      localStorage.setItem("logado", true);
-      localStorage.setItem("usuario", user);
+      // 🔹 Salva o login só na sessão
+      sessionStorage.setItem("logado", true);
+      sessionStorage.setItem("usuario", user);
+
       window.location.href = "home.html";
     } else {
       document.getElementById("errorMsg").innerText = "Usuário ou senha incorretos!";

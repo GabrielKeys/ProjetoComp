@@ -1,13 +1,15 @@
 // ---- Função de logout ----
 function logout() {
-  localStorage.removeItem("logado");
-  localStorage.removeItem("usuario");
+  sessionStorage.removeItem("logado");
+  sessionStorage.removeItem("usuario");
   window.location.href = "login.html";
 }
 
 // ---- Atualizar estatísticas da estação ----
 function atualizarEstacao() {
-  const estacao = JSON.parse(localStorage.getItem("estacaoSelecionada"));
+  const usuarioAtual = sessionStorage.getItem("usuario");
+  const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
+
   const statPotencia = document.getElementById("statPotencia");
   const statEspera = document.getElementById("statEspera");
   const statDisponibilidade = document.getElementById("statDisponibilidade");
@@ -31,18 +33,17 @@ function atualizarEstacao() {
 
 // ---- Inicialização geral ----
 document.addEventListener("DOMContentLoaded", () => {
-  // -----------------------------
-  // Verificação de login
-  // -----------------------------
-  const logado = localStorage.getItem("logado");
-  const usuario = localStorage.getItem("usuario");
+  const logado = sessionStorage.getItem("logado");
+  const usuario = sessionStorage.getItem("usuario");
 
   if (!logado || !usuario) {
     window.location.href = "login.html";
     return;
   }
 
-  // Nome do usuário
+  const usuarioAtual = usuario;
+
+  // Nome formatado do usuário
   const nomeFormatado = usuario.charAt(0).toUpperCase() + usuario.slice(1);
   const nomeUsuario = document.getElementById("nomeUsuario");
   if (nomeUsuario) {
@@ -50,15 +51,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // -----------------------------
-  // Preenche dados do veículo
+  // Veículo (dados por usuário)
   // -----------------------------
   const info = document.querySelector(".vehicle-info").querySelectorAll("p");
-  info[0].innerText = "Modelo: " + (localStorage.getItem("veiculoModelo") || "Veículo Elétrico");
-  info[1].innerText = "Ano: " + (localStorage.getItem("veiculoAno") || "----");
-  info[2].innerText = "Bateria: " + (localStorage.getItem("veiculoBateria") || "-- kWh");
-  info[3].innerText = "Carregando: " + (localStorage.getItem("veiculoCarregamento") || "---- kW");
+  info[0].innerText = "Modelo: " + (localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "Veículo Elétrico");
+  info[1].innerText = "Ano: " + (localStorage.getItem(`veiculoAno_${usuarioAtual}`) || "----");
+  info[2].innerText = "Bateria: " + (localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "-- kWh");
+  info[3].innerText = "Carregando: " + (localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "---- kW");
 
-  // Modal de edição
   const modal = document.getElementById("editModal");
   const settingsIcon = document.querySelector(".settings-icon");
   const closeBtn = document.querySelector(".close");
@@ -66,10 +66,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (settingsIcon) {
     settingsIcon.addEventListener("click", () => {
-      document.getElementById("editModelo").value = localStorage.getItem("veiculoModelo") || "Veículo Elétrico";
-      document.getElementById("editAno").value = localStorage.getItem("veiculoAno") || "2023";
-      document.getElementById("editBateria").value = localStorage.getItem("veiculoBateria") || "0,3 kWh";
-      document.getElementById("editCarregamento").value = localStorage.getItem("veiculoCarregamento") || "170 kW";
+      document.getElementById("editModelo").value = localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "Veículo Elétrico";
+      document.getElementById("editAno").value = localStorage.getItem(`veiculoAno_${usuarioAtual}`) || "2023";
+      document.getElementById("editBateria").value = localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "0,3 kWh";
+      document.getElementById("editCarregamento").value = localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "170 kW";
       modal.style.display = "flex";
     });
   }
@@ -77,20 +77,20 @@ document.addEventListener("DOMContentLoaded", () => {
   if (editForm) {
     editForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      localStorage.setItem("veiculoModelo", document.getElementById("editModelo").value);
-      localStorage.setItem("veiculoAno", document.getElementById("editAno").value);
-      localStorage.setItem("veiculoBateria", document.getElementById("editBateria").value);
-      localStorage.setItem("veiculoCarregamento", document.getElementById("editCarregamento").value);
+      localStorage.setItem(`veiculoModelo_${usuarioAtual}`, document.getElementById("editModelo").value);
+      localStorage.setItem(`veiculoAno_${usuarioAtual}`, document.getElementById("editAno").value);
+      localStorage.setItem(`veiculoBateria_${usuarioAtual}`, document.getElementById("editBateria").value);
+      localStorage.setItem(`veiculoCarregamento_${usuarioAtual}`, document.getElementById("editCarregamento").value);
       modal.style.display = "none";
       location.reload();
     });
   }
 
   // -----------------------------
-  // Carteira
+  // Carteira (dados por usuário)
   // -----------------------------
-  let saldo = parseFloat(localStorage.getItem("saldoCarteira")) || 0;
-  let transacoes = JSON.parse(localStorage.getItem("transacoesCarteira")) || [];
+  let saldo = parseFloat(localStorage.getItem(`saldoCarteira_${usuarioAtual}`)) || 0;
+  let transacoes = JSON.parse(localStorage.getItem(`transacoesCarteira_${usuarioAtual}`)) || [];
   const saldoEl = document.getElementById("saldoCarteira");
   const listaTransacoes = document.getElementById("listaTransacoes");
   const btnRecarregar = document.getElementById("btnRecarregar");
@@ -110,8 +110,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!isNaN(valor) && valor > 0) {
         saldo += valor;
         transacoes.push(valor);
-        localStorage.setItem("saldoCarteira", saldo);
-        localStorage.setItem("transacoesCarteira", JSON.stringify(transacoes));
+
+        localStorage.setItem(`saldoCarteira_${usuarioAtual}`, saldo);
+        localStorage.setItem(`transacoesCarteira_${usuarioAtual}`, JSON.stringify(transacoes));
+
         inputValor.value = "";
         atualizarCarteiraUI();
       } else {
@@ -123,36 +125,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------------
   // Estação
   // -----------------------------
-  atualizarEstacao(); // mostra ao carregar a página
+  atualizarEstacao();
 });
 
 // Lista de estações fictícias
 const estacoesFicticias = [
-  {
-    nome: "Estação Central",
-    potencia: "150 kW",
-    tempoEspera: "10 min",
-    disponibilidade: "24/7",
-    energia: "100% Verde"
-  },
-  {
-    nome: "Shopping Center",
-    potencia: "90 kW",
-    tempoEspera: "15 min",
-    disponibilidade: "6h - 23h",
-    energia: "80% Verde"
-  },
-  {
-    nome: "Posto Rodovia",
-    potencia: "200 kW",
-    tempoEspera: "5 min",
-    disponibilidade: "24/7",
-    energia: "95% Verde"
-  }
+  { nome: "Estação Central", potencia: "150 kW", tempoEspera: "10 min", disponibilidade: "24/7", energia: "100% Verde" },
+  { nome: "Shopping Center", potencia: "90 kW", tempoEspera: "15 min", disponibilidade: "6h - 23h", energia: "80% Verde" },
+  { nome: "Posto Rodovia", potencia: "200 kW", tempoEspera: "5 min", disponibilidade: "24/7", energia: "95% Verde" }
 ];
 
 // Modal e seleção de estação
 document.addEventListener("DOMContentLoaded", () => {
+  const usuarioAtual = sessionStorage.getItem("usuario");
   const btnSelecionar = document.getElementById("btnSelecionarEstacao");
   const modal = document.getElementById("stationModal");
   const closeBtn = modal ? modal.querySelector(".close") : null;
@@ -164,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const li = document.createElement("li");
       li.textContent = estacao.nome;
       li.addEventListener("click", () => {
-        localStorage.setItem("estacaoSelecionada", JSON.stringify(estacao));
+        localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
         modal.style.display = "none";
         atualizarEstacao();
       });

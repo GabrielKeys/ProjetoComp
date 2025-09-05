@@ -59,61 +59,73 @@
     </aside>
 
 
-<!-- Conteúdo principal -->
-<main class="main">
-  <!-- Cabeçalho -->
-  <section class="header">
-    <div class="header-top">
-      <!-- Logo fictícia (pode trocar por outra imagem) -->
-      <img src="assets/logo.png" alt="Logo" class="header-logo" />
+    <!-- Conteúdo principal -->
+    <main class="main">
+      <!-- Cabeçalho -->
+      <section class="header">
+        <div class="header-top">
+          <img src="assets/logo.png" alt="Logo" class="header-logo" />
 
-      <div class="header-text">
-        <h1 id="stationTitle">Bem-vindo</h1>
-        <p id="stationMsg">
-          Experimente o futuro da mobilidade com nossa rede de carregamento. 
-          Selecione uma estação para ver os detalhes.
-        </p>
-      </div>
-    </div>
+          <div class="header-text">
+            <h1 id="stationTitle">Bem-vindo</h1>
+            <p id="stationMsg">
+              Experimente o futuro da mobilidade com nossa rede de carregamento. 
+              Selecione uma estação para ver os detalhes.
+            </p>
+          </div>
+        </div>
 
-    <!-- Estatísticas da estação -->
-    <div class="stats">
-      <div class="stat">
-        <strong id="statPotencia">--</strong>
-        <span>Potência Máxima</span>
-      </div>
-      <div class="stat">
-        <strong id="statEspera">--</strong>
-        <span>Tempo Médio de Espera</span>
-      </div>
-      <div class="stat">
-        <strong id="statDisponibilidade">--</strong>
-        <span>Disponibilidade</span>
-      </div>
-      <div class="stat">
-        <strong id="statEnergia">--</strong>
-        <span>Energia Verde</span>
-      </div>
-    </div>
+        <!-- Estatísticas da estação -->
+        <div class="stats">
+          <div class="stat">
+            <strong id="statPotencia">--</strong>
+            <span>Potência Máxima</span>
+          </div>
+          <div class="stat">
+            <strong id="statEspera">--</strong>
+            <span>Tempo Médio de Espera</span>
+          </div>
+          <div class="stat">
+            <strong id="statDisponibilidade">--</strong>
+            <span>Disponibilidade</span>
+          </div>
+        </div>
 
-    <!-- Botão -->
-    <button id="btnSelecionarEstacao">Selecionar Estação</button>
+        <!-- Botões -->
+        <button id="btnSelecionarEstacao">Selecionar Estação</button>
+        <button id="btnAgendar" disabled>Agendar Reserva</button>
 
-    <!-- Modal de seleção -->
-    <div id="stationModal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3>Selecione uma Estação</h3>
-        <ul id="listaEstacoes"></ul>
-      </div>
-    </div>
-  </section>
+        <!-- Modal de seleção -->
+        <div id="stationModal" class="modal">
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Selecione uma Estação</h3>
+            <ul id="listaEstacoes"></ul>
+          </div>
+        </div>
+
+        <!-- Modal de agendamento -->
+        <div id="agendamentoModal" class="modal">
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Agendar Reserva</h3>
+            <form id="formAgendamento">
+              <label for="dataReserva">Data:</label>
+              <input type="date" id="dataReserva" required>
+
+              <label for="horaReserva">Hora:</label>
+              <input type="time" id="horaReserva" required>
+
+              <button type="submit">Confirmar</button>
+            </form>
+          </div>
+        </div>
+      </section>
 
       <!-- Veículo -->
       <section class="card vehicle">
         <h2>Meu Veículo</h2>
         <div class="vehicle-info">
-          <!-- Aqui usamos a pasta assets -->
           <img src="assets/carro.png" alt="Carro Elétrico Genérico">
           <div>
             <p class="veiculo-modelo"><strong>Modelo: -</strong></p>
@@ -123,7 +135,6 @@
           </div>
         </div>
       </section>
-
 
       <!-- Carteira & Status -->
       <section class="grid">
@@ -151,12 +162,12 @@
       </section>
 
       <!-- Próxima Reserva -->
-      <section class="card next-reservation">
+      <section class="card next-reservation" id="proximaReservaCard">
         <div>
           <h2>Próxima Reserva</h2>
-          <p>12/04/2025 - 14:00</p>
+          <p id="textoReserva">Nenhuma reserva agendada.</p>
         </div>
-        <button class="btn">Ver Detalhes</button>
+        <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
       </section>
     </main>
   </div>
@@ -171,7 +182,5 @@
   </script>
 
   <script src="script.js"></script>
-
 </body>
-
 </html>
