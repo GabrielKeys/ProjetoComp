@@ -23,27 +23,50 @@ const estacoesFicticias = [
   }
 ];
 
-//Normalização de horários
+// Converte "HH:MM" para minutos
 function horaParaMinutos(hora) {
   const [h, m] = hora.split(":").map(Number);
   return h * 60 + m;
 }
 
+// Verifica se horário está dentro da disponibilidade
 function estaDentroDoHorario(horaVal, abertura, fechamento) {
   const hora = horaParaMinutos(horaVal);
   const ini = horaParaMinutos(abertura);
   const fim = horaParaMinutos(fechamento);
 
   if (ini < fim) {
-    // intervalo normal no mesmo dia
     return hora >= ini && hora <= fim;
   } else {
-    // atravessa meia-noite
-    return hora >= ini || hora <= fim;
+    return hora >= ini || hora <= fim; // atravessa meia-noite
   }
 }
 
-//Bloqueio de datas e horas inválidas no agendamento 
+// Função principal de validação de disponibilidade
+function validarDisponibilidade(estacao, data, hora, reservasExistentes = []) {
+  if (!estaDentroDoHorario(hora, estacao.abertura, estacao.fechamento)) {
+    return {
+      disponivel: false,
+      mensagem: `A estação ${estacao.nome} só funciona entre ${estacao.abertura} e ${estacao.fechamento}.`
+    };
+  }
+
+  const conflito = reservasExistentes.find(r =>
+    r.estacao === estacao.nome &&
+    r.data === data &&
+    r.hora === hora
+  );
+  if (conflito) {
+    return {
+      disponivel: false,
+      mensagem: `Já existe uma reserva para ${hora} em ${estacao.nome}.`
+    };
+  }
+
+  return { disponivel: true, mensagem: "Horário disponível ✅" };
+}
+
+// ---- Bloqueio de datas e horas inválidas ----
 document.addEventListener("DOMContentLoaded", () => {
   const formAgendamento = document.getElementById("formAgendamento");
   const inputData = document.getElementById("dataReserva");
@@ -51,18 +74,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!formAgendamento || !inputData || !inputHora) return;
 
-  // margem em minutos (fácil de alterar)
   const MARGIN_MINUTES = 5;
-
   const pad2 = n => String(n).padStart(2, "0");
 
-  // retorna string YYYY-MM-DD de uma Date local
-  const toDateLocalString = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const toDateLocalString = (d) =>
+    `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const toTimeLocalString = (d) =>
+    `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 
-  // retorna string HH:MM de uma Date local
-  const toTimeLocalString = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-
-  // define min / max do input date (hoje .. hoje + 7 dias)
   const hoje = new Date();
   const hojeStr = toDateLocalString(hoje);
   inputData.setAttribute("min", hojeStr);
@@ -71,14 +90,6 @@ document.addEventListener("DOMContentLoaded", () => {
   maxDate.setDate(maxDate.getDate() + 7);
   inputData.setAttribute("max", toDateLocalString(maxDate));
 
-  // cria Date local com componentes (evita parsing ambíguo)
-  function buildLocalDate(dateStr, timeStr) {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const [hh, mm] = (timeStr || "00:00").split(":").map(Number);
-    return new Date(y, m - 1, d, hh, mm, 0, 0); // local time
-  }
-
-  // atualiza min do inputHora quando a data selecionada for hoje (com margem)
   function atualizarMinHoraParaData(dateStr) {
     if (!dateStr) {
       inputHora.removeAttribute("min");
@@ -91,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const horaMin = toTimeLocalString(agora);
       inputHora.setAttribute("min", horaMin);
 
-      // se o valor atual da hora for menor que min, força para min (evita enviar inválido)
       if (inputHora.value && inputHora.value < horaMin) {
         inputHora.value = horaMin;
       }
@@ -101,25 +111,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // inicializa minHora conforme já preenchido (ou hoje)
   atualizarMinHoraParaData(inputData.value || hojeStr);
 
-  // quando usuário muda a data
   inputData.addEventListener("change", (e) => {
     atualizarMinHoraParaData(e.target.value);
   });
 
-  // validação do inputHora enquanto digita (mensagem customizada)
   inputHora.addEventListener("input", () => {
     const dataSelecionada = inputData.value || hojeStr;
     if (dataSelecionada === hojeStr) {
-      // calcular min (agora + margem) local
       const agora = new Date();
       agora.setMinutes(agora.getMinutes() + MARGIN_MINUTES);
       const horaMin = toTimeLocalString(agora);
 
       if (inputHora.value && inputHora.value < horaMin) {
-        inputHora.setCustomValidity(`❌ Horário inválido — escolha a partir de ${horaMin} (agora + ${MARGIN_MINUTES} min).`);
+        inputHora.setCustomValidity(
+          `❌ Horário inválido — escolha a partir de ${horaMin} (agora + ${MARGIN_MINUTES} min).`
+        );
       } else {
         inputHora.setCustomValidity("");
       }
@@ -128,41 +136,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // validação final no submit (proteção definitiva)
+  // Corrigido: alerta ao faltar data/hora
   formAgendamento.addEventListener("submit", (e) => {
     const dataVal = inputData.value;
     const horaVal = inputHora.value;
     if (!dataVal || !horaVal) {
       e.preventDefault();
-      alert("Reseva Realizada com Sucesso!");
+      alert("❌ Preencha data e hora antes de confirmar a reserva.");
       return;
     }
-
-    const selecionado = buildLocalDate(dataVal, horaVal);
-
-    // mínima (agora + margem)
-    const agora = new Date();
-    agora.setMinutes(agora.getMinutes() + MARGIN_MINUTES);
-
-    if (selecionado < agora) {
-      e.preventDefault();
-      alert(`❌ O horário deve ser pelo menos ${MARGIN_MINUTES} minutos a partir de agora.`);
-      return;
-    }
-
-    // máxima (hoje + 7 dias, até 23:59 do dia máximo)
-    const limiteMax = new Date();
-    limiteMax.setDate(limiteMax.getDate() + 7);
-    const limiteMaxEnd = new Date(limiteMax.getFullYear(), limiteMax.getMonth(), limiteMax.getDate(), 23, 59, 59, 999);
-
-    if (selecionado > limiteMaxEnd) {
-      e.preventDefault();
-      alert("❌ Só é possível agendar até 7 dias à frente.");
-      return;
-    }
-// Valida se o horário escolhido está dentro do intervalo de funcionamento
-function validarDisponibilidade(estacao, horaVal) {
-  return estaDentroDoHorario(horaVal, estacao.abertura, estacao.fechamento);
-}
   });
 });

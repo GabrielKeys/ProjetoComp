@@ -12,7 +12,7 @@ function atualizarEstacao() {
   if (estacao) {
     statPotencia.textContent = estacao.potencia || "--";
     statEspera.textContent = estacao.tempoEspera || "--";
-    statDisponibilidade.textContent = `Disponibilidade: ${estacao.abertura} - ${estacao.fechamento}`;
+    statDisponibilidade.textContent = `${estacao.abertura} - ${estacao.fechamento}`;
     stationMsg.textContent = `Estação selecionada: ${estacao.nome}`;
     if (btnAgendar) btnAgendar.disabled = false;
   } else {
@@ -24,8 +24,7 @@ function atualizarEstacao() {
   }
 }
 
-
-// Modal e seleção de estação
+// ---- Modal e seleção de estação ----
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioAtual = localStorage.getItem("usuario");
   const btnSelecionar = document.getElementById("btnSelecionarEstacao");
@@ -69,8 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnAgendar = document.getElementById("btnAgendar");
   const agendamentoModal = document.getElementById("agendamentoModal");
   const closeBtns = document.querySelectorAll("#agendamentoModal .close");
-  const formAgendamento = document.getElementById("formAgendamento");
-  const usuarioAtual = localStorage.getItem("usuario");
 
   if (btnAgendar) {
     btnAgendar.addEventListener("click", () => {
@@ -78,65 +75,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Fecha modal
   closeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
       agendamentoModal.style.display = "none";
     });
   });
 
-  // Salvar agendamento
-  if (formAgendamento) {
-    formAgendamento.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      const data = document.getElementById("dataReserva").value;
-      const hora = document.getElementById("horaReserva").value;
-      const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
-
-      if (!estacao) {
-        alert("Selecione uma estação antes de agendar.");
-        return;
-      }
-
-      const reserva = { data, hora, estacao: estacao.nome };
-      localStorage.setItem(`reserva_${usuarioAtual}`, JSON.stringify(reserva));
-
-      // Atualizar card de próxima reserva
-      const textoReserva = document.getElementById("textoReserva");
-      const btnDetalhes = document.getElementById("btnDetalhesReserva");
-
-      if (textoReserva) {
-        textoReserva.textContent = `Reserva em ${estacao.nome} para ${data} às ${hora}`;
-      }
-      if (btnDetalhes) {
-        btnDetalhes.style.display = "inline-block";
-      }
-
-      agendamentoModal.style.display = "none";
-      formAgendamento.reset();
-    });
-  }
-
-  // Fechar modal clicando fora
   window.addEventListener("click", (e) => {
     if (e.target === agendamentoModal) agendamentoModal.style.display = "none";
   });
 });
 
-// Função para carregar reservas salvas
+// ---- Funções de reservas ----
 function carregarReservas() {
   const usuario = localStorage.getItem("usuario");
   return JSON.parse(localStorage.getItem(`reservas_${usuario}`)) || [];
 }
 
-// Função para salvar reservas
 function salvarReservas(reservas) {
   const usuario = localStorage.getItem("usuario");
   localStorage.setItem(`reservas_${usuario}`, JSON.stringify(reservas));
 }
 
-// Função para renderizar as reservas na tela
 function renderizarReservas() {
   const reservas = carregarReservas();
   const textoReserva = document.getElementById("textoReserva");
@@ -146,10 +106,8 @@ function renderizarReservas() {
     textoReserva.textContent = "Nenhuma reserva agendada.";
     lista.innerHTML = "";
     return;
-  
   }
 
-  // Reserva mais próxima (primeira)
   const primeira = reservas[0];
   textoReserva.innerHTML = `
     <strong>Próxima Reserva</strong>
@@ -158,31 +116,41 @@ function renderizarReservas() {
     <p>Horário: ${primeira.hora}</p>
   `;
 
-  // Outras reservas
   lista.innerHTML = "";
   reservas.slice(1).forEach(r => {
     const div = document.createElement("div");
     div.classList.add("reserva-item");
-    div.innerHTML = `
-      <p><strong>${r.estacao}</strong> - ${r.data} ${r.hora}</p>
-    `;
+    div.innerHTML = `<p><strong>${r.estacao}</strong> - ${r.data} ${r.hora}</p>`;
     lista.appendChild(div);
   });
+
+  const btnDetalhes = document.getElementById("btnDetalhesReserva");
+  if (btnDetalhes) btnDetalhes.style.display = "inline-block";
 }
 
-// Confirmar nova reserva
+// ---- Confirmar nova reserva ----
 document.getElementById("formAgendamento").addEventListener("submit", (e) => {
   e.preventDefault();
+
   const data = document.getElementById("dataReserva").value;
   const hora = document.getElementById("horaReserva").value;
-  const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${localStorage.getItem("usuario")}`));
+  const usuarioAtual = localStorage.getItem("usuario");
+  const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
 
   if (!data || !hora || !estacao) {
-    alert("Selecione estação, data e horário!");
+    alert("❌ Selecione estação, data e horário!");
     return;
   }
 
   const reservas = carregarReservas();
+
+  // ✅ validar disponibilidade antes de salvar
+  const resultado = validarDisponibilidade(estacao, data, hora, reservas);
+  if (!resultado.disponivel) {
+    alert("❌ " + resultado.mensagem);
+    return;
+  }
+
   reservas.push({ estacao: estacao.nome, data, hora });
   salvarReservas(reservas);
   renderizarReservas();
@@ -190,6 +158,7 @@ document.getElementById("formAgendamento").addEventListener("submit", (e) => {
   document.getElementById("agendamentoModal").style.display = "none";
 });
 
+// ---- Detalhes da reserva ----
 const btnDetalhes = document.getElementById("btnDetalhesReserva");
 const modalDetalhes = document.getElementById("detalhesModal");
 const closeDetalhes = document.getElementById("closeDetalhes");
@@ -202,7 +171,7 @@ btnDetalhes.addEventListener("click", () => {
     return;
   }
 
-  const primeira = reservas[0]; // mostra a próxima reserva
+  const primeira = reservas[0];
   detalhesReserva.innerHTML = `
     <p><strong>Estação:</strong> ${primeira.estacao}</p>
     <p><strong>Data:</strong> ${primeira.data}</p>
@@ -220,5 +189,3 @@ window.addEventListener("click", (e) => {
     modalDetalhes.style.display = "none";
   }
 });
-
-
