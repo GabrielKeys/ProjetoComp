@@ -1,0 +1,25 @@
+/* Função: Estilização da barra lateral, incluindo navegação, caixa de usuário e botão de logout. */
+.sidebar {
+  width: 250px; background: #0a2a66; color: white; padding: 20px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.sidebar h2 { margin-bottom: 20px; }
+.sidebar nav a {
+  display: block; padding: 10px; margin: 5px 0;
+  color: white; text-decoration: none; border-radius: 6px;
+}
+.sidebar nav a:hover, .sidebar nav .active { background: #123b8b; }
+
+.user-box {
+  background: #123b8b; padding: 10px; border-radius: 6px;
+  text-align: center; font-size: 14px;
+}
+.badge { padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+.gold { background: gold; color: black; }
+
+.logout-btn {
+  margin-top: 10px; padding: 6px 12px;
+  background: #ff4d4d; border: none; color: white;
+  border-radius: 5px; cursor: pointer; width: 100%;
+}
+.logout-btn:hover { background: #cc0000; }

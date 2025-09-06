@@ -1,0 +1,4 @@
+/* Função: Define o layout principal da página (estrutura base de container e área principal). */
+.container { display: flex; min-height: 100vh; }
+.main { flex: 1; padding: 20px; }
+

@@ -1,0 +1,4 @@
+/* Função: Define estilos básicos e remove margens/paddings padrão dos navegadores
+ * para garantir consistência visual entre diferentes browsers. */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: #f5f6fa; }
