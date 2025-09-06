@@ -1,24 +1,24 @@
 // Lista de estações fictícias
 const estacoesFicticias = [
-  { 
-    nome: "Estação Central", 
-    potencia: "150 kW", 
-    tempoEspera: "10 min", 
-    abertura: "08:00", 
-    fechamento: "22:00" 
+  {
+    nome: "Estação Central",
+    potencia: "150 kW",
+    tempoEspera: "10 min",
+    abertura: "08:00",
+    fechamento: "22:00"
   },
-  { 
-    nome: "Shopping Center", 
-    potencia: "90 kW", 
-    tempoEspera: "15 min", 
-    abertura: "06:00", 
-    fechamento: "23:00" 
+  {
+    nome: "Shopping Center",
+    potencia: "90 kW",
+    tempoEspera: "15 min",
+    abertura: "06:00",
+    fechamento: "23:00"
   },
-  { 
-    nome: "Posto Rodovia", 
-    potencia: "200 kW", 
-    tempoEspera: "5 min", 
-    abertura: "13:00", 
+  {
+    nome: "Posto Rodovia",
+    potencia: "200 kW",
+    tempoEspera: "5 min",
+    abertura: "13:00",
     fechamento: "03:00" // atravessa a meia-noite
   }
 ];
@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const horaVal = inputHora.value;
     if (!dataVal || !horaVal) {
       e.preventDefault();
-      alert("❌ Preencha data e hora antes de confirmar a reserva.");
+      mostrarMensagem("❌ Preencha data e hora antes de confirmar a reserva.", "erro");
       return;
     }
   });

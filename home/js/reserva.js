@@ -138,7 +138,7 @@ document.getElementById("formAgendamento").addEventListener("submit", (e) => {
   const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
 
   if (!data || !hora || !estacao) {
-    alert("❌ Selecione estação, data e horário!");
+    mostrarMensagem("❌ Selecione estação, data e horário!", "erro");
     return;
   }
 
@@ -147,7 +147,7 @@ document.getElementById("formAgendamento").addEventListener("submit", (e) => {
   // ✅ validar disponibilidade antes de salvar
   const resultado = validarDisponibilidade(estacao, data, hora, reservas);
   if (!resultado.disponivel) {
-    alert("❌ " + resultado.mensagem);
+    mostrarMensagem("❌ " + resultado.mensagem, "erro");
     return;
   }
 
@@ -156,6 +156,8 @@ document.getElementById("formAgendamento").addEventListener("submit", (e) => {
   renderizarReservas();
 
   document.getElementById("agendamentoModal").style.display = "none";
+  mostrarMensagem("✅ Reserva realizada com sucesso!", "sucesso");
+
 });
 
 // ---- Detalhes da reserva ----
@@ -167,7 +169,7 @@ const detalhesReserva = document.getElementById("detalhesReserva");
 btnDetalhes.addEventListener("click", () => {
   const reservas = carregarReservas();
   if (reservas.length === 0) {
-    alert("Nenhuma reserva encontrada!");
+    mostrarMensagem("Nenhuma reserva encontrada!", "aviso");
     return;
   }
 
@@ -189,3 +191,4 @@ window.addEventListener("click", (e) => {
     modalDetalhes.style.display = "none";
   }
 });
+

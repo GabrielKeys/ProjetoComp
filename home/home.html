@@ -36,16 +36,20 @@
           <h2>Editar Veículo</h2>
           <form id="editForm">
             <label>Modelo:</label>
-            <input type="text" id="editModelo" required>
+            <input type="text" id="editModelo" placeholder="Digite o modelo do Veículo">
 
             <label>Ano:</label>
-            <input type="text" id="editAno" required>
+            <input type="text" id="editAno" placeholder="Ano do Veículo">
+
+            <label>Placa:</label>
+            <input type="text" id="editPlaca" placeholder="Placa do Veículo" maxlength="8" required>
 
             <label>Bateria:</label>
-            <input type="text" id="editBateria" required>
+            <input type="text" id="editBateria" placeholder="Bateria em kWh" required>
 
             <label>Carregamento:</label>
-            <input type="text" id="editCarregamento" required>
+            <input type="text" id="editCarregamento" placeholder="Carregamento em KW" required>
+
 
             <button type="submit">Salvar</button>
           </form>
@@ -124,6 +128,7 @@
           <div>
             <p class="veiculo-modelo"><strong>Modelo: -</strong></p>
             <p class="veiculo-ano">Ano:-</p>
+            <p class="veiculo-placa">Placa: ---</p>
             <p class="veiculo-bateria">Bateria: - kWh</p>
             <p class="veiculo-carregamento">Carregando: - kW</p>
           </div>
