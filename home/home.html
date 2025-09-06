@@ -63,7 +63,7 @@
           <div class="header-text">
             <h1 id="stationTitle">Bem-vindo</h1>
             <p id="stationMsg">
-              Experimente o futuro da mobilidade com nossa rede de carregamento. 
+              Experimente o futuro da mobilidade com nossa rede de carregamento.
               Selecione uma estação para ver os detalhes.
             </p>
           </div>
@@ -161,10 +161,22 @@
           <h2>Próxima Reserva</h2>
           <p id="textoReserva">Nenhuma reserva agendada.</p>
         </div>
-        <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
+        <div id="listaReservas"></div> <!-- Aqui vão aparecer as reservas seguintes -->
+      </section>
+      <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
       </section>
     </main>
   </div>
+
+  <!-- Modal de detalhes da reserva -->
+  <div id="detalhesModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeDetalhes">&times;</span>
+      <h3>Detalhes das Reservas</h3>
+      <div id="detalhesReserva"></div>
+    </div>
+  </div>
+
 
   <!-- Scripts no final -->
   <script src="js/logout.js"></script>
@@ -173,4 +185,5 @@
   <script src="js/carteira.js"></script>
   <script src="js/main.js"></script>
 </body>
+
 </html>

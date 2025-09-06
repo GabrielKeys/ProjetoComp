@@ -2,3 +2,19 @@
 .container { display: flex; min-height: 100vh; }
 .main { flex: 1; padding: 20px; }
 
+
+/* Botão de cancelar reserva */
+#detalhesReserva .btn-cancelar {
+  margin-left: 0px;
+  padding: 5px 10px;
+  font-size: 13px;
+  background-color: #e74c3c !important; /* força vermelho */
+  color: white !important;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#detalhesReserva .btn-cancelar:hover {
+  background-color: #c0392b !important;
+}

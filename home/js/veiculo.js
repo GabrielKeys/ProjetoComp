@@ -1,4 +1,3 @@
-// home/js/veiculo.js
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioAtual = localStorage.getItem("usuario");
   if (!usuarioAtual) return;
