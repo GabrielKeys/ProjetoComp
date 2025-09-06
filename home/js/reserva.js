@@ -12,7 +12,7 @@ function atualizarEstacao() {
   if (estacao) {
     statPotencia.textContent = estacao.potencia || "--";
     statEspera.textContent = estacao.tempoEspera || "--";
-    statDisponibilidade.textContent = estacao.disponibilidade || "--";
+    statDisponibilidade.textContent = `Disponibilidade: ${estacao.abertura} - ${estacao.fechamento}`;
     stationMsg.textContent = `Estação selecionada: ${estacao.nome}`;
     if (btnAgendar) btnAgendar.disabled = false;
   } else {
@@ -24,12 +24,6 @@ function atualizarEstacao() {
   }
 }
 
-// Lista de estações fictícias
-const estacoesFicticias = [
-  { nome: "Estação Central", potencia: "150 kW", tempoEspera: "10 min", disponibilidade: "24/7" },
-  { nome: "Shopping Center", potencia: "90 kW", tempoEspera: "15 min", disponibilidade: "6h - 23h" },
-  { nome: "Posto Rodovia", potencia: "200 kW", tempoEspera: "5 min", disponibilidade: "24/7" }
-];
 
 // Modal e seleção de estação
 document.addEventListener("DOMContentLoaded", () => {
@@ -226,4 +220,5 @@ window.addEventListener("click", (e) => {
     modalDetalhes.style.display = "none";
   }
 });
+
 
