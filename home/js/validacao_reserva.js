@@ -1,28 +1,3 @@
-// Lista de estações fictícias
-const estacoesFicticias = [
-  {
-    nome: "Estação Central",
-    potencia: "150 kW",
-    tempoEspera: "10 min",
-    abertura: "08:00",
-    fechamento: "22:00"
-  },
-  {
-    nome: "Shopping Center",
-    potencia: "90 kW",
-    tempoEspera: "15 min",
-    abertura: "06:00",
-    fechamento: "23:00"
-  },
-  {
-    nome: "Posto Rodovia",
-    potencia: "200 kW",
-    tempoEspera: "5 min",
-    abertura: "13:00",
-    fechamento: "03:00" // atravessa a meia-noite
-  }
-];
-
 // Converte "HH:MM" para minutos
 function horaParaMinutos(hora) {
   const [h, m] = hora.split(":").map(Number);
@@ -38,7 +13,7 @@ function estaDentroDoHorario(horaVal, abertura, fechamento) {
   if (ini < fim) {
     return hora >= ini && hora <= fim;
   } else {
-    return hora >= ini || hora <= fim; // atravessa meia-noite
+    return hora >= ini || hora <= fim; // atravessa a meia-noite
   }
 }
 
@@ -146,4 +121,44 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
   });
+});
+
+// ===============================
+// Carregar favoritos no painel de validação
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("listaFavoritos");
+  const favoritos = JSON.parse(localStorage.getItem("favoritos")) || [];
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (favoritos.length === 0) {
+    container.innerHTML = "<p>Nenhuma estação favoritada ainda.</p>";
+    mostrarMensagem("Nenhuma estação favoritada encontrada.", "aviso");
+    return;
+  }
+
+  favoritos.forEach(estacao => {
+    const div = document.createElement("div");
+    div.classList.add("estacao-card");
+    div.style.border = "1px solid #ccc";
+    div.style.padding = "10px";
+    div.style.marginBottom = "8px";
+    div.style.borderRadius = "8px";
+    div.style.background = "#f9f9f9";
+
+    div.innerHTML = `
+      <b>${estacao.nome}</b><br>
+      ${estacao.rua || ""} ${estacao.numero || ""} - ${estacao.cidade || ""} ${estacao.estado || ""}<br>
+      Potência: ${estacao.potencia || "N/D"}<br>
+      Tempo de espera: ${estacao.tempoEspera || "N/D"}<br>
+      Horário: ${estacao.abertura || "N/D"} - ${estacao.fechamento || "N/D"}<br>
+    `;
+
+    container.appendChild(div);
+  });
+
+  mostrarMensagem(`${favoritos.length} estação(ões) favoritada(s) carregada(s).`, "sucesso");
 });

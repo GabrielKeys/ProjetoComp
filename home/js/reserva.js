@@ -34,16 +34,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (listaEstacoes) {
     listaEstacoes.innerHTML = "";
-    estacoesFicticias.forEach(estacao => {
-      const li = document.createElement("li");
-      li.textContent = estacao.nome;
-      li.addEventListener("click", () => {
-        localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
-        modal.style.display = "none";
-        atualizarEstacao();
+    const chaveFavoritos = `favoritos_${usuarioAtual}`;
+    let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
+
+    if (favoritos.length === 0) {
+      listaEstacoes.innerHTML = "<li>Nenhuma estação favoritada ainda.</li>";
+    } else {
+      favoritos.forEach((estacao, index) => {
+        const li = document.createElement("li");
+        li.textContent = estacao.nome;
+
+        // Selecionar estação
+        li.addEventListener("click", () => {
+          localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
+          modal.style.display = "none";
+          atualizarEstacao();
+        });
+
+        // Botão remover
+        const btnRemover = document.createElement("button");
+        btnRemover.textContent = "❌";
+        btnRemover.title = "Remover dos favoritos";
+        btnRemover.classList.add("btn-remover-estacao");
+
+        btnRemover.addEventListener("click", (e) => {
+          e.stopPropagation(); // impede selecionar estação
+          favoritos.splice(index, 1);
+          localStorage.setItem(chaveFavoritos, JSON.stringify(favoritos));
+          mostrarMensagem(`❌ ${estacao.nome} removida dos favoritos.`, "erro");
+          li.remove();
+
+          const selecionada = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
+          if (selecionada && selecionada.nome === estacao.nome) {
+            localStorage.removeItem(`estacaoSelecionada_${usuarioAtual}`);
+          }
+
+          atualizarEstacao();
+
+          if (favoritos.length === 0) {
+            listaEstacoes.innerHTML = "<li>Nenhuma estação favoritada ainda.</li>";
+            localStorage.removeItem(`estacaoSelecionada_${usuarioAtual}`);
+            atualizarEstacao();
+          }
+        });
+
+        li.appendChild(btnRemover);
+        listaEstacoes.appendChild(li);
       });
-      listaEstacoes.appendChild(li);
-    });
+    }
   }
 
   if (btnSelecionar) {
@@ -157,7 +195,6 @@ document.getElementById("formAgendamento").addEventListener("submit", (e) => {
 
   document.getElementById("agendamentoModal").style.display = "none";
   mostrarMensagem("✅ Reserva realizada com sucesso!", "sucesso");
-
 });
 
 // ---- Detalhes da reserva ----
@@ -191,4 +228,3 @@ window.addEventListener("click", (e) => {
     modalDetalhes.style.display = "none";
   }
 });
-

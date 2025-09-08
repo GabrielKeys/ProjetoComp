@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VW Carregamento - Mapa</title>
+
+    <!-- CSS do Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- Estilos do projeto -->
+    <link rel="stylesheet" href="../home/css/reset.css">
+    <link rel="stylesheet" href="../home/css/sidebar.css">
+    <link rel="stylesheet" href="../home/css/layout.css">
+
+    <style>
+        #map {
+            width: 100%;
+            height: 500px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>VoltWay</h2>
+            <nav>
+                <a href="../home/home.html">Início</a>
+                <a href="../mapa/mapa.html" class="active">Mapa</a>
+                <a href="../assinatura/assinatura.html">Assinatura</a>
+                <a href="../perfil/perfil.html">Perfil</a>
+            </nav>
+
+            <div class="user-box">
+                <p id="nomeUsuario"></p>
+                <button class="logout-btn" onclick="logout()">Sair</button>
+            </div>
+        </aside>
+
+        <!-- Conteúdo principal -->
+        <main class="main">
+            <h1>Mapa das Estações</h1>
+            <p>Veja as estações de recarga próximas.</p>
+
+            <!-- Filtro -->
+            <label>
+                <input type="checkbox" id="filtroRecarga" checked>
+                Mostrar apenas locais com recarregamento de veículos
+            </label>
+
+            <!-- Container do mapa -->
+            <div id="map"></div>
+        </main>
+    </div>
+
+    <!-- JS do Leaflet -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Seus scripts -->
+    <script src="../home/js/logout.js"></script>
+    <script src="../home/js/main.js"></script>
+    <script src="mapa.js"></script>
+    <script src="../FuncoesGlobais.js"></script>
+</body>
+
+</html>

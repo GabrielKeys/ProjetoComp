@@ -1,5 +1,7 @@
-/* Função: Estilização de janelas modais (edição de veículo, seleção de estações, recarga da carteira).
- */
+/* ================================
+   Estilização de janelas modais
+   (edição de veículo, seleção de estações, recarga da carteira)
+================================ */
 .modal {
   display: none;
   position: fixed;
@@ -40,7 +42,8 @@
   border-radius: 5px;
 }
 
-.modal-content button {
+/* 🔹 Botões normais dos modais (Confirmar, Agendar etc.) */
+.modal-content button:not(.btn-remover-estacao) {
   margin-top: 15px;
   width: 100%;
   padding: 10px;
@@ -51,7 +54,7 @@
   cursor: pointer;
 }
 
-.modal-content button:hover {
+.modal-content button:not(.btn-remover-estacao):hover {
   background: #0056b3;
 }
 
@@ -61,6 +64,7 @@
   cursor: pointer;
 }
 
+/* 🔹 Carteira (recarga) */
 .wallet-recharge {
   margin-top: 10px;
   display: flex;
@@ -87,6 +91,7 @@
   background: #218838;
 }
 
+/* 🔹 Lista genérica (outros modais, exceto estações) */
 .modal-content ul {
   list-style: none;
   padding: 0;
@@ -99,15 +104,59 @@
   cursor: pointer;
   border-radius: 5px;
   color: white;
-  text-align: center;
+  text-align: left; /* corrigido para não atrapalhar flex no modal de estações */
 }
 
 .modal-content li:hover {
   background: #007bff;
 }
 
-/* Modal específico para agendamento */
+/* 🔹 Modal específico para agendamento */
 #modalReserva .modal-content {
   background: #fff;
   color: #000;
+}
+
+/* ================================
+   Exclusivo: Lista de estações favoritas
+================================ */
+#stationModal .modal-content #listaEstacoes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#stationModal .modal-content #listaEstacoes li {
+  display: flex;
+  justify-content: space-between; /* nome à esquerda, botão à direita */
+  align-items: center;
+  padding: 10px 14px;
+  background: #0056b3;
+  color: #fff;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#stationModal .modal-content #listaEstacoes li:hover {
+  background: #004494;
+}
+
+/* 🔹 Botão remover estação */
+.btn-remover-estacao {
+  background: transparent;
+  border: none;
+  color: #ff4d4d;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  flex-shrink: 0;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.btn-remover-estacao:hover {
+  transform: scale(1.2);
+  color: #ff1a1a;
 }

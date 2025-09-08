@@ -43,23 +43,6 @@
   font-size: 1.1rem;
 }
 
-/* Online dot e engrenagem */
-.online-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  background: #28a745; 
-  border-radius: 50%;
-  margin-right: 6px;
-}
-.settings-icon img{
-  margin-left: 8px;
-  cursor: pointer;
-  width: 25px !important;
-  height: 25px !important;
-  vertical-align: middle;
-}
-
 /* Botões principais */
 button#btnSelecionarEstacao,
 button#btnAgendar {
