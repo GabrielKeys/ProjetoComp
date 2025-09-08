@@ -2,45 +2,6 @@ let map;
 let userMarker;
 let carregadores = [];
 
-// ===============================
-// Lista de estações fictícias
-// ✅ Pode ter coordenadas OU endereço
-// ===============================
-const estacoes = [
-  {
-    nome: "Estação Aeroporto",
-    lat: -23.60477,
-    lng: -46.90269,
-    potencia: "150 kW",
-    tempoEspera: "10 min",
-    abertura: "08:00",
-    fechamento: "22:00"
-  },
-  {
-    nome: "Estação Shopping",
-    rua: "Avenida Paulista",
-    numero: "1000",
-    cidade: "São Paulo",
-    estado: "SP",
-    cep: "01310-100",
-    potencia: "90 kW",
-    tempoEspera: "15 min",
-    abertura: "06:00",
-    fechamento: "23:00"
-  },
-  {
-    nome: "Estação Centro",
-    rua: "Praça da Sé",
-    numero: "",
-    cidade: "São Paulo",
-    estado: "SP",
-    potencia: "200 kW",
-    tempoEspera: "5 min",
-    abertura: "00:00",
-    fechamento: "23:59"
-  }
-];
-
 document.addEventListener("DOMContentLoaded", () => {
   initMap();
   configurarFiltro();
@@ -163,17 +124,22 @@ function carregarEstacoes() {
         let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
 
         const jaFavorito = favoritos.some(fav => fav.nome === estacao.nome);
-        const estrela = jaFavorito ? "⭐" : "☆";
 
+        // ===============================
+        // Popup com estrela customizada
+        // ===============================
         marker.bindPopup(`
-          <b>${estacao.nome}</b><br>
-          ${estacao.rua || ""} ${estacao.numero || ""}<br>
-          ${estacao.cidade || ""} - ${estacao.estado || ""} ${estacao.cep || ""}<br>
-          Potência: ${estacao.potencia}<br>
-          Tempo de Espera: ${estacao.tempoEspera}<br>
-          Horário: ${estacao.abertura} - ${estacao.fechamento}<br><br>
-          <button onclick="toggleFavorito('${estacao.nome}')">${estrela} Favoritar</button>
-        `);
+  <div class="popup-conteudo">
+    <b>${estacao.nome}</b><br>
+    ${estacao.rua || ""} ${estacao.numero || ""}<br>
+    ${estacao.cidade || ""} - ${estacao.estado || ""} ${estacao.cep || ""}<br>
+    Potência: ${estacao.potencia}<br>
+    Tempo de Espera: ${estacao.tempoEspera}<br>
+    Horário: ${estacao.abertura} - ${estacao.fechamento}
+    <span class="estrela ${jaFavorito ? "favorita" : ""}" onclick="toggleFavorito('${estacao.nome}', this)"></span>
+  </div>
+`);
+
 
         marker.addTo(map);
         carregadores.push(marker);
@@ -190,22 +156,23 @@ function carregarEstacoes() {
 // ===============================
 // Favoritar / Desfavoritar estação
 // ===============================
-function toggleFavorito(nomeEstacao) {
+function toggleFavorito(nomeEstacao, elemento) {
   const usuarioAtual = localStorage.getItem("usuario");
   const chaveFavoritos = `favoritos_${usuarioAtual}`;
 
   let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
-
   const index = favoritos.findIndex(fav => fav.nome === nomeEstacao);
 
   if (index >= 0) {
     favoritos.splice(index, 1);
     mostrarMensagem(`❌ ${nomeEstacao} removida dos favoritos.`, "erro");
+    if (elemento) elemento.classList.remove("favorita");
   } else {
     const estacao = estacoes.find(e => e.nome === nomeEstacao);
     if (estacao) {
       favoritos.push(estacao);
       mostrarMensagem(`⭐ ${nomeEstacao} adicionada aos favoritos!`, "sucesso");
+      if (elemento) elemento.classList.add("favorita");
     }
   }
 

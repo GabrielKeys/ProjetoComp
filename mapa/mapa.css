@@ -1,0 +1,142 @@
+/* ============================
+   Estrela de favoritos
+   ============================ */
+.estrela { 
+    display: inline-block; 
+    width: 28px; 
+    height: 28px; 
+    background: url("assets/img/estrela.png") no-repeat center center; 
+    background-size: contain; 
+    cursor: pointer; 
+    position: absolute; 
+    bottom: 5px; 
+    right: 5px; 
+} 
+.estrela::before { 
+    content: "☆"; /* estrela vazia */ 
+} 
+
+.estrela.favorita { filter: none; /* remove brilho exagerado */ 
+    opacity: 0.9; /* leve destaque */ 
+    transform: scale(1.05); /* pequeno aumento */ 
+} 
+        
+.estrela.favorita::before { 
+    content: "⭐"; /* estrela cheia */ 
+} 
+    .estrela:hover { 
+    transform: scale(1.2); color: orange; 
+} 
+    
+.popup-estacao { /* Container do conteúdo do popup */ 
+    position: relative; 
+    font-size: 14px; 
+    line-height: 1.4; 
+} 
+
+.popup-footer { /* Rodapé alinhando a estrela no canto inferior direito */ 
+    display: flex; 
+    justify-content: flex-end; 
+    margin-top: 8px; 
+} 
+.popup-conteudo { 
+    position: relative; 
+    padding-bottom: 35px; /* espaço para a estrela no rodapé */ }
+
+/* ============================
+   Página de Mapa
+   ============================ */
+/* Container principal do mapa */
+.mapa-container {
+  padding: 20px;
+  background: #f5f6fa;
+  min-height: 100vh;
+}
+
+/* Header estilizado */
+.mapa-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 12px 18px;
+  background: linear-gradient(90deg, #0052a3, #007bff);
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+.mapa-header h2 {
+  margin: 0;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Transformar checkbox em switch */
+.mapa-header label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  gap: 10px;
+}
+
+.mapa-header input[type="checkbox"] {
+  appearance: none;
+  width: 40px;
+  height: 20px;
+  background: #ccc;
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.mapa-header input[type="checkbox"]:checked {
+  background: #28a745;
+}
+
+.mapa-header input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: 0.3s;
+}
+
+.mapa-header input[type="checkbox"]:checked::after {
+  left: 22px;
+}
+
+/* Mapa em card */
+#map {
+  width: 100%;
+  height: 500px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+  border: none;
+  overflow: hidden;
+}
+
+
+/* ============================
+   Popup Leaflet
+   ============================ */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  border: 2px solid #0052a3;
+  padding: 8px;
+}
+.leaflet-popup-content {
+  font-size: 14px;
+  color: #333;
+}
+.leaflet-popup-content b {
+  color: #0052a3;
+  font-size: 16px;
+}
