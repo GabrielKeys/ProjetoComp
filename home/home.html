@@ -28,34 +28,7 @@
         <p id="nomeUsuario"></p>
         <button class="logout-btn" onclick="logout()">Sair</button>
       </div>
-
-      <!-- Modal para editar veículo -->
-      <div id="editModal" class="modal">
-        <div class="modal-content">
-          <span class="close">&times;</span>
-          <h2>Editar Veículo</h2>
-          <form id="editForm">
-            <label>Modelo:</label>
-            <input type="text" id="editModelo" placeholder="Digite o modelo do Veículo">
-
-            <label>Ano:</label>
-            <input type="text" id="editAno" placeholder="Ano do Veículo">
-
-            <label>Placa:</label>
-            <input type="text" id="editPlaca" placeholder="Placa do Veículo" maxlength="8" required>
-
-            <label>Bateria:</label>
-            <input type="text" id="editBateria" placeholder="Bateria em kWh" required>
-
-            <label>Carregamento:</label>
-            <input type="text" id="editCarregamento" placeholder="Carregamento em KW" required>
-
-
-            <button type="submit">Salvar</button>
-          </form>
-        </div>
-      </div>
-    </aside>
+    </aside> <!-- ✅ fechamento correto da sidebar -->
 
     <!-- Conteúdo principal -->
     <main class="main">
@@ -125,14 +98,19 @@
         <h2>Meu Veículo</h2>
         <div class="vehicle-info">
           <img src="../assets/carro.png" alt="Carro Elétrico Genérico">
-          <div>
-            <p class="veiculo-modelo"><strong>Modelo: -</strong></p>
-            <p class="veiculo-ano">Ano:-</p>
-            <p class="veiculo-placa">Placa: ---</p>
-            <p class="veiculo-bateria">Bateria: - kWh</p>
-            <p class="veiculo-carregamento">Carregando: - kW</p>
+          <div id="veiculoDetalhes">
+            <div class="vehicle-fields">
+              <div class="field-row"><label>Modelo:</label><span id="veiculoModelo">---</span></div>
+              <div class="field-row"><label>Ano:</label><span id="veiculoAno">----</span></div>
+              <div class="field-row"><label>Placa:</label><span id="veiculoPlaca">---</span></div>
+              <div class="field-row"><label>Bateria:</label><span id="veiculoBateria">-- kWh</span></div>
+              <div class="field-row"><label>Carregando:</label><span id="veiculoCarregamento">---- kW</span></div>
+            </div>
           </div>
-        </div>
+          <!-- Botão de edição -->
+          <div class="editar-wrapper">
+            <button id="btnEditarVeiculo" class="btn-editar">Editar Veículo</button>
+          </div>
       </section>
 
       <!-- Carteira & Status -->
@@ -169,7 +147,6 @@
         <div id="listaReservas"></div> <!-- Aqui vão aparecer as reservas seguintes -->
       </section>
       <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
-      </section>
     </main>
   </div>
 
@@ -181,7 +158,6 @@
       <div id="detalhesReserva"></div>
     </div>
   </div>
-
 
   <!-- Scripts no final -->
   <script src="js/logout.js"></script>

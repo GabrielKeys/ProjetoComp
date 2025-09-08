@@ -11,7 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const nomeFormatado = usuario.charAt(0).toUpperCase() + usuario.slice(1);
   const nomeUsuario = document.getElementById("nomeUsuario");
   if (nomeUsuario) {
-    nomeUsuario.innerHTML = `<span class="online-dot"></span> ${nomeFormatado} <span class="settings-icon"><img src="../assets/engrenagem.png" alt="Logo" class="header-logo" /></span>`;
+    nomeUsuario.innerHTML = `
+  <span class="online-dot"></span> ${nomeFormatado}
+  <button id="gearBtn" class="settings-icon" title="Configurações">
+    <img src="../assets/engrenagem.png" alt="Configurações" />
+  </button>
+`;
   }
 
   // Atualizar estação na carga inicial
@@ -31,27 +36,27 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-// Monta HTML com botão "Cancelar"
-detalhesReserva.innerHTML = reservas.map((r, i) => `
+      // Monta HTML com botão "Cancelar"
+      detalhesReserva.innerHTML = reservas.map((r, i) => `
   <p>
     <strong>${i + 1}.</strong> ${r.data} às ${r.hora} - ${r.estacao}
     <button class="btn-cancelar" data-index="${i}">Cancelar</button>
   </p>
 `).join("");
 
-// Adiciona evento aos botões "Cancelar"
-document.querySelectorAll(".btn-cancelar").forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    const index = e.target.getAttribute("data-index");
-    if (confirm("Tem certeza que deseja cancelar esta reserva?")) {
-      let reservas = carregarReservas();
-      reservas.splice(index, 1); // remove a reserva
-      salvarReservas(reservas);  // atualiza no localStorage
-      renderizarReservas();      // atualiza lista na tela
-      detalhesModal.style.display = "none"; // fecha modal
-    }
-  });
-});
+      // Adiciona evento aos botões "Cancelar"
+      document.querySelectorAll(".btn-cancelar").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const index = e.target.getAttribute("data-index");
+          if (confirm("Tem certeza que deseja cancelar esta reserva?")) {
+            let reservas = carregarReservas();
+            reservas.splice(index, 1); // remove a reserva
+            salvarReservas(reservas);  // atualiza no localStorage
+            renderizarReservas();      // atualiza lista na tela
+            detalhesModal.style.display = "none"; // fecha modal
+          }
+        });
+      });
 
       // Mostra modal
       detalhesModal.style.display = "flex";

@@ -23,3 +23,36 @@
   border-radius: 5px; cursor: pointer; width: 100%;
 }
 .logout-btn:hover { background: #cc0000; }
+
+/* Botão da engrenagem  */
+.settings-icon img {
+  margin-left: 8px;
+  cursor: pointer;
+  width: 25px !important;
+  height: 25px !important;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
+
+}
+
+#gearBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+
+#gearBtn:hover img {
+  transform: rotate(45deg); /* efeito ao passar o mouse */
+}
+/* Online dot */
+.online-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #28a745; 
+  border-radius: 50%;
+  margin-right: 6px;
+}
