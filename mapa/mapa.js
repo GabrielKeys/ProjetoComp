@@ -17,48 +17,16 @@ function initMap() {
 
     // Estilo para esconder apenas POIs desnecessários
     styles: [
-      {
-        featureType: "poi",
-        elementType: "labels.icon",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.business",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.medical",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.place_of_worship",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.park",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.airport",
-        stylers: [{ visibility: "off" }],
-      },
-      // mantém estradas, cidades e rios
-      {
-        featureType: "road",
-        stylers: [{ visibility: "on" }],
-      },
-      {
-        featureType: "administrative",
-        stylers: [{ visibility: "on" }],
-      },
-      {
-        featureType: "landscape",
-        stylers: [{ visibility: "on" }],
-      },
-      {
-        featureType: "water",
-        stylers: [{ visibility: "on" }],
-      },
+      { featureType: "poi", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+      { featureType: "poi.business", stylers: [{ visibility: "off" }] },
+      { featureType: "poi.medical", stylers: [{ visibility: "off" }] },
+      { featureType: "poi.place_of_worship", stylers: [{ visibility: "off" }] },
+      { featureType: "poi.park", stylers: [{ visibility: "off" }] },
+      { featureType: "poi.airport", stylers: [{ visibility: "off" }] },
+      { featureType: "road", stylers: [{ visibility: "on" }] },
+      { featureType: "administrative", stylers: [{ visibility: "on" }] },
+      { featureType: "landscape", stylers: [{ visibility: "on" }] },
+      { featureType: "water", stylers: [{ visibility: "on" }] },
     ],
   });
 
@@ -71,11 +39,7 @@ function initMap() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const userLocation = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-
+        const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.setCenter(userLocation);
         map.setZoom(15);
 
@@ -86,29 +50,22 @@ function initMap() {
           title: "Você está aqui",
           icon: {
             url: "../assets/carro-icone.png",
-            scaledSize: new google.maps.Size(60, 60), // tamanho ajustável
-            anchor: new google.maps.Point(25, 50) // x=metade, y=altura (base do carro)
+            scaledSize: new google.maps.Size(60, 60),
+            anchor: new google.maps.Point(25, 50),
           },
         });
-
 
         console.log("📍 Localização encontrada:", userLocation);
         mostrarMensagem("📍 Localização encontrada!", "sucesso", true);
 
         // 3. carrega reais depois de 1,5s
-        setTimeout(() => {
-          carregarEstacoesReais(userLocation);
-        }, 1500);
+        setTimeout(() => carregarEstacoesReais(userLocation), 1500);
       },
       () => {
         mostrarMensagem("⚠️ Não foi possível obter sua localização. Usando fallback.", "erro", true);
         const fallback = { lat: -23.5505, lng: -46.6333 };
         map.setCenter(fallback);
-
-        // carrega reais no fallback
-        setTimeout(() => {
-          carregarEstacoesReais(fallback);
-        }, 1500);
+        setTimeout(() => carregarEstacoesReais(fallback), 1500);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -116,10 +73,22 @@ function initMap() {
     mostrarMensagem("⚠️ Geolocalização não suportada.", "erro", true);
     const fallback = { lat: -23.5505, lng: -46.6333 };
     map.setCenter(fallback);
+    setTimeout(() => carregarEstacoesReais(fallback), 1500);
+  }
 
-    setTimeout(() => {
-      carregarEstacoesReais(fallback);
-    }, 1500);
+  // Restaurar filtro salvo
+  const filtroCheckbox = document.getElementById("filtroRecarga");
+  if (filtroCheckbox) {
+    const estadoSalvo = localStorage.getItem("filtroRecarga");
+    if (estadoSalvo !== null) {
+      filtroCheckbox.checked = (estadoSalvo === "true");
+    }
+    aplicarFiltro(filtroCheckbox.checked);
+
+    filtroCheckbox.addEventListener("change", () => {
+      localStorage.setItem("filtroRecarga", filtroCheckbox.checked);
+      aplicarFiltro(filtroCheckbox.checked);
+    });
   }
 }
 
@@ -129,7 +98,6 @@ function initMap() {
 function carregarEstacoesFicticias() {
   estacoes.forEach((estacao) => {
     if (!estacao.lat || !estacao.lng) return;
-
     const position = { lat: estacao.lat, lng: estacao.lng };
 
     const marker = new google.maps.Marker({
@@ -176,7 +144,6 @@ function carregarEstacoesFicticias() {
           btn.addEventListener("click", () => {
             const usuarioAtual = localStorage.getItem("usuario");
             localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
-
             const agendamentoModal = document.getElementById("agendamentoModal");
             if (agendamentoModal) agendamentoModal.style.display = "flex";
             atualizarEstacao();
@@ -228,16 +195,17 @@ function carregarEstacoesReais(location) {
           `;
 
           const infowindow = new google.maps.InfoWindow({ content: contentString });
-
-          marker.addListener("click", () => {
-            infowindow.open(map, marker);
-          });
+          marker.addListener("click", () => infowindow.open(map, marker));
 
           carregadores.push(marker);
         });
 
         console.log(`⚡ ${results.length} estações não registradas carregadas.`);
         mostrarMensagem(`${results.length} estações não registradas carregadas.`, "aviso", true);
+
+        // Reaplica o filtro depois de carregar
+        const filtroAtivo = document.getElementById("filtroRecarga")?.checked ?? true;
+        aplicarFiltro(filtroAtivo);
       } else {
         mostrarMensagem("Nenhuma estação não registrada encontrada.", "erro", true);
       }
@@ -245,6 +213,13 @@ function carregarEstacoesReais(location) {
   );
 }
 
+// ===============================
+// Função central do filtro
+// ===============================
+function aplicarFiltro(somenteRegistradas) {
+  ficticios.forEach((m) => m.setMap(map));
+  carregadores.forEach((m) => m.setMap(somenteRegistradas ? null : map));
+}
 
 // ===============================
 // Favoritar / Desfavoritar estação
@@ -273,27 +248,6 @@ function toggleFavorito(nomeEstacao, elemento) {
 }
 
 // ===============================
-// Filtro - Mostrar apenas registradas
-// ===============================
-document.addEventListener("DOMContentLoaded", () => {
-  const filtro = document.getElementById("filtroRecarga");
-
-  if (filtro) {
-    filtro.addEventListener("change", () => {
-      if (filtro.checked) {
-        // Mostrar apenas registradas (fictícias)
-        ficticios.forEach((m) => m.setMap(map));
-        carregadores.forEach((m) => m.setMap(null));
-      } else {
-        // Mostrar todas
-        ficticios.forEach((m) => m.setMap(map));
-        carregadores.forEach((m) => m.setMap(map));
-      }
-    });
-  }
-});
-
-// ===============================
 // Mostrar mensagem sem duplicar
 // ===============================
 function mostrarMensagem(texto, tipo, evitarDuplicado = false) {
@@ -308,8 +262,5 @@ function mostrarMensagem(texto, tipo, evitarDuplicado = false) {
   div.setAttribute("data-texto", texto);
 
   document.body.appendChild(div);
-
-  setTimeout(() => {
-    div.remove();
-  }, 4000);
+  setTimeout(() => div.remove(), 4000);
 }
