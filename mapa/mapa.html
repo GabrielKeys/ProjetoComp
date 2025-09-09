@@ -18,7 +18,8 @@
         /* Garante altura para o mapa do Google */
         #map {
             width: 100%;
-            height: 500px; /* ajuste conforme layout */
+            height: 500px;
+            /* ajuste conforme layout */
             border-radius: 10px;
             margin-bottom: 20px;
         }
@@ -58,9 +59,9 @@
                 </div>
 
                 <!-- Filtro -->
-                <label class="filtro-label">
+                <label>
                     <input type="checkbox" id="filtroRecarga" checked>
-                    Mostrar apenas locais com recarregamento de veículos
+                    Mostrar apenas estações de carregamento registradas
                 </label>
             </section>
 
@@ -112,8 +113,8 @@
     <!-- scripts -->
     <script src="../home/js/logout.js"></script>
     <script src="../home/js/main.js"></script>
-    <script src="mapa.js"></script>
     <script src="estacoes.js"></script>
+    <script src="mapa.js"></script>
     <script src="../global/Global.js"></script>
     <script src="../home/js/reserva.js"></script>
     <script src="../home/js/validacao_reserva.js"></script>
@@ -126,9 +127,12 @@
     </script>
 
     <!-- Google Maps API (adicione sua chave aqui) -->
-    <script async
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY&callback=initMap&libraries=places">
+    <script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY&libraries=places&callback=initMap">
 </script>
 
+
+
 </body>
+
 </html>

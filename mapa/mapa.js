@@ -1,84 +1,132 @@
 let map;
 let userMarker;
 let carregadores = [];
-
-document.addEventListener("DOMContentLoaded", () => {
-  configurarFiltro();
-});
+let ficticios = [];
 
 // ===============================
 // Inicializa o mapa Google Maps
 // ===============================
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: -23.5505, lng: -46.6333 },
+    center: { lat: -23.5505, lng: -46.6333 }, // fallback SP
     zoom: 13,
-    mapTypeControl: false,   // remove satélite
+    mapTypeControl: false,
     streetViewControl: true,
     fullscreenControl: true,
-    gestureHandling: "greedy" // zoom direto com scroll
+    gestureHandling: "greedy",
+
+    // Estilo para esconder apenas POIs desnecessários
+    styles: [
+      {
+        featureType: "poi",
+        elementType: "labels.icon",
+        stylers: [{ visibility: "off" }],
+      },
+      {
+        featureType: "poi.business",
+        stylers: [{ visibility: "off" }],
+      },
+      {
+        featureType: "poi.medical",
+        stylers: [{ visibility: "off" }],
+      },
+      {
+        featureType: "poi.place_of_worship",
+        stylers: [{ visibility: "off" }],
+      },
+      {
+        featureType: "poi.park",
+        stylers: [{ visibility: "off" }],
+      },
+      {
+        featureType: "poi.airport",
+        stylers: [{ visibility: "off" }],
+      },
+      // mantém estradas, cidades e rios
+      {
+        featureType: "road",
+        stylers: [{ visibility: "on" }],
+      },
+      {
+        featureType: "administrative",
+        stylers: [{ visibility: "on" }],
+      },
+      {
+        featureType: "landscape",
+        stylers: [{ visibility: "on" }],
+      },
+      {
+        featureType: "water",
+        stylers: [{ visibility: "on" }],
+      },
+    ],
   });
 
+  console.log("🗺️ Mapa inicializado.");
+
+  // 1. Sempre carrega estações fictícias primeiro
+  carregarEstacoesFicticias();
+
+  // 2. Tenta geolocalização
   if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(
+    navigator.geolocation.getCurrentPosition(
       (pos) => {
         const userLocation = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
         };
-        const precisao = pos.coords.accuracy;
 
         map.setCenter(userLocation);
-        map.setZoom(16);
+        map.setZoom(15);
 
-        if (userMarker) {
-          userMarker.setPosition(userLocation);
-        } else {
-          userMarker = new google.maps.Marker({
-            position: userLocation,
-            map: map,
-            title: `Você está aqui (precisão: ${Math.round(precisao)}m)`,
-            icon: {
-              url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-              scaledSize: new google.maps.Size(32, 32),
-            },
-          });
-        }
+        // marcador do usuário
+        userMarker = new google.maps.Marker({
+          position: userLocation,
+          map: map,
+          title: "Você está aqui",
+          icon: {
+            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+            scaledSize: new google.maps.Size(32, 32),
+          },
+        });
 
-        if (precisao <= 50) {
-          mostrarMensagem(`📍 Localização encontrada (precisão: ${Math.round(precisao)}m)`, "sucesso");
-        } else if (precisao <= 200) {
-          mostrarMensagem(`📍 Localização aproximada (precisão: ${Math.round(precisao)}m)`, "aviso");
-        } else {
-          mostrarMensagem(`⚠️ Localização imprecisa (precisão: ${Math.round(precisao)}m)`, "erro");
-        }
+        console.log("📍 Localização encontrada:", userLocation);
+        mostrarMensagem("📍 Localização encontrada!", "sucesso", true);
 
-        if (carregadores.length === 0) {
-          carregarEstacoes();
-        }
+        // 3. carrega reais depois de 1,5s
+        setTimeout(() => {
+          carregarEstacoesReais(userLocation);
+        }, 1500);
       },
-      (err) => {
-        console.error(err);
-        mostrarMensagem("Não foi possível obter sua localização precisa.", "erro");
-        carregarEstacoes();
+      () => {
+        mostrarMensagem("⚠️ Não foi possível obter sua localização. Usando fallback.", "erro", true);
+        const fallback = { lat: -23.5505, lng: -46.6333 };
+        map.setCenter(fallback);
+
+        // carrega reais no fallback
+        setTimeout(() => {
+          carregarEstacoesReais(fallback);
+        }, 1500);
       },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   } else {
-    mostrarMensagem("Geolocalização não suportada no seu navegador.", "erro");
-    carregarEstacoes();
+    mostrarMensagem("⚠️ Geolocalização não suportada.", "erro", true);
+    const fallback = { lat: -23.5505, lng: -46.6333 };
+    map.setCenter(fallback);
+
+    setTimeout(() => {
+      carregarEstacoesReais(fallback);
+    }, 1500);
   }
 }
 
 // ===============================
-// Adiciona marcadores das estações
+// Carregar estações registradas (fictícias do app)
 // ===============================
-function carregarEstacoes() {
+function carregarEstacoesFicticias() {
   estacoes.forEach((estacao) => {
-    if (!estacao.lat || !estacao.lng) {
-      console.warn(`⚠️ Estação ${estacao.nome} sem coordenadas.`);
-      return;
-    }
+    if (!estacao.lat || !estacao.lng) return;
 
     const position = { lat: estacao.lat, lng: estacao.lng };
 
@@ -87,36 +135,35 @@ function carregarEstacoes() {
       map,
       title: estacao.nome,
       icon: {
-        url: "https://cdn-icons-png.flaticon.com/512/3103/3103446.png",
+        url: "../assets/bateria-verde.png", // 🔋 verde = registrada
         scaledSize: new google.maps.Size(28, 28),
       },
     });
 
+    // favoritos
     const usuarioAtual = localStorage.getItem("usuario");
     const chaveFavoritos = `favoritos_${usuarioAtual}`;
     let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
     const jaFavorito = favoritos.some((fav) => fav.nome === estacao.nome);
 
     const contentString = `
-  <div class="popup-estacao">
-    <div class="popup-conteudo">
-      <b>${estacao.nome}</b>
-      ${estacao.rua || ""} ${estacao.numero || ""}<br>
-      ${estacao.cidade || ""} ${estacao.estado || ""} ${estacao.cep || ""}<br>
-      Potência: ${estacao.potencia}<br>
-      Tempo de Espera: ${estacao.tempoEspera}<br>
-      Horário: ${estacao.abertura} - ${estacao.fechamento}
-    </div>
-    <div class="popup-footer">
-      <button class="btn-reservar" data-estacao='${JSON.stringify(estacao)}'>Reservar</button>
-      <span class="estrela ${jaFavorito ? "favorita" : ""}" onclick="toggleFavorito('${estacao.nome}', this)"></span>
-    </div>
-  </div>
-`;
+      <div class="popup-estacao">
+        <div class="popup-conteudo">
+          <b>${estacao.nome}</b>
+          ${estacao.rua || ""} ${estacao.numero || ""}<br>
+          ${estacao.cidade || ""} ${estacao.estado || ""} ${estacao.cep || ""}<br>
+          Potência: ${estacao.potencia || "N/D"}<br>
+          Tempo de Espera: ${estacao.tempoEspera || "N/D"}<br>
+          Horário: ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}
+        </div>
+        <div class="popup-footer">
+          <button class="btn-reservar" data-estacao='${JSON.stringify(estacao)}'>Reservar</button>
+          <span class="estrela ${jaFavorito ? "favorita" : ""}" onclick="toggleFavorito('${estacao.nome}', this)"></span>
+        </div>
+      </div>
+    `;
 
-    const infowindow = new google.maps.InfoWindow({
-      content: contentString,
-    });
+    const infowindow = new google.maps.InfoWindow({ content: contentString });
 
     marker.addListener("click", () => {
       infowindow.open(map, marker);
@@ -136,11 +183,66 @@ function carregarEstacoes() {
       });
     });
 
-    carregadores.push(marker);
+    ficticios.push(marker);
   });
 
-  mostrarMensagem(`${estacoes.length} estações foram carregadas.`, "sucesso");
+  console.log(`✅ ${estacoes.length} estações registradas carregadas.`);
+  mostrarMensagem(`${estacoes.length} estações registradas carregadas.`, "sucesso", true);
 }
+
+// ===============================
+// Carregar estações não registradas (Google Places)
+// ===============================
+function carregarEstacoesReais(location) {
+  const service = new google.maps.places.PlacesService(map);
+
+  service.nearbySearch(
+    {
+      location,
+      radius: 15000,
+      keyword: "estação de carregamento de veículos elétricos",
+    },
+    (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        results.forEach((place) => {
+          const marker = new google.maps.Marker({
+            position: place.geometry.location,
+            map,
+            title: place.name,
+            icon: {
+              url: "../assets/bateria-cinza.png", // 🔋 cinza = não registrada
+              scaledSize: new google.maps.Size(26, 26),
+            },
+          });
+
+          const contentString = `
+            <div class="popup-estacao">
+              <div class="popup-conteudo">
+                <b>${place.name}</b>
+                ${place.vicinity || ""}<br>
+                <span style="color:#666;font-size:12px">(Não registrada no app)</span>
+              </div>
+            </div>
+          `;
+
+          const infowindow = new google.maps.InfoWindow({ content: contentString });
+
+          marker.addListener("click", () => {
+            infowindow.open(map, marker);
+          });
+
+          carregadores.push(marker);
+        });
+
+        console.log(`⚡ ${results.length} estações não registradas carregadas.`);
+        mostrarMensagem(`${results.length} estações não registradas carregadas.`, "aviso", true);
+      } else {
+        mostrarMensagem("Nenhuma estação não registrada encontrada.", "erro", true);
+      }
+    }
+  );
+}
+
 
 // ===============================
 // Favoritar / Desfavoritar estação
@@ -154,13 +256,13 @@ function toggleFavorito(nomeEstacao, elemento) {
 
   if (index >= 0) {
     favoritos.splice(index, 1);
-    mostrarMensagem(`❌ ${nomeEstacao} removida dos favoritos.`, "erro");
+    mostrarMensagem(`❌ ${nomeEstacao} removida dos favoritos.`, "erro", true);
     if (elemento) elemento.classList.remove("favorita");
   } else {
     const estacao = estacoes.find((e) => e.nome === nomeEstacao);
     if (estacao) {
       favoritos.push(estacao);
-      mostrarMensagem(`⭐ ${nomeEstacao} adicionada aos favoritos!`, "sucesso");
+      mostrarMensagem(`⭐ ${nomeEstacao} adicionada aos favoritos!`, "sucesso", true);
       if (elemento) elemento.classList.add("favorita");
     }
   }
@@ -169,21 +271,43 @@ function toggleFavorito(nomeEstacao, elemento) {
 }
 
 // ===============================
-// Filtro para mostrar/esconder estações
+// Filtro - Mostrar apenas registradas
 // ===============================
-function configurarFiltro() {
+document.addEventListener("DOMContentLoaded", () => {
   const filtro = document.getElementById("filtroRecarga");
-  if (!filtro) return;
 
-  filtro.addEventListener("change", () => {
-    carregadores.forEach((marker) => {
-      marker.setMap(filtro.checked ? map : null);
+  if (filtro) {
+    filtro.addEventListener("change", () => {
+      if (filtro.checked) {
+        // Mostrar apenas registradas (fictícias)
+        ficticios.forEach((m) => m.setMap(map));
+        carregadores.forEach((m) => m.setMap(null));
+      } else {
+        // Mostrar todas
+        ficticios.forEach((m) => m.setMap(map));
+        carregadores.forEach((m) => m.setMap(map));
+      }
     });
+  }
+});
 
-    if (filtro.checked) {
-      mostrarMensagem("Exibindo estações de recarga.", "aviso");
-    } else {
-      mostrarMensagem("Estações de recarga ocultadas.", "aviso");
-    }
-  });
+// ===============================
+// Mostrar mensagem sem duplicar
+// ===============================
+function mostrarMensagem(texto, tipo, evitarDuplicado = false) {
+  if (evitarDuplicado) {
+    const jaExiste = document.querySelector(`.msg-${tipo}[data-texto="${texto}"]`);
+    if (jaExiste) return;
+  }
+
+  const div = document.createElement("div");
+  div.className = `mensagem msg-${tipo}`;
+  div.innerText = texto;
+  div.setAttribute("data-texto", texto);
+
+  document.body.appendChild(div);
+
+  setTimeout(() => {
+    div.remove();
+  }, 4000);
 }
