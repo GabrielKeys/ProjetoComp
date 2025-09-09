@@ -1,59 +1,106 @@
 /* ============================
    Estrela de favoritos
    ============================ */
-.estrela { 
-    display: inline-block; 
-    width: 28px; 
-    height: 17px; 
-    background: url("assets/img/estrela.png") no-repeat center center; 
-    background-size: contain; 
-    cursor: pointer; 
-    position: absolute; 
-    bottom: 5px; 
-    left: 160px;
-} 
-.estrela::before { 
-    content: "☆"; /* estrela vazia */ 
-} 
+.estrela {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: url("../assets/estrela.png") no-repeat center center;
+  background-size: contain;
+  cursor: pointer;
+  filter: grayscale(100%) brightness(70%); /* cinza apagado */
+  transition: transform 0.25s ease, filter 0.25s ease;
+  margin-left: 8px;
+}
 
-.estrela.favorita { filter: none; /* remove brilho exagerado */ 
-    opacity: 0.9; /* leve destaque */ 
-    transform: scale(1.05); /* pequeno aumento */ 
-} 
-        
-.estrela.favorita::before { 
-    content: "⭐"; /* estrela cheia */ 
-} 
-    .estrela:hover { 
-    transform: scale(1.2); color: orange; 
-} 
-    
-.popup-estacao { /* Container do conteúdo do popup */ 
-    position: relative; 
-    font-size: 14px; 
-    line-height: 1.4; 
-} 
+/* Hover quando não favoritada */
+.estrela:hover {
+  transform: scale(1.15) rotate(-5deg);
+  filter: grayscale(30%) brightness(100%);
+}
 
-.popup-footer { /* Rodapé alinhando a estrela no canto inferior direito */ 
-    display: flex; 
-    justify-content: flex-end; 
-    margin-top: 8px; 
-} 
-.popup-conteudo { 
-    position: relative; 
-    padding-bottom: 0px; /* espaço para a estrela no rodapé */ }
+/* Estrela favoritada */
+.estrela.favorita {
+  filter: none;
+  transform: scale(1.05);
+}
+
+/* ============================
+   Popup customizado (Google Maps)
+   ============================ */
+.popup-estacao {
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+  max-width: 300px;
+  padding: 14px;                /* 🔹 margens internas melhores */
+  box-sizing: border-box;
+}
+
+.popup-estacao b {
+  display: block;
+  font-size: 16px;
+  color: #0052a3;
+  margin-bottom: 0px;           /* 🔹 menos espaço abaixo do título */
+  text-align: left;             /* 🔹 título alinhado com o resto */
+}
+
+.popup-estacao .popup-conteudo {
+  margin-bottom: 30px;
+  line-height: 1.4;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  text-align: left;
+}
+
+.popup-estacao .popup-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+}
+/* Botão dentro do popup */
+.popup-estacao .btn-reservar {
+  flex: 1;
+  background: linear-gradient(90deg, #123b8b, #007bff);
+  color: #fff;
+  border: none;
+  padding: 6px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.3s, transform 0.2s;
+  margin-right: 10px;
+}
+.popup-estacao .btn-reservar:hover {
+  background: #0a2a66;
+  transform: scale(1.05);
+}
+
+/* ============================
+   Corrigir popup do Google Maps
+   ============================ */
+.gm-style .gm-style-iw-c,
+.gm-style-iw,
+.gm-style-iw-d {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.gm-style-iw-d::-webkit-scrollbar {
+  display: none;
+}
 
 /* ============================
    Página de Mapa
    ============================ */
-/* Container principal do mapa */
 .mapa-container {
   padding: 20px;
   background: #f5f6fa;
   min-height: 100vh;
 }
 
-/* Transformar checkbox em switch no header do mapa */
+/* Switch do filtro no header */
 .header label {
   display: flex;
   align-items: center;
@@ -100,52 +147,52 @@
   box-shadow: 0 4px 15px rgba(0,0,0,0.25);
   border: none;
   overflow: hidden;
-  margin-bottom: 20px;s
+  margin-bottom: 20px;
 }
 
-
 /* ============================
-   Popup Leaflet
+   Cartões
    ============================ */
-.leaflet-popup-content-wrapper {
-  border-radius: 8px;
-  border: 2px solid #0052a3;
-  padding: 8px;
+.card { 
+  background: white; 
+  padding: 20px; 
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
+  margin-bottom: 20px; 
 }
-.leaflet-popup-content {
-  font-size: 14px;
-  color: #333;
+.next-reservation { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  background: #e6f0ff; 
 }
-.leaflet-popup-content b {
-  color: #0052a3;
-  font-size: 16px;
+.btn { 
+  background: #0a2a66; 
+  color: white; 
+  border: none; 
+  padding: 10px 15px;
+  border-radius: 6px; 
+  cursor: pointer; 
 }
-
-
-/* Função: Estilização dos cards da página principal (veículo, saldo, transações, agendamentos).*/
-.card { background: white; padding: 20px; border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-.next-reservation { display: flex; justify-content: space-between; align-items: center; background: #e6f0ff; }
-.btn { background: #0a2a66; color: white; border: none; padding: 10px 15px;
-  border-radius: 6px; cursor: pointer; }
-.btn:hover { background: #123b8b; }
-
+.btn:hover { 
+  background: #123b8b; 
+}
 
 /* ============================
-    Botão de reservar
+   Botão de reservar
    ============================ */
 .btn-reservar {
   background: linear-gradient(90deg, #123b8b, #007bff);
   color: #fff;
   border: none;
-  padding: 6px 50px;
+  padding: 6px 20px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
-  margin-right: 6px;
+  text-align: center;
+  flex: 1;
+  max-width: 120px;
 }
 .btn-reservar:hover {
   background: #123b8b;
 }
-
-

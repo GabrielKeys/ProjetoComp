@@ -6,9 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VW Carregamento - Mapa</title>
 
-    <!-- CSS do Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
     <!-- Estilos do projeto -->
     <link rel="stylesheet" href="../home/css/reset.css">
     <link rel="stylesheet" href="../global/Sidebar.css">
@@ -17,6 +14,15 @@
     <link rel="stylesheet" href="../global/Header.css">
     <link rel="stylesheet" href="../home/css/modal.css">
 
+    <style>
+        /* Garante altura para o mapa do Google */
+        #map {
+            width: 100%;
+            height: 500px; /* ajuste conforme layout */
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 
 <body>
@@ -58,7 +64,7 @@
                 </label>
             </section>
 
-            <!-- Mapa Leaflet -->
+            <!-- Mapa Google Maps -->
             <div id="map"></div>
 
             <!-- Próxima Reserva (Mapa) -->
@@ -103,10 +109,6 @@
         </div>
     </div>
 
-
-    <!-- JS do Leaflet -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
     <!-- scripts -->
     <script src="../home/js/logout.js"></script>
     <script src="../home/js/main.js"></script>
@@ -116,13 +118,17 @@
     <script src="../home/js/reserva.js"></script>
     <script src="../home/js/validacao_reserva.js"></script>
 
-
     <!-- Forçar renderização das reservas no mapa -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             renderizarReservas();
         });
     </script>
-</body>
 
+    <!-- Google Maps API (adicione sua chave aqui) -->
+    <script async
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY&callback=initMap&libraries=places">
+</script>
+
+</body>
 </html>
