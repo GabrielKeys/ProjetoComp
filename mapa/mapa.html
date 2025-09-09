@@ -2,87 +2,102 @@
 <html lang="pt-BR">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VW Carregamento - Mapa</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VW Carregamento - Mapa</title>
 
-  <!-- CSS do Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- CSS do Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
-  <!-- Estilos do projeto -->
-  <link rel="stylesheet" href="../home/css/reset.css">
-  <link rel="stylesheet" href="../home/css/sidebar.css">
-  <link rel="stylesheet" href="../home/css/layout.css">
-  <link rel="stylesheet" href="mapa.css">
+    <!-- Estilos do projeto -->
+    <link rel="stylesheet" href="../home/css/reset.css">
+    <link rel="stylesheet" href="../home/css/sidebar.css">
+    <link rel="stylesheet" href="../home/css/layout.css">
+    <link rel="stylesheet" href="mapa.css">
+    <link rel="stylesheet" href="../home/css/modal.css">
+
 </head>
 
 <body>
-  <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <h2>VoltWay</h2>
-      <nav>
-        <a href="../home/home.html">Início</a>
-        <a href="../mapa/mapa.html" class="active">Mapa</a>
-        <a href="../assinatura/assinatura.html">Assinatura</a>
-        <a href="../perfil/perfil.html">Perfil</a>
-      </nav>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>VoltWay</h2>
+            <nav>
+                <a href="../home/home.html">Início</a>
+                <a href="../mapa/mapa.html" class="active">Mapa</a>
+                <a href="../assinatura/assinatura.html">Assinatura</a>
+                <a href="../perfil/perfil.html">Perfil</a>
+            </nav>
 
-      <div class="user-box">
-        <p id="nomeUsuario"></p>
-        <button class="logout-btn" onclick="logout()">Sair</button>
-      </div>
-    </aside>
+            <div class="user-box">
+                <p id="nomeUsuario"></p>
+                <button class="logout-btn" onclick="logout()">Sair</button>
+            </div>
+        </aside>
 
-    <!-- Conteúdo principal -->
-    <main class="main">
+        <!-- Conteúdo principal -->
+        <main class="main">
 
-      <!-- Cabeçalho do mapa -->
-      <div class="mapa-header">
-        <div class="titulo">
-          <h2>Mapa das Estações</h2>
-          <p>Veja as estações de recarga próximas.</p>
+            <!-- Cabeçalho do mapa -->
+            <div class="mapa-header">
+                <div class="titulo">
+                    <h2>Mapa das Estações</h2>
+                    <p>Veja as estações de recarga próximas.</p>
+                </div>
+
+                <!-- Filtro -->
+                <label class="filtro-label">
+                    <input type="checkbox" id="filtroRecarga" checked>
+                    Mostrar apenas locais com recarregamento de veículos
+                </label>
+            </div>
+
+            <!-- Mapa Leaflet -->
+            <div id="map"></div>
+
+            <!-- Próxima Reserva (Mapa) -->
+            <section class="card next-reservation" id="proximaReservaCardMapa">
+                <div>
+                    <h2>Próxima Reserva</h2>
+                    <p id="textoReservaMapa">Nenhuma reserva agendada.</p>
+                </div>
+                <div id="listaReservasMapa"></div>
+            </section>
+
+            <!-- Botão de detalhes -->
+            <button class="btn" id="btnDetalhesReservaMapa" style="display:none;">Ver Detalhes</button>
+
+        </main>
+    </div>
+
+    <!-- Modal de detalhes da reserva -->
+    <div id="detalhesModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeDetalhes">&times;</span>
+            <h3>Detalhes das Reservas</h3>
+            <div id="detalhesReserva"></div>
         </div>
+    </div>
 
-        <!-- Filtro -->
-        <label class="filtro-label">
-          <input type="checkbox" id="filtroRecarga" checked>
-          Mostrar apenas locais com recarregamento de veículos
-        </label>
-      </div>
 
-      <!-- Mapa Leaflet -->
-      <div id="map"></div>
+    <!-- JS do Leaflet -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-      <!-- Próxima Reserva (Mapa) -->
-      <section class="card next-reservation" id="proximaReservaCardMapa">
-        <div>
-          <h2>Próxima Reserva</h2>
-          <p id="textoReservaMapa">Nenhuma reserva agendada.</p>
-        </div>
-        <div id="listaReservasMapa"></div>
-      </section>
-      <button class="btn" id="btnDetalhesReservaMapa" style="display:none;">Ver Detalhes</button>
+    <!-- scripts -->
+    <script src="../home/js/logout.js"></script>
+    <script src="../home/js/main.js"></script>
+    <script src="mapa.js"></script>
+    <script src="estacoes.js"></script>
+    <script src="../FuncoesGlobais.js"></script>
+    <script src="../home/js/reserva.js"></script>
 
-    </main>
-  </div>
-
-  <!-- JS do Leaflet -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-  <!-- scripts -->
-  <script src="../home/js/logout.js"></script>
-  <script src="../home/js/main.js"></script>
-  <script src="../FuncoesGlobais.js"></script>
-  <script src="../home/js/reserva.js"></script>
-  <script src="mapa.js"></script>
-
-  <!-- Forçar renderização das reservas no mapa -->
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      renderizarReservas();
-    });
-  </script>
+    <!-- Forçar renderização das reservas no mapa -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderizarReservas();
+        });
+    </script>
 </body>
 
 </html>

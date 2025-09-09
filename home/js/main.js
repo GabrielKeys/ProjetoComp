@@ -1,3 +1,6 @@
+// ====================================
+// Verificação de login
+// ====================================
 document.addEventListener("DOMContentLoaded", () => {
   const logado = localStorage.getItem("logado");
   const usuario = localStorage.getItem("usuario");
@@ -12,56 +15,62 @@ document.addEventListener("DOMContentLoaded", () => {
   const nomeUsuario = document.getElementById("nomeUsuario");
   if (nomeUsuario) {
     nomeUsuario.innerHTML = `
-  <span class="online-dot"></span> ${nomeFormatado}
-  <button id="gearBtn" class="settings-icon" title="Configurações">
-    <img src="../assets/engrenagem.png" alt="Configurações" />
-  </button>
-`;
+      <span class="online-dot"></span> ${nomeFormatado}
+      <button id="gearBtn" class="settings-icon" title="Configurações">
+        <img src="../assets/engrenagem.png" alt="Configurações" />
+      </button>
+    `;
   }
 
   // Atualizar estação na carga inicial
   atualizarEstacao();
 
-  // Evento do botão "Ver Detalhes"
-  const btnDetalhes = document.getElementById("btnDetalhesReserva");
+  // ====================================
+  // Modal de Detalhes das Reservas
+  // ====================================
+  const btnDetalhesHome = document.getElementById("btnDetalhesReserva");
+  const btnDetalhesMapa = document.getElementById("btnDetalhesReservaMapa");
+
   const detalhesModal = document.getElementById("detalhesModal");
   const detalhesReserva = document.getElementById("detalhesReserva");
   const closeDetalhes = document.getElementById("closeDetalhes");
 
-  if (btnDetalhes) {
-    btnDetalhes.addEventListener("click", () => {
-      const reservas = carregarReservas();
-      if (!reservas || reservas.length === 0) {
-        alert("Nenhuma reserva encontrada.");
-        return;
-      }
+  function abrirModalDetalhes() {
+    const reservas = carregarReservas();
+    if (!reservas || reservas.length === 0) {
+      mostrarMensagem("Nenhuma reserva encontrada!", "aviso");
+      return;
+    }
 
-      // Monta HTML com botão "Cancelar"
-      detalhesReserva.innerHTML = reservas.map((r, i) => `
-  <p>
-    <strong>${i + 1}.</strong> ${r.data} às ${r.hora} - ${r.estacao}
-    <button class="btn-cancelar" data-index="${i}">Cancelar</button>
-  </p>
-`).join("");
+    // Monta HTML com botão "Cancelar"
+    detalhesReserva.innerHTML = reservas.map((r, i) => `
+      <p>
+        <strong>${i + 1}.</strong> ${r.data} às ${r.hora} - ${r.estacao}
+        <button class="btn-cancelar" data-index="${i}">Cancelar</button>
+      </p>
+    `).join("");
 
-      // Adiciona evento aos botões "Cancelar"
-      document.querySelectorAll(".btn-cancelar").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          const index = e.target.getAttribute("data-index");
-          if (confirm("Tem certeza que deseja cancelar esta reserva?")) {
-            let reservas = carregarReservas();
-            reservas.splice(index, 1); // remove a reserva
-            salvarReservas(reservas);  // atualiza no localStorage
-            renderizarReservas();      // atualiza lista na tela
-            detalhesModal.style.display = "none"; // fecha modal
-          }
-        });
+    if (detalhesModal) detalhesModal.style.display = "flex";
+
+    // Eventos de cancelar
+    document.querySelectorAll(".btn-cancelar").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const index = parseInt(e.target.getAttribute("data-index"), 10);
+        if (confirm("Tem certeza que deseja cancelar esta reserva?")) {
+          let reservas = carregarReservas();
+          reservas.splice(index, 1); // remove a reserva
+          salvarReservas(reservas);
+          renderizarReservas();
+          detalhesModal.style.display = "none";
+          mostrarMensagem("❌ Reserva cancelada com sucesso.", "erro");
+        }
       });
-
-      // Mostra modal
-      detalhesModal.style.display = "flex";
     });
   }
+
+  // Eventos para abrir modal (Home e Mapa)
+  if (btnDetalhesHome) btnDetalhesHome.addEventListener("click", abrirModalDetalhes);
+  if (btnDetalhesMapa) btnDetalhesMapa.addEventListener("click", abrirModalDetalhes);
 
   // Fecha modal no X
   if (closeDetalhes) {
@@ -78,7 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ---- Sistema de mensagens customizadas ----
+// ====================================
+// Sistema de mensagens customizadas
+// ====================================
 function mostrarMensagem(texto, tipo = "aviso") {
   // cria container se não existir
   let container = document.getElementById("mensagensContainer");

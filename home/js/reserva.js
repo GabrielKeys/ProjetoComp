@@ -1,4 +1,6 @@
-// ---- Atualizar estatísticas da estação ----
+// ====================================
+// Atualizar estatísticas da estação
+// ====================================
 function atualizarEstacao() {
   const usuarioAtual = localStorage.getItem("usuario");
   const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
@@ -10,21 +12,23 @@ function atualizarEstacao() {
   const btnAgendar = document.getElementById("btnAgendar");
 
   if (estacao) {
-    statPotencia.textContent = estacao.potencia || "--";
-    statEspera.textContent = estacao.tempoEspera || "--";
-    statDisponibilidade.textContent = `${estacao.abertura} - ${estacao.fechamento}`;
-    stationMsg.textContent = `Estação selecionada: ${estacao.nome}`;
+    if (statPotencia) statPotencia.textContent = estacao.potencia || "--";
+    if (statEspera) statEspera.textContent = estacao.tempoEspera || "--";
+    if (statDisponibilidade) statDisponibilidade.textContent = `${estacao.abertura} - ${estacao.fechamento}`;
+    if (stationMsg) stationMsg.textContent = `Estação selecionada: ${estacao.nome}`;
     if (btnAgendar) btnAgendar.disabled = false;
   } else {
-    statPotencia.textContent = "--";
-    statEspera.textContent = "--";
-    statDisponibilidade.textContent = "--";
-    stationMsg.textContent = "Nenhuma estação de recarga selecionada.";
+    if (statPotencia) statPotencia.textContent = "--";
+    if (statEspera) statEspera.textContent = "--";
+    if (statDisponibilidade) statDisponibilidade.textContent = "--";
+    if (stationMsg) stationMsg.textContent = "Nenhuma estação de recarga selecionada.";
     if (btnAgendar) btnAgendar.disabled = true;
   }
 }
 
-// ---- Modal e seleção de estação ----
+// ====================================
+// Modal de Seleção de Estação
+// ====================================
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioAtual = localStorage.getItem("usuario");
   const btnSelecionar = document.getElementById("btnSelecionarEstacao");
@@ -47,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Selecionar estação
         li.addEventListener("click", () => {
           localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
-          modal.style.display = "none";
+          if (modal) modal.style.display = "none";
           atualizarEstacao();
         });
 
@@ -61,20 +65,17 @@ document.addEventListener("DOMContentLoaded", () => {
           e.stopPropagation(); // impede selecionar estação
           favoritos.splice(index, 1);
           localStorage.setItem(chaveFavoritos, JSON.stringify(favoritos));
-          mostrarMensagem(`❌ ${estacao.nome} removida dos favoritos.`, "erro");
           li.remove();
+          mostrarMensagem(`❌ ${estacao.nome} removida dos favoritos.`, "erro");
 
           const selecionada = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
           if (selecionada && selecionada.nome === estacao.nome) {
             localStorage.removeItem(`estacaoSelecionada_${usuarioAtual}`);
           }
-
           atualizarEstacao();
 
           if (favoritos.length === 0) {
             listaEstacoes.innerHTML = "<li>Nenhuma estação favoritada ainda.</li>";
-            localStorage.removeItem(`estacaoSelecionada_${usuarioAtual}`);
-            atualizarEstacao();
           }
         });
 
@@ -86,13 +87,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnSelecionar) {
     btnSelecionar.addEventListener("click", () => {
-      modal.style.display = "flex";
+      if (modal) modal.style.display = "flex";
     });
   }
 
   if (closeBtn) {
     closeBtn.addEventListener("click", () => {
-      modal.style.display = "none";
+      if (modal) modal.style.display = "none";
     });
   }
 
@@ -101,7 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ---- Modal de Agendamento ----
+// ====================================
+// Modal de Agendamento
+// ====================================
 document.addEventListener("DOMContentLoaded", () => {
   const btnAgendar = document.getElementById("btnAgendar");
   const agendamentoModal = document.getElementById("agendamentoModal");
@@ -109,13 +112,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnAgendar) {
     btnAgendar.addEventListener("click", () => {
-      agendamentoModal.style.display = "flex";
+      if (agendamentoModal) agendamentoModal.style.display = "flex";
     });
   }
 
   closeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
-      agendamentoModal.style.display = "none";
+      if (agendamentoModal) agendamentoModal.style.display = "none";
     });
   });
 
@@ -124,7 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ---- Funções de reservas ----
+// ====================================
+// Funções de Reservas
+// ====================================
 function carregarReservas() {
   const usuario = localStorage.getItem("usuario");
   return JSON.parse(localStorage.getItem(`reservas_${usuario}`)) || [];
@@ -193,81 +198,50 @@ function renderizarReservas() {
   if (btnDetalhesMapa) btnDetalhesMapa.style.display = "inline-block";
 }
 
-
-// ---- Confirmar nova reserva ----
-document.getElementById("formAgendamento").addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const data = document.getElementById("dataReserva").value;
-  const hora = document.getElementById("horaReserva").value;
-  const usuarioAtual = localStorage.getItem("usuario");
-  const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
-
-  if (!data || !hora || !estacao) {
-    mostrarMensagem("❌ Selecione estação, data e horário!", "erro");
-    return;
-  }
-
-  const reservas = carregarReservas();
-
-  // ✅ validar disponibilidade antes de salvar
-  const resultado = validarDisponibilidade(estacao, data, hora, reservas);
-  if (!resultado.disponivel) {
-    mostrarMensagem("❌ " + resultado.mensagem, "erro");
-    return;
-  }
-
-  reservas.push({ estacao: estacao.nome, data, hora });
-  salvarReservas(reservas);
-  renderizarReservas();
-
-  document.getElementById("agendamentoModal").style.display = "none";
-  mostrarMensagem("✅ Reserva realizada com sucesso!", "sucesso");
-});
-
-// ---- Detalhes da reserva ----
-const modalDetalhes = document.getElementById("detalhesModal");
-const closeDetalhes = document.getElementById("closeDetalhes");
-const detalhesReserva = document.getElementById("detalhesReserva");
-
-function abrirDetalhesReserva() {
-  const reservas = carregarReservas();
-  if (reservas.length === 0) {
-    mostrarMensagem("Nenhuma reserva encontrada!", "aviso");
-    return;
-  }
-
-  const primeira = reservas[0];
-  detalhesReserva.innerHTML = `
-    <p><strong>Estação:</strong> ${primeira.estacao}</p>
-    <p><strong>Data:</strong> ${primeira.data}</p>
-    <p><strong>Horário:</strong> ${primeira.hora}</p>
-  `;
-  modalDetalhes.style.display = "flex";
-}
-
-const btnDetalhes = document.getElementById("btnDetalhesReserva");
-if (btnDetalhes) btnDetalhes.addEventListener("click", abrirDetalhesReserva);
-
-const btnDetalhesMapa = document.getElementById("btnDetalhesReservaMapa");
-if (btnDetalhesMapa) btnDetalhesMapa.addEventListener("click", abrirDetalhesReserva);
-
-if (closeDetalhes) {
-  closeDetalhes.addEventListener("click", () => {
-    modalDetalhes.style.display = "none";
-  });
-}
-
-window.addEventListener("click", (e) => {
-  if (e.target === modalDetalhes) {
-    modalDetalhes.style.display = "none";
-  }
-});
-
-
-// ---- Inicialização automática ----
+// ====================================
+// Confirmar Nova Reserva
+// ====================================
 document.addEventListener("DOMContentLoaded", () => {
-  atualizarEstacao();     // garante que mostra a estação selecionada (se houver)
-  renderizarReservas();   // carrega reservas tanto no home quanto no mapa
+  const formAgendamento = document.getElementById("formAgendamento");
+  if (!formAgendamento) return;
+
+  formAgendamento.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const data = document.getElementById("dataReserva").value;
+    const hora = document.getElementById("horaReserva").value;
+    const usuarioAtual = localStorage.getItem("usuario");
+    const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
+
+    if (!data || !hora || !estacao) {
+      mostrarMensagem("❌ Selecione estação, data e horário!", "erro");
+      return;
+    }
+
+    const reservas = carregarReservas();
+
+    // ✅ validar disponibilidade antes de salvar
+    const resultado = validarDisponibilidade(estacao, data, hora, reservas);
+    if (!resultado.disponivel) {
+      mostrarMensagem("❌ " + resultado.mensagem, "erro");
+      return;
+    }
+
+    reservas.push({ estacao: estacao.nome, data, hora });
+    salvarReservas(reservas);
+    renderizarReservas();
+
+    const agendamentoModal = document.getElementById("agendamentoModal");
+    if (agendamentoModal) agendamentoModal.style.display = "none";
+
+    mostrarMensagem("✅ Reserva realizada com sucesso!", "sucesso");
+  });
 });
 
+// ====================================
+// Inicialização Automática
+// ====================================
+document.addEventListener("DOMContentLoaded", () => {
+  atualizarEstacao();
+  renderizarReservas();
+});
