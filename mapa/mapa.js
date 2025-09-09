@@ -126,7 +126,7 @@ function carregarEstacoes() {
         const jaFavorito = favoritos.some(fav => fav.nome === estacao.nome);
 
         // ===============================
-        // Popup com estrela customizada
+        // Popup com Reservar + Favoritar
         // ===============================
         marker.bindPopup(`
   <div class="popup-conteudo">
@@ -136,10 +136,59 @@ function carregarEstacoes() {
     Potência: ${estacao.potencia}<br>
     Tempo de Espera: ${estacao.tempoEspera}<br>
     Horário: ${estacao.abertura} - ${estacao.fechamento}
-    <span class="estrela ${jaFavorito ? "favorita" : ""}" onclick="toggleFavorito('${estacao.nome}', this)"></span>
+    <div class="popup-footer">
+      <button class="btn-reservar" data-estacao='${JSON.stringify(estacao)}'>Reservar</button>
+      <span class="estrela ${jaFavorito ? "favorita" : ""}" onclick="toggleFavorito('${estacao.nome}', this)"></span>
+    </div>
   </div>
 `);
 
+        // Quando o popup abrir, adiciona evento ao botão
+        marker.on("popupopen", (e) => {
+          const btn = document.querySelector(".btn-reservar");
+          if (btn) {
+            btn.addEventListener("click", () => {
+              abrirAgendamento(estacao);
+            });
+          }
+        });
+
+        function abrirAgendamento(estacao) {
+          const usuarioAtual = localStorage.getItem("usuario");
+          localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
+
+          const agendamentoModal = document.getElementById("agendamentoModal");
+          if (agendamentoModal) {
+            agendamentoModal.style.display = "flex";
+          } else {
+            mostrarMensagem("⚠️ Modal de agendamento não encontrado!", "erro");
+          }
+
+          atualizarEstacao(); // garante que o painel mostre a estação selecionada
+        }
+
+
+        // ===============================
+        // Evento do botão Reservar
+        // ===============================
+        marker.on("popupopen", (e) => {
+          const btn = e.popup._contentNode.querySelector(".btn-reservar");
+          if (btn) {
+            btn.addEventListener("click", () => {
+              const estacao = JSON.parse(btn.getAttribute("data-estacao"));
+              const usuarioAtual = localStorage.getItem("usuario");
+
+              // salva estação selecionada
+              localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
+
+              // abre modal de agendamento (o reserva.js já trata o submit)
+              const agendamentoModal = document.getElementById("agendamentoModal");
+              if (agendamentoModal) agendamentoModal.style.display = "flex";
+
+              atualizarEstacao(); // atualiza painel lateral
+            });
+          }
+        });
 
         marker.addTo(map);
         carregadores.push(marker);
@@ -202,4 +251,3 @@ function configurarFiltro() {
     }
   });
 }
-

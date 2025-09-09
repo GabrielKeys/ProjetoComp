@@ -1,66 +1,38 @@
-/* Função: Estilização do cabeçalho superior da home (logo, título, estatísticas e ícone de configurações). */
-/* Header e estatísticas */
-.header {
-  background: #052c65;
-  color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  margin-bottom: 20px;
+  /* Função: Estilização do cabeçalho superior da home (logo, título, estatísticas e ícone de configurações). */
+  /* Header e estatísticas */
+  .stat {
+    background: #0a3d91;
+    padding: 10px 15px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 100px;
+  }
 
-  display: flex;               
-  align-items: center;         
-  justify-content: space-between; 
-  gap: 20px;                   
-}
+  .stat strong {
+    display: block;
+    font-size: 1.1rem;
+  }
 
-.header-left { flex: 1; }
-.stats {
-  display: flex;
-  gap: 15px;
-  flex: 2;  
-}
+  /* Botões principais */
+  button#btnSelecionarEstacao,
+  button#btnAgendar {
+    margin-top: 15px;
+    background: #007bff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+  }
 
-.header-top {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
+  button#btnSelecionarEstacao:hover,
+  button#btnAgendar:hover {
+    background: #0056b3;
+  }
 
-.header-logo { width: 50px; height: 50px; }
-.header-text h1 { font-size: 1.3rem; margin: 0; }
-.header-text p { margin: 5px 0 15px; font-size: 0.9rem; }
+  button#btnAgendar:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
 
-.stat {
-  background: #0a3d91;
-  padding: 10px 15px;
-  border-radius: 8px;
-  text-align: center;
-  min-width: 100px;
-}
-
-.stat strong {
-  display: block;
-  font-size: 1.1rem;
-}
-
-/* Botões principais */
-button#btnSelecionarEstacao,
-button#btnAgendar {
-  margin-top: 15px;
-  background: #007bff;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
-}
-
-button#btnSelecionarEstacao:hover,
-button#btnAgendar:hover {
-  background: #0056b3;
-}
-
-button#btnAgendar:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
+  

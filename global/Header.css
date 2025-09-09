@@ -1,0 +1,30 @@
+/* Header estilizado */
+.header {
+  background: #052c65;
+  color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+
+  display: flex;               
+  align-items: center;         
+  justify-content: space-between; 
+  gap: 20px;                   
+}
+
+.header-left { flex: 1; }
+.stats {
+  display: flex;
+  gap: 15px;
+  flex: 2;  
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-logo{ width: 50px; height: 50px; }
+.header-text h1 { font-size: 1.3rem; margin: 0; }
+.header-text p { margin: 5px 0 15px; font-size: 0.9rem; }
