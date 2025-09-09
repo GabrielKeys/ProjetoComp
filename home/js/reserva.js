@@ -137,34 +137,62 @@ function salvarReservas(reservas) {
 
 function renderizarReservas() {
   const reservas = carregarReservas();
+
+  // Home
   const textoReserva = document.getElementById("textoReserva");
   const lista = document.getElementById("listaReservas");
 
+  // Mapa
+  const textoReservaMapa = document.getElementById("textoReservaMapa");
+  const listaMapa = document.getElementById("listaReservasMapa");
+
   if (reservas.length === 0) {
-    textoReserva.textContent = "Nenhuma reserva agendada.";
-    lista.innerHTML = "";
+    if (textoReserva) textoReserva.textContent = "Nenhuma reserva agendada.";
+    if (lista) lista.innerHTML = "";
+    if (textoReservaMapa) textoReservaMapa.textContent = "Nenhuma reserva agendada.";
+    if (listaMapa) listaMapa.innerHTML = "";
     return;
   }
 
   const primeira = reservas[0];
-  textoReserva.innerHTML = `
+  const reservaHtml = `
     <strong>Próxima Reserva</strong>
     <p>Estação: ${primeira.estacao}</p>
     <p>Data: ${primeira.data}</p>
     <p>Horário: ${primeira.hora}</p>
   `;
 
-  lista.innerHTML = "";
-  reservas.slice(1).forEach(r => {
-    const div = document.createElement("div");
-    div.classList.add("reserva-item");
-    div.innerHTML = `<p><strong>${r.estacao}</strong> - ${r.data} ${r.hora}</p>`;
-    lista.appendChild(div);
-  });
+  if (textoReserva) textoReserva.innerHTML = reservaHtml;
+  if (textoReservaMapa) textoReservaMapa.innerHTML = reservaHtml;
 
+  if (lista) {
+    lista.innerHTML = "";
+    reservas.slice(1).forEach(r => {
+      const div = document.createElement("div");
+      div.classList.add("reserva-item");
+      div.innerHTML = `<p><strong>${r.estacao}</strong> - ${r.data} ${r.hora}</p>`;
+      lista.appendChild(div);
+    });
+  }
+
+  if (listaMapa) {
+    listaMapa.innerHTML = "";
+    reservas.slice(1).forEach(r => {
+      const div = document.createElement("div");
+      div.classList.add("reserva-item");
+      div.innerHTML = `<p><strong>${r.estacao}</strong> - ${r.data} ${r.hora}</p>`;
+      listaMapa.appendChild(div);
+    });
+  }
+
+  // Botão de detalhes (home e mapa)
   const btnDetalhes = document.getElementById("btnDetalhesReserva");
+  const btnDetalhesMapa = document.getElementById("btnDetalhesReservaMapa");
+
   if (btnDetalhes) btnDetalhes.style.display = "inline-block";
+  if (btnDetalhesMapa) btnDetalhesMapa.style.display = "inline-block";
 }
+
 
 // ---- Confirmar nova reserva ----
 document.getElementById("formAgendamento").addEventListener("submit", (e) => {
@@ -198,12 +226,11 @@ document.getElementById("formAgendamento").addEventListener("submit", (e) => {
 });
 
 // ---- Detalhes da reserva ----
-const btnDetalhes = document.getElementById("btnDetalhesReserva");
 const modalDetalhes = document.getElementById("detalhesModal");
 const closeDetalhes = document.getElementById("closeDetalhes");
 const detalhesReserva = document.getElementById("detalhesReserva");
 
-btnDetalhes.addEventListener("click", () => {
+function abrirDetalhesReserva() {
   const reservas = carregarReservas();
   if (reservas.length === 0) {
     mostrarMensagem("Nenhuma reserva encontrada!", "aviso");
@@ -217,14 +244,30 @@ btnDetalhes.addEventListener("click", () => {
     <p><strong>Horário:</strong> ${primeira.hora}</p>
   `;
   modalDetalhes.style.display = "flex";
-});
+}
 
-closeDetalhes.addEventListener("click", () => {
-  modalDetalhes.style.display = "none";
-});
+const btnDetalhes = document.getElementById("btnDetalhesReserva");
+if (btnDetalhes) btnDetalhes.addEventListener("click", abrirDetalhesReserva);
+
+const btnDetalhesMapa = document.getElementById("btnDetalhesReservaMapa");
+if (btnDetalhesMapa) btnDetalhesMapa.addEventListener("click", abrirDetalhesReserva);
+
+if (closeDetalhes) {
+  closeDetalhes.addEventListener("click", () => {
+    modalDetalhes.style.display = "none";
+  });
+}
 
 window.addEventListener("click", (e) => {
   if (e.target === modalDetalhes) {
     modalDetalhes.style.display = "none";
   }
 });
+
+
+// ---- Inicialização automática ----
+document.addEventListener("DOMContentLoaded", () => {
+  atualizarEstacao();     // garante que mostra a estação selecionada (se houver)
+  renderizarReservas();   // carrega reservas tanto no home quanto no mapa
+});
+
