@@ -85,10 +85,12 @@ function initMap() {
           map: map,
           title: "Você está aqui",
           icon: {
-            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-            scaledSize: new google.maps.Size(32, 32),
+            url: "../assets/carro-icone.png",
+            scaledSize: new google.maps.Size(60, 60), // tamanho ajustável
+            anchor: new google.maps.Point(25, 50) // x=metade, y=altura (base do carro)
           },
         });
+
 
         console.log("📍 Localização encontrada:", userLocation);
         mostrarMensagem("📍 Localização encontrada!", "sucesso", true);
