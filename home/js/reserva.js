@@ -144,6 +144,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function salvarFavoritosEFechar() {
     salvarFavoritos();
+
+    // 🔹 Se não sobrou nenhuma favorita → limpa a estação selecionada
+    if (favoritos.length === 0) {
+      localStorage.removeItem(`estacaoSelecionada_${usuarioAtual}`);
+    }
+
     if (modal) modal.style.display = "none";
     if (typeof atualizarEstacao === "function") atualizarEstacao();
   }
@@ -173,7 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === modal) salvarFavoritosEFechar();
   });
 
-  renderizarLista();
 });
 
 // ====================================
