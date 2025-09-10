@@ -2,47 +2,106 @@
 <html lang="pt-BR">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VW Carregamento - Assinatura</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VW Carregamento - Assinatura</title>
 
-    <!-- Estilos do projeto -->
-    <link rel="stylesheet" href="../home/css/reset.css">
-    <link rel="stylesheet" href="../global/Sidebar.css">
-    <link rel="stylesheet" href="../home/css/layout.css">
-    <link rel="stylesheet" href="../global/Header.css">
+  <!-- Estilos do projeto -->
+  <link rel="stylesheet" href="../home/css/reset.css">
+  <link rel="stylesheet" href="../global/Sidebar.css">
+  <link rel="stylesheet" href="../home/css/layout.css">
+  <link rel="stylesheet" href="../global/Header.css">
+  <link rel="stylesheet" href="assinatura.css">
 </head>
 
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <h2>VoltWay</h2>
-            <nav>
-                <a href="../home/home.html">Início</a>
-                <a href="../mapa/mapa.html">Mapa</a>
-                <a href="../assinatura/assinatura.html" class="active">Assinatura</a>
-                <a href="../perfil/perfil.html">Perfil</a>
-            </nav>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2>VoltWay</h2>
+      <nav>
+        <a href="../home/home.html">Início</a>
+        <a href="../mapa/mapa.html">Mapa</a>
+        <a href="../assinatura/assinatura.html" class="active">Assinatura</a>
+        <a href="../perfil/perfil.html">Perfil</a>
+      </nav>
 
-            <div class="user-box">
-                <p id="nomeUsuario"></p>
-                <button class="logout-btn" onclick="logout()">Sair</button>
-            </div>
-        </aside>
+      <div class="user-box">
+        <p id="nomeUsuario">Usuário Exemplo</p>
+        <button class="logout-btn" onclick="logout()">Sair</button>
+      </div>
+    </aside>
 
-        <!-- Conteúdo principal -->
-        <main class="main">            
-                <!-- Cabeçalho   -->
-            <section class="header">
-                <div class="header-top">
-                    <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+    <!-- Conteúdo principal -->
+    <main class="main">
+      <!-- Cabeçalho -->
+      <section class="header">
+        <div class="header-top">
+          <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+          <div class="header-text">
+            <h1>Planos de Assinatura</h1>
+            <p>Escolha o melhor plano para você e aproveite todos os benefícios exclusivos.</p>
+          </div>
+        </div>
+      </section>
 
-                    <div class="header-text">
-                        <h1 id="stationTitle">Pagina de Assinatura</h1>
-                        <p>Espaço reservado para planos e benefícios.</p>
-                    </div>
-                </div>
+      <!-- Plano Atual -->
+      <section class="card assinatura-container">
+        <h2>Meu Plano Atual</h2>
+        <p><strong>Gold</strong> - R$29,90/mês</p>
+        <ul>
+          <li>✅ Reservas ilimitadas</li>
+          <li>✅ Suporte Premium</li>
+          <li>✅ Pontos de fidelidade em dobro</li>
+        </ul>
+        <button class="btn">Gerenciar Pagamento</button>
+      </section>
+
+      <!-- Planos disponíveis -->
+      <section class="plans">
+        <div class="card plano">
+          <h2>Plano Free</h2>
+          <p><strong>Gratuito</strong></p>
+          <p>Acesso básico ao app e funcionalidades limitadas.</p>
+          <ul>
+            <li>❌ Reservas ilimitadas</li>
+            <li>❌ Suporte Premium</li>
+            <li>❌ Pontos extras</li>
+          </ul>
+          <button class="btn">Selecionar</button>
+        </div>
+
+        <div class="card plano">
+          <h2>Plano Gold</h2>
+          <p><strong>R$29,90/mês</strong></p>
+          <p>Reservas ilimitadas, suporte premium e mais pontos de fidelidade.</p>
+          <ul>
+            <li>✅ Reservas ilimitadas</li>
+            <li>✅ Suporte Premium</li>
+            <li>✅ Pontos em dobro</li>
+          </ul>
+          <button class="btn">Selecionar</button>
+        </div>
+
+        <div class="card plano">
+          <h2>Plano Platinum</h2>
+          <p><strong>R$59,90/mês</strong></p>
+          <p>Todas as vantagens do Gold + descontos exclusivos em recargas.</p>
+          <ul>
+            <li>✅ Acesso Gold</li>
+            <li>✅ Descontos em recargas</li>
+            <li>✅ Acesso antecipado a novidades</li>
+          </ul>
+          <button class="btn">Selecionar</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- scripts -->
+  <script src="../home/js/logout.js"></script>
+  <script src="../home/js/main.js"></script>
+  <script src="../global/Global.js"></script>
+
 </body>
-
 </html>

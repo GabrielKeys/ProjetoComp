@@ -148,14 +148,30 @@
     </main>
   </div>
 
-  <!-- Modal de detalhes da reserva -->
-  <div id="detalhesModal" class="modal">
+  <!-- Modal de Detalhes de Reservas -->
+  <div id="detalhesReservaModal" class="modal">
     <div class="modal-content">
-      <span class="close" id="closeDetalhes">&times;</span>
-      <h3>Detalhes das Reservas</h3>
-      <div id="detalhesReserva"></div>
+      <span class="close">&times;</span>
+      <h3>Minhas Reservas</h3>
+      <ul id="listaDetalhesReservas"></ul>
     </div>
   </div>
+
+  <!-- Modal de Confirmação de Cancelamento -->
+  <div id="confirmarCancelamentoModal" class="modal">
+    <div class="modal-content">
+      <h3>Cancelar Reserva</h3>
+      <p>Tem certeza que deseja cancelar esta reserva?</p>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+        <button id="btnCancelarConfirmar" class="btn-cancelar-reserva">Sim, Cancelar</button>
+        <button id="btnCancelarFechar" class="btn">Não</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Google Pay API -->
+  <script async src="https://pay.google.com/gp/p/js/pay.js"></script>
+
 
   <!-- Scripts no final -->
   <script src="js/logout.js"></script>
@@ -164,6 +180,8 @@
   <script src="js/veiculo.js"></script>
   <script src="js/carteira.js"></script>
   <script src="js/main.js"></script>
+  <script src="../global/Global.js"></script>
+
 </body>
 
 </html>

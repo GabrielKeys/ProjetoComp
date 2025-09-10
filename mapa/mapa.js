@@ -14,8 +14,6 @@ function initMap() {
     streetViewControl: true,
     fullscreenControl: true,
     gestureHandling: "greedy",
-
-    // Estilo para esconder apenas POIs desnecessários
     styles: [
       { featureType: "poi", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
       { featureType: "poi.business", stylers: [{ visibility: "off" }] },
@@ -40,6 +38,8 @@ function initMap() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const precisao = pos.coords.accuracy; // 🔹 metros
+
         map.setCenter(userLocation);
         map.setZoom(15);
 
@@ -55,22 +55,46 @@ function initMap() {
           },
         });
 
-        console.log("📍 Localização encontrada:", userLocation);
-        mostrarMensagem("📍 Localização encontrada!", "sucesso", true);
+        console.log("📍 Localização encontrada:", userLocation, "Precisão:", precisao);
+
+        // ===============================
+        // Mensagem adaptada conforme precisão
+        // ===============================
+        if (precisao <= 50) {
+          mostrarMensagem(
+            `📍 Localização encontrada (precisão: ${Math.round(precisao)}m)`,
+            "sucesso"
+          );
+        } else if (precisao <= 200) {
+          mostrarMensagem(
+            `📍 Localização aproximada (precisão: ${Math.round(precisao)}m)`,
+            "aviso"
+          );
+        } else {
+          mostrarMensagem(
+            `⚠️ Localização imprecisa (precisão: ${Math.round(precisao)}m)`,
+            "erro"
+          );
+        }
 
         // 3. carrega reais depois de 1,5s
         setTimeout(() => carregarEstacoesReais(userLocation), 1500);
       },
-      () => {
-        mostrarMensagem("⚠️ Não foi possível obter sua localização. Usando fallback.", "erro", true);
+      (err) => {
+        console.error(err);
+        mostrarMensagem("Não foi possível obter sua localização precisa.", "erro");
         const fallback = { lat: -23.5505, lng: -46.6333 };
         map.setCenter(fallback);
         setTimeout(() => carregarEstacoesReais(fallback), 1500);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0,
+      }
     );
   } else {
-    mostrarMensagem("⚠️ Geolocalização não suportada.", "erro", true);
+    mostrarMensagem("Geolocalização não suportada no seu navegador.", "erro");
     const fallback = { lat: -23.5505, lng: -46.6333 };
     map.setCenter(fallback);
     setTimeout(() => carregarEstacoesReais(fallback), 1500);
@@ -91,6 +115,8 @@ function initMap() {
     });
   }
 }
+
+
 
 // ===============================
 // Carregar estações registradas (fictícias do app)
@@ -264,3 +290,13 @@ function mostrarMensagem(texto, tipo, evitarDuplicado = false) {
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 4000);
 }
+
+// Se entrou no perfil com hash, rolar suavemente até a seção
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.location.hash) {
+    const alvo = document.querySelector(window.location.hash);
+    if (alvo) {
+      alvo.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+});

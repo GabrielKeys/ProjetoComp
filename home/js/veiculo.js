@@ -6,15 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnEditar = document.getElementById("btnEditarVeiculo");
 
   // =====================================================
-  // Função principal para abrir a edição do veículo
-  //PROVISÓRIO: Botão da engrenagem (gearBtn) dispara a mesma ação do botão "Editar Veículo"
-  // 🔹 Basta trocar o conteúdo dentro do if (e.target.closest...) no futuro.
+  //  Abrir a edição do veículo
   // =====================================================
-  document.addEventListener("click", (e) => {
-    if (e.target.closest("#gearBtn") && btnEditar) {
-      btnEditar.click();
-    }
-  });
 
   // ---- Renderizar veículo na tela ----
   function renderVehicle() {

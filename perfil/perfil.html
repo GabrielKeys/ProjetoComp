@@ -2,47 +2,125 @@
 <html lang="pt-BR">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VW Carregamento - Perfil</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VW Carregamento - Perfil</title>
 
-    <!-- Estilos do projeto -->
-    <link rel="stylesheet" href="../home/css/reset.css">
-    <link rel="stylesheet" href="../global/Sidebar.css">
-    <link rel="stylesheet" href="../home/css/layout.css">
-    <link rel="stylesheet" href="../global/Header.css">
+  <!-- Estilos do projeto -->
+  <link rel="stylesheet" href="../home/css/reset.css">
+  <link rel="stylesheet" href="../global/Sidebar.css">
+  <link rel="stylesheet" href="../home/css/layout.css">
+  <link rel="stylesheet" href="../global/Header.css">
+  <link rel="stylesheet" href="perfil.css">
 </head>
 
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <h2>VoltWay</h2>
-            <nav>
-                <a href="../home/home.html">Início</a>
-                <a href="../mapa/mapa.html">Mapa</a>
-                <a href="../assinatura/assinatura.html">Assinatura</a>
-                <a href="../perfil/perfil.html" class="active">Perfil</a>
-            </nav>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2>VoltWay</h2>
+      <nav>
+        <a href="../home/home.html">Início</a>
+        <a href="../mapa/mapa.html">Mapa</a>
+        <a href="../assinatura/assinatura.html">Assinatura</a>
+        <a href="../perfil/perfil.html" class="active">Perfil</a>
+      </nav>
 
-            <div class="user-box">
-                <p id="nomeUsuario"></p>
-                <button class="logout-btn" onclick="logout()">Sair</button>
-            </div>
-        </aside>
+      <div class="user-box">
+        <p id="nomeUsuario">Usuário Exemplo</p>
+        <button class="logout-btn" onclick="logout()">Sair</button>
+      </div>
+    </aside>
 
-        <!-- Conteúdo principal -->
-        <main class="main">            
-                <!-- Cabeçalho   -->
-            <section class="header">
-                <div class="header-top">
-                    <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+    <!-- Conteúdo principal -->
+    <main class="main">
+      <!-- Cabeçalho -->
+      <section class="header">
+        <div class="header-top">
+          <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+          <div class="header-text">
+            <h1>Perfil do Usuário</h1>
+            <p>Gerencie suas informações pessoais, veículo e preferências.</p>
+          </div>
+        </div>
+      </section>
 
-                    <div class="header-text">
-                        <h1 id="stationTitle">Pagina de Perfil</h1>
-                        <p>Espaço reservado para informações do usuário.</p>
-                    </div>
-                </div>
+      <!-- Foto do Usuário -->
+      <section class="card perfil-container perfil-foto-container">
+        <div class="perfil-foto">
+          <img src="../assets/foto.png">
+          <button class="btn-upload">Alterar Foto</button>
+        </div>
+      </section>
+
+      <!-- Informações do Usuário -->
+      <section class="card perfil-container">
+        <h2>Informações do Usuário</h2>
+        <p><strong>👤 Nome:</strong> ----</p>
+        <p><strong>Email:</strong> ----</p>
+        <p><strong>Telefone:</strong> ----</p>
+        <p><strong>Plano Atual:</strong> Gold</p>
+        <button class="btn">Editar Perfil</button>
+      </section>
+
+      <!-- Veículo do Usuário -->
+      <section class="card perfil-container">
+        <h2>Meu Veículo</h2>
+        <img src="../assets/carro.png" alt="Veículo do Usuário">
+        <p><strong>Modelo:</strong> ----</p>
+        <p><strong>Ano:</strong> ----</p>
+        <p><strong>Placa:</strong> ----</p>
+        <p><strong>Bateria:</strong> ----</p>
+        <p><strong>Potência de Carga:</strong> ----</p>
+        <button class="btn">Editar Veículo</button>
+      </section>
+
+      <!-- Preferências -->
+      <section class="card perfil-container">
+        <h2>Preferências</h2>
+        <p>Notificações: Ativadas</p>
+        <p>Tema: Claro</p>
+        <p>Localização Automática: Ativada</p>
+        <button class="btn">Alterar Preferências</button>
+      </section>
+
+      <!-- Histórico de Reservas -->
+      <section id="historicoReservas" class="card perfil-container">
+        <h2>Histórico de Reservas</h2>
+        <ul>
+          <li>📍 Estação Av. Paulista - 02/09/2025 - 15:00</li>
+          <li>📍 Estação Shopping Morumbi - 28/08/2025 - 19:30</li>
+          <li>📍 Estação Aeroporto GRU - 20/08/2025 - 10:00</li>
+        </ul>
+        <button class="btn">Ver Mais</button>
+      </section>
+    </main>
+  </div>
+
+  <!-- scripts -->
+  <script src="../home/js/logout.js"></script>
+  <script src="../home/js/main.js"></script>
+  <script src="../global/Global.js"></script>
+
+  <!-- Ação do botão da engrenagem (gearBtn) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const scrollTarget = localStorage.getItem("scrollToPerfilSection");
+      if (scrollTarget) {
+        const alvo = document.getElementById(scrollTarget);
+        if (alvo) {
+          setTimeout(() => {
+            const targetY = alvo.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({ top: targetY, behavior: "smooth" });
+          }, 200); // espera a página renderizar
+        }
+        localStorage.removeItem("scrollToPerfilSection");
+      }
+    });
+  </script>
+
+
+
 </body>
 
 </html>

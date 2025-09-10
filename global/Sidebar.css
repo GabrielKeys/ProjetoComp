@@ -1,30 +1,78 @@
 /* Função: Estilização da barra lateral, incluindo navegação, caixa de usuário e botão de logout. */
 .sidebar {
-  width: 250px; background: #0a2a66; color: white; padding: 20px;
-  display: flex; flex-direction: column; justify-content: space-between;
+  position: fixed;       /* fixa no lado esquerdo */
+  top: 0;
+  left: 0;
+  height: 100vh;         /* ocupa a tela toda */
+  width: 250px;
+  background: #0a2a66;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
 }
-.sidebar h2 { margin-bottom: 20px; }
+
+/* Corrige o deslocamento do conteúdo principal */
+.main {
+  margin-left: 250px;    /* evita que o conteúdo sobreponha a sidebar */
+  padding: 20px;
+}
+
+.sidebar h2 { 
+  margin-bottom: 20px; 
+}
+
 .sidebar nav a {
-  display: block; padding: 10px; margin: 5px 0;
-  color: white; text-decoration: none; border-radius: 6px;
+  display: block;
+  padding: 10px;
+  margin: 5px 0;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
 }
-.sidebar nav a:hover, .sidebar nav .active { background: #123b8b; }
+
+.sidebar nav a:hover, 
+.sidebar nav .active { 
+  background: #123b8b; 
+}
 
 .user-box {
-  background: #123b8b; padding: 10px; border-radius: 6px;
-  text-align: center; font-size: 14px;
+  background: #123b8b;
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
 }
-.badge { padding: 2px 6px; border-radius: 4px; font-size: 12px; }
-.gold { background: gold; color: black; }
+
+.badge { 
+  padding: 2px 6px; 
+  border-radius: 4px; 
+  font-size: 12px; 
+}
+
+.gold { 
+  background: gold; 
+  color: black; 
+}
 
 .logout-btn {
-  margin-top: 10px; padding: 6px 12px;
-  background: #ff4d4d; border: none; color: white;
-  border-radius: 5px; cursor: pointer; width: 100%;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: #ff4d4d;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
 }
-.logout-btn:hover { background: #cc0000; }
 
-/* Botão da engrenagem  */
+.logout-btn:hover { 
+  background: #cc0000; 
+}
+
+/* Botão da engrenagem */
 .settings-icon img {
   margin-left: 8px;
   cursor: pointer;
@@ -32,7 +80,6 @@
   height: 25px !important;
   vertical-align: middle;
   transition: transform 0.2s ease;
-
 }
 
 #gearBtn {
@@ -43,10 +90,10 @@
   cursor: pointer;
 }
 
-
 #gearBtn:hover img {
   transform: rotate(45deg); /* efeito ao passar o mouse */
 }
+
 /* Online dot */
 .online-dot {
   display: inline-block;

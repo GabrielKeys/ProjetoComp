@@ -16,77 +16,115 @@
 }
 
 .modal-content {
-  background: #454444c6;
+  background: #fff; /* base neutra */
   padding: 20px;
   border-radius: 8px;
-  width: 320px;
-  text-align: left;
-  color: #fff;
-}
-
-.modal-content h2,
-.modal-content h3 {
-  margin-top: 0;
-}
-
-.modal-content label {
-  display: block;
-  margin-top: 10px;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 6px;
-  margin-top: 4px;
-  border: none;
-  border-radius: 5px;
-}
-
-/* 🔹 Botões normais dos modais (Confirmar, Agendar etc.) */
-.modal-content button:not(.btn-remover-estacao) {
-  margin-top: 15px;
-  width: 100%;
-  padding: 10px;
-  background: #007BFF;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.modal-content button:not(.btn-remover-estacao):hover {
-  background: #0056b3;
+  width: 360px;
+  max-width: calc(100% - 40px);
+  box-sizing: border-box;
+  position: relative;
 }
 
 .close {
-  float: right;
-  font-size: 18px;
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #555;
   cursor: pointer;
 }
 
-/* 🔹 Lista genérica (outros modais, exceto estações) */
-.modal-content ul {
-  list-style: none;
-  padding: 0;
-}
-
-.modal-content li {
+/* ================================
+   Modal de Agendamento (estilo melhorado)
+================================ */
+#agendamentoModal .modal-content {
+  background: #ffffff;
+  color: #333;
+  padding: 24px;
+  border-radius: 12px;
+  width: 360px;
+  max-width: calc(100% - 40px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   position: relative;
-  padding: 10px 40px 10px 10px;
-  margin: 5px 0;
-  background: #eaeaea;
-  cursor: default;
-  border-radius: 5px;
-  color: rgb(184, 183, 183);
-  text-align: left;
+  box-sizing: border-box;
 }
 
+#agendamentoModal h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #222;
+}
 
-/* 🔹 Modal específico para agendamento */
-#modalReserva .modal-content {
-  background: #fff;
+/* Inputs */
+#agendamentoModal label {
+  display: block;
+  margin: 12px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+}
+
+#agendamentoModal input[type="date"],
+#agendamentoModal input[type="time"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#agendamentoModal input[type="date"]:focus,
+#agendamentoModal input[type="time"]:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+/* Botão Confirmar */
+#agendamentoModal button[type="submit"] {
+  margin-top: 18px;
+  width: 100%;
+  padding: 12px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+#agendamentoModal button[type="submit"]:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+#agendamentoModal button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+/* Botão fechar */
+#agendamentoModal .close {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #555;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#agendamentoModal .close:hover {
   color: #000;
 }
+
 
 /* ================================
    Modal Seleção de Estação
@@ -140,7 +178,7 @@
 ================================ */
 #stationModal .estacao-linha {
   display: flex;
-  align-items: center;   /* 🔹 centraliza tudo na vertical */
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
@@ -152,14 +190,14 @@
   color: #000;
   flex: 1 1 auto;
   margin: 0;
-  line-height: 1.4;  /* 🔹 altura consistente */
+  line-height: 1.4;
   word-break: break-word;
 }
 
 /* Ações (botão + estrela) */
 #stationModal .estacao-acoes {
   display: flex;
-  align-items: center;  /* 🔹 centraliza botão + estrela */
+  align-items: center;
   gap: 10px;
   flex-shrink: 0;
 }
@@ -174,8 +212,6 @@
   font-size: 13px;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(18,59,139,0.12);
-  white-space: nowrap;
-  margin: 0; /* 🔹 remove desalinhamento */
 }
 #stationModal .btn-selecionar-estacao:hover {
   filter: brightness(.95);
@@ -186,14 +222,12 @@
   width: 22px;
   height: 22px;
   display: inline-block;
-  background-image: url("../../assets/estrela.png"); /* caminho */
+  background-image: url("../../assets/estrela.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
   cursor: pointer;
   filter: grayscale(100%) brightness(70%);
-  transition: transform .22s ease, filter .22s ease;
-  flex-shrink: 0;
 }
 #stationModal .estrela-modal:hover {
   transform: scale(1.14) rotate(-5deg);
@@ -203,20 +237,9 @@
   transform: scale(1.03);
 }
 
-/* "Ver detalhes" */
-#stationModal .ver-detalhes {
-  margin: 8px 0 0 0;
-  font-size: 13px;
-  color: #007bff;
-  cursor: pointer;
-}
-#stationModal .ver-detalhes:hover {
-  text-decoration: underline;
-}
-
-/* Caixa detalhes */
+/* Detalhes da estação (agora visíveis por padrão) */
 #stationModal .detalhes-estacao {
-  display: none;
+  display: block; /* mostrar sempre */
   margin-top: 8px;
   padding: 10px;
   background: #ffffff;
@@ -226,6 +249,176 @@
   color: #333;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
-#stationModal .detalhes-estacao.ativo {
+
+/* ================================
+   Modal Detalhes de Reserva
+================================ */
+#detalhesReservaModal.modal {
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+#detalhesReservaModal .modal-content {
+  background: #ffffff;
+  color: #000;
+  width: 400px;
+  max-width: calc(100% - 40px);
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  position: relative;
+  box-sizing: border-box;
+}
+
+#detalhesReservaModal .modal-content .close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  color: #333;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+#detalhesReservaModal .modal-content ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#detalhesReservaModal .modal-content li {
+  background: #f3f5f7;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 10px 0;
   display: block;
+  box-sizing: border-box;
+}
+
+/* Linha principal (estação + botão cancelar) */
+#detalhesReservaModal .reserva-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+#detalhesReservaModal .reserva-nome {
+  font-weight: 700;
+  font-size: 15px;
+  color: #000;
+  flex: 1 1 auto;
+  margin: 0;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+#detalhesReservaModal .btn-cancelar-reserva {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(139,18,18,0.12);
+  white-space: nowrap;
+  min-width: 20px;
+}
+#detalhesReservaModal .btn-cancelar-reserva:hover {
+  background: #c0392b;
+}
+
+/* Detalhes da reserva (sempre visíveis) */
+#detalhesReservaModal .detalhes-reserva {
+  margin-top: 8px;
+  padding: 10px;
+  background: #ffffff;
+  border-left: 3px solid #007BFF;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+/* Pequenos ajustes responsivos */
+@media (max-width: 480px) {
+  #stationModal .modal-content,
+  #detalhesReservaModal .modal-content {
+    width: calc(100% - 32px);
+    padding: 14px;
+  }
+}
+
+/* 🔹 Modal de confirmação de cancelamento */
+#confirmarCancelamentoModal {
+  display: none;
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+#confirmarCancelamentoModal .modal-content {
+  background: #fff;
+  color: #333;
+  padding: 20px;
+  border-radius: 10px;
+  width: 320px;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+#confirmarCancelamentoModal h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+#confirmarCancelamentoModal .acoes {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+/* Botão cancelar (vermelho) */
+#btnCancelarConfirmar {
+  flex: 1;
+  background: #dc3545;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+#btnCancelarConfirmar:hover {
+  background: #b52a37;
+}
+
+/* Botão fechar (cinza/azul claro) */
+#btnCancelarFechar {
+  flex: 1;
+  background: #6c757d;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+#btnCancelarFechar:hover {
+  background: #5a6268;
 }

@@ -98,18 +98,27 @@
                 </div>
             </div>
 
-            <!-- Botão de detalhes -->
-            <button class="btn" id="btnDetalhesReservaMapa" style="display:none;">Ver Detalhes</button>
-
         </main>
     </div>
 
-    <!-- Modal de detalhes da reserva -->
-    <div id="detalhesModal" class="modal">
+    <!-- Modal de Detalhes da Reserva (mesmo do Home) -->
+    <div id="detalhesReservaModal" class="modal">
         <div class="modal-content">
-            <span class="close" id="closeDetalhes">&times;</span>
+            <span class="close">&times;</span>
             <h3>Detalhes das Reservas</h3>
-            <div id="detalhesReserva"></div>
+            <ul id="listaDetalhesReservas"></ul>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Cancelamento -->
+    <div id="confirmarCancelamentoModal" class="modal">
+        <div class="modal-content">
+            <h3>Cancelar Reserva</h3>
+            <p>Tem certeza que deseja cancelar esta reserva?</p>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                <button id="btnCancelarConfirmar" class="btn-cancelar-reserva">Sim, Cancelar</button>
+                <button id="btnCancelarFechar" class="btn">Não</button>
+            </div>
         </div>
     </div>
 
@@ -133,8 +142,6 @@
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY&libraries=places&callback=initMap">
         </script>
-
-
 
 </body>
 

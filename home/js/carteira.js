@@ -1,5 +1,7 @@
+// carteira.js (versão com Google Pay TEST + fallback local)
+// ----------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  const usuarioAtual = localStorage.getItem("usuario");
+  const usuarioAtual = localStorage.getItem("usuario") || "default";
   let saldo = parseFloat(localStorage.getItem(`saldoCarteira_${usuarioAtual}`)) || 0;
   let transacoes = JSON.parse(localStorage.getItem(`transacoesCarteira_${usuarioAtual}`)) || [];
 
@@ -8,29 +10,158 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRecarregar = document.getElementById("btnRecarregar");
   const inputValor = document.getElementById("valorRecarga");
 
+  // ===============================
+  // Helpers
+  // ===============================
+  function info(msg, tipo = "sucesso") {
+    if (typeof mostrarMensagem === "function") {
+      mostrarMensagem(msg, tipo);
+    } else {
+      alert(msg);
+    }
+  }
+
   function atualizarCarteiraUI() {
-    saldoEl.innerText = `R$${saldo.toFixed(2)}`;
-    listaTransacoes.innerHTML = transacoes.length
-      ? transacoes.slice().reverse().map(t => `<p class="pos">+ R$${t.toFixed(2)} (Recarga)</p>`).join("")
-      : "<p>Nenhuma transação ainda.</p>";
+    if (saldoEl) saldoEl.innerText = `R$${saldo.toFixed(2)}`;
+    if (listaTransacoes) {
+      listaTransacoes.innerHTML = transacoes.length
+        ? transacoes
+            .slice()
+            .reverse()
+            .map((t) => `<p class="pos">+ R$${parseFloat(t).toFixed(2)} (Recarga)</p>`)
+            .join("")
+        : "<p>Nenhuma transação ainda.</p>";
+    }
   }
   atualizarCarteiraUI();
 
-  if (btnRecarregar) {
-    btnRecarregar.addEventListener("click", () => {
-      const valor = parseFloat(inputValor.value);
-      if (!isNaN(valor) && valor > 0) {
-        saldo += valor;
-        transacoes.push(valor);
+  function persistir() {
+    localStorage.setItem(`saldoCarteira_${usuarioAtual}`, saldo);
+    localStorage.setItem(`transacoesCarteira_${usuarioAtual}`, JSON.stringify(transacoes));
+  }
 
-        localStorage.setItem(`saldoCarteira_${usuarioAtual}`, saldo);
-        localStorage.setItem(`transacoesCarteira_${usuarioAtual}`, JSON.stringify(transacoes));
+  function recarregarLocal(valor) {
+    saldo += valor;
+    transacoes.push(valor);
+    persistir();
+    atualizarCarteiraUI();
+    info(`✅ Recarga de R$${valor.toFixed(2)} aplicada (modo local).`, "sucesso");
+  }
 
-        inputValor.value = "";
-        atualizarCarteiraUI();
-      } else {
-        alert("Digite um valor válido para recarga!");
+  // ===============================
+  // Google Pay
+  // ===============================
+  function waitForGooglePay(timeoutMs = 5000) {
+    return new Promise((resolve, reject) => {
+      const intervalMs = 100;
+      let waited = 0;
+
+      if (window.google && google.payments && google.payments.api) {
+        resolve(true);
+        return;
       }
+
+      const iv = setInterval(() => {
+        waited += intervalMs;
+        if (window.google && google.payments && google.payments.api) {
+          clearInterval(iv);
+          resolve(true);
+        } else if (waited >= timeoutMs) {
+          clearInterval(iv);
+          reject(new Error("Google Pay não carregou dentro do timeout."));
+        }
+      }, intervalMs);
     });
+  }
+
+  async function iniciarGooglePay(valor) {
+    try {
+      await waitForGooglePay(5000);
+    } catch (err) {
+      console.warn("Google Pay não disponível:", err);
+      info("Google Pay não carregou — aplicando recarga local (modo teste).", "aviso");
+      recarregarLocal(valor);
+      return;
+    }
+
+    try {
+      const paymentsClient = new google.payments.api.PaymentsClient({ environment: "TEST" });
+
+      const baseRequest = {
+        apiVersion: 2,
+        apiVersionMinor: 0,
+      };
+
+      const allowedCardNetworks = ["VISA", "MASTERCARD"];
+      const allowedAuthMethods = ["PAN_ONLY", "CRYPTOGRAM_3DS"];
+
+      const tokenizationSpecification = {
+        type: "PAYMENT_GATEWAY",
+        parameters: {
+          gateway: "example",
+          gatewayMerchantId: "exampleGatewayMerchantId",
+        },
+      };
+
+      const cardPaymentMethod = {
+        type: "CARD",
+        parameters: {
+          allowedAuthMethods,
+          allowedCardNetworks,
+        },
+        tokenizationSpecification: tokenizationSpecification,
+      };
+
+      const paymentDataRequest = Object.assign({}, baseRequest, {
+        allowedPaymentMethods: [cardPaymentMethod],
+        transactionInfo: {
+          totalPriceStatus: "FINAL",
+          totalPrice: valor.toFixed(2),
+          currencyCode: "BRL",
+          countryCode: "BR",
+        },
+        merchantInfo: {
+          merchantName: "VoltWay (Teste)",
+        },
+      });
+
+      const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest);
+      console.log("Google Pay - paymentData:", paymentData);
+
+      saldo += valor;
+      transacoes.push(valor);
+      persistir();
+      atualizarCarteiraUI();
+      info(`✅ Recarga de R$${valor.toFixed(2)} realizada com sucesso.`, "sucesso");
+    } catch (err) {
+      console.error("loadPaymentData erro:", err);
+      info("❌ Pagamento cancelado ou não autorizado.", "erro");
+    }
+  }
+
+  // ===============================
+  // Botão Recarregar
+  // ===============================
+  if (btnRecarregar) {
+    btnRecarregar.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      if (!inputValor) {
+        info("Campo de valor não encontrado.", "erro");
+        return;
+      }
+
+      const raw = (inputValor.value || "").toString().trim().replace(/\s+/g, "");
+      const normalized = raw.replace(",", ".");
+      const valor = parseFloat(normalized);
+
+      if (isNaN(valor) || valor <= 0) {
+        info("Digite um valor válido para recarga.", "erro");
+        return;
+      }
+
+      iniciarGooglePay(valor);
+    });
+  } else {
+    console.warn("Botão #btnRecarregar não encontrado no DOM.");
   }
 });
