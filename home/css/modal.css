@@ -64,33 +64,6 @@
   cursor: pointer;
 }
 
-/* 🔹 Carteira (recarga) */
-.wallet-recharge {
-  margin-top: 10px;
-  display: flex;
-  gap: 8px;
-}
-
-.wallet-recharge input {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.wallet-recharge button {
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.wallet-recharge button:hover {
-  background: #218838;
-}
-
 /* 🔹 Lista genérica (outros modais, exceto estações) */
 .modal-content ul {
   list-style: none;
@@ -98,17 +71,48 @@
 }
 
 .modal-content li {
-  padding: 10px;
+  position: relative; /* necessário para a estrela ficar dentro */
+  padding: 10px 40px 10px 10px; /* espaço extra à direita para a estrela */
   margin: 5px 0;
   background: #0052a3;
   cursor: pointer;
   border-radius: 5px;
   color: white;
-  text-align: left; /* corrigido para não atrapalhar flex no modal de estações */
+  text-align: left;
 }
 
 .modal-content li:hover {
   background: #007bff;
+}
+
+/* ============================
+   Estrela de favoritos (modal)
+   ============================ */
+.estrela-modal {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: url("../assets/estrela.png") no-repeat center center;
+  background-size: contain;
+  cursor: pointer;
+  filter: grayscale(100%) brightness(70%); /* apagada */
+  transition: transform 0.25s ease, filter 0.25s ease;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Hover quando não favoritada */
+.estrela-modal:hover {
+  transform: translateY(-50%) scale(1.15) rotate(-5deg);
+  filter: grayscale(30%) brightness(100%);
+}
+
+/* Estrela favoritada */
+.estrela-modal.favorita {
+  filter: none;
+  transform: translateY(-50%) scale(1.05);
 }
 
 /* 🔹 Modal específico para agendamento */
@@ -131,16 +135,12 @@
   justify-content: space-between; /* nome à esquerda, botão à direita */
   align-items: center;
   padding: 10px 14px;
-  background: #0056b3;
+  background: #e9e9e9;
   color: #fff;
   border-radius: 6px;
   margin-bottom: 8px;
   cursor: pointer;
   transition: background 0.3s;
-}
-
-#stationModal .modal-content #listaEstacoes li:hover {
-  background: #004494;
 }
 
 /* 🔹 Botão remover estação */
@@ -160,3 +160,147 @@
   transform: scale(1.2);
   color: #ff1a1a;
 }
+
+/* ==============================
+   Estilos isolados e específicos
+   para #stationModal (seleção)
+   ============================== */
+
+/* garante que o modal de seleção use o flex da .modal global */
+#stationModal.modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal branco, rolável se necessário */
+#stationModal .modal-content {
+  background: #ffffff;
+  color: #000;
+  width: 380px;
+  max-width: calc(100% - 40px);
+  max-height: 80vh;        /* não ultrapassa a tela */
+  overflow-y: auto;        /* permite scroll interno */
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* botão fechar preto e posicionado corretamente */
+#stationModal .modal-content .close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  color: #333;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* limpa regras herdadas de UL/LI globais */
+#stationModal .modal-content ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* item da lista como caixa clara, full-width */
+#stationModal .modal-content li.estacao-item {
+  background: #f3f5f7;      /* leve cinza, mais escuro que o modal branco */
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+  display: block;
+  box-sizing: border-box;
+}
+
+/* organização interna: linha superior (nome + ações) */
+#stationModal .estacao-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* nome à esquerda, ações à direita */
+  gap: 12px;
+}
+
+/* nome da estação (lado esquerdo) */
+#stationModal .estacao-nome {
+  font-weight: 700;
+  font-size: 15px;
+  color: #000;
+  flex: 1;              /* ocupa o espaço da esquerda */
+  margin-right: 12px;
+  word-break: break-word;
+}
+
+/* ações (botão + estrela, em ordem) */
+#stationModal .estacao-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;  /* botão mais próximo da estrela */
+  flex: 0 0 auto;
+}
+
+#stationModal .btn-selecionar-estacao {
+  order: 1;
+  background: #0056b3;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(18,59,139,0.12);
+}
+
+#stationModal .btn-selecionar-estacao:hover { filter: brightness(.95); }
+
+/* estrela vem depois do botão */
+#stationModal .estrela-modal {
+  order: 2;
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  background: url("../assets/estrela.png") no-repeat center center;
+  background-size: contain;
+  cursor: pointer;
+  filter: grayscale(100%) brightness(70%);
+  transition: transform .22s ease, filter .22s ease;
+}
+
+#stationModal .estrela-modal:hover {
+  transform: scale(1.14) rotate(-5deg);
+  filter: grayscale(30%) brightness(100%);
+}
+
+#stationModal .estrela-modal.favorita {
+  filter: none;
+  transform: scale(1.03);
+}
+
+/* "Ver detalhes" abaixo da linha */
+#stationModal .ver-detalhes {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+#stationModal .ver-detalhes:hover { text-decoration: underline; }
+
+/* caixa de detalhes empurra a lista, não sobrepõe */
+#stationModal .detalhes-estacao {
+  display: none;
+  margin-top: 8px;
+  padding: 10px;
+  background: #ffffff;
+  border-left: 3px solid #007BFF;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+#stationModal .detalhes-estacao.ativo { display: block; }

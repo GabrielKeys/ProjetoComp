@@ -25,9 +25,8 @@ function atualizarEstacao() {
     if (btnAgendar) btnAgendar.disabled = true;
   }
 }
-
 // ====================================
-// Modal de Seleção de Estação
+// Modal de Seleção de Estação (versão corrigida)
 // ====================================
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioAtual = localStorage.getItem("usuario");
@@ -35,72 +34,158 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("stationModal");
   const closeBtn = modal ? modal.querySelector(".close") : null;
   const listaEstacoes = document.getElementById("listaEstacoes");
+  const chaveFavoritos = `favoritos_${usuarioAtual}`;
 
-  if (listaEstacoes) {
+  // Lê favoritos do localStorage
+  function carregarFavoritos() {
+    return JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
+  }
+
+  // Estado local usado enquanto o modal está aberto:
+  // - favoritos: array com os objetos originais
+  // - favoritosVisuais: array de booleanos (true = estrela ativa)
+  let favoritos = carregarFavoritos();
+  let favoritosVisuais = favoritos.map(() => true);
+
+  // Renderiza a lista com base em 'favoritos' e 'favoritosVisuais'
+  function renderizarLista() {
+    if (!listaEstacoes) return;
     listaEstacoes.innerHTML = "";
-    const chaveFavoritos = `favoritos_${usuarioAtual}`;
-    let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
+
+    favoritos = carregarFavoritos();               // garante dados frescos
+    favoritosVisuais = favoritos.map(() => true);   // inicialmente todos true
 
     if (favoritos.length === 0) {
       listaEstacoes.innerHTML = "<li>Nenhuma estação favoritada ainda.</li>";
-    } else {
-      favoritos.forEach((estacao, index) => {
-        const li = document.createElement("li");
-        li.textContent = estacao.nome;
-
-        // Selecionar estação
-        li.addEventListener("click", () => {
-          localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
-          if (modal) modal.style.display = "none";
-          atualizarEstacao();
-        });
-
-        // Botão remover
-        const btnRemover = document.createElement("button");
-        btnRemover.textContent = "❌";
-        btnRemover.title = "Remover dos favoritos";
-        btnRemover.classList.add("btn-remover-estacao");
-
-        btnRemover.addEventListener("click", (e) => {
-          e.stopPropagation(); // impede selecionar estação
-          favoritos.splice(index, 1);
-          localStorage.setItem(chaveFavoritos, JSON.stringify(favoritos));
-          li.remove();
-          mostrarMensagem(`❌ ${estacao.nome} removida dos favoritos.`, "erro");
-
-          const selecionada = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
-          if (selecionada && selecionada.nome === estacao.nome) {
-            localStorage.removeItem(`estacaoSelecionada_${usuarioAtual}`);
-          }
-          atualizarEstacao();
-
-          if (favoritos.length === 0) {
-            listaEstacoes.innerHTML = "<li>Nenhuma estação favoritada ainda.</li>";
-          }
-        });
-
-        li.appendChild(btnRemover);
-        listaEstacoes.appendChild(li);
-      });
+      return;
     }
+
+    favoritos.forEach((estacao, idx) => {
+      const li = document.createElement("li");
+      li.className = "estacao-item";
+
+      // Linha principal: nome + ações
+      const linha = document.createElement("div");
+      linha.className = "estacao-linha";
+
+      const nome = document.createElement("span");
+      nome.className = "estacao-nome";
+      nome.textContent = estacao.nome;
+
+      const acoes = document.createElement("div");
+      acoes.className = "estacao-acoes";
+
+      // Estrela (toggle visual)
+      const estrela = document.createElement("span");
+      estrela.className = "estrela-modal favorita";
+      estrela.title = "Clique para desfavoritar";
+      estrela.style.backgroundImage = "url('../assets/estrela.png')";
+      // estado inicial (pode ser alterado depois)
+      if (!favoritosVisuais[idx]) estrela.classList.remove("favorita");
+
+      estrela.addEventListener("click", (e) => {
+        e.stopPropagation();
+        favoritosVisuais[idx] = !favoritosVisuais[idx];
+        estrela.classList.toggle("favorita", favoritosVisuais[idx]);
+      });
+
+      // Botão Selecionar (azul)
+      const btnSelect = document.createElement("button");
+      btnSelect.className = "btn-selecionar-estacao";
+      btnSelect.textContent = "Selecionar";
+      btnSelect.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // salva a estação selecionada e fecha (salva favoritos também)
+        localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
+        salvarFavoritosEFechar();
+      });
+
+      acoes.appendChild(estrela);
+      acoes.appendChild(btnSelect);
+
+      linha.appendChild(nome);
+      linha.appendChild(acoes);
+
+      // "Ver detalhes" e área de detalhes que empurra a lista
+      const verDetalhes = document.createElement("p");
+      verDetalhes.className = "ver-detalhes";
+      verDetalhes.textContent = "Ver detalhes";
+
+      const detalhes = document.createElement("div");
+      detalhes.className = "detalhes-estacao";
+      detalhes.innerHTML = `
+        <p><strong>Endereço:</strong> ${estacao.rua || "N/D"} ${estacao.numero || ""}</p>
+        <p><strong>Cidade:</strong> ${estacao.cidade || "N/D"} ${estacao.estado || ""}</p>
+        <p><strong>Potência:</strong> ${estacao.potencia || "N/A"}</p>
+        <p><strong>Horário:</strong> ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}</p>
+      `;
+      verDetalhes.addEventListener("click", (e) => {
+        e.stopPropagation();
+        detalhes.classList.toggle("ativo");
+      });
+
+      li.appendChild(linha);
+      li.appendChild(verDetalhes);
+      li.appendChild(detalhes);
+
+      listaEstacoes.appendChild(li);
+    });
   }
 
+  // Salva no localStorage apenas os que ficaram com estrela ativa
+  function salvarFavoritos() {
+    // recarrega favoritos originais para prevenir divergência
+    const originais = carregarFavoritos();
+    const novos = originais.filter((_, i) => favoritosVisuais[i]);
+    localStorage.setItem(chaveFavoritos, JSON.stringify(novos));
+    // atualiza estado local para manter consistência
+    favoritos = novos;
+    favoritosVisuais = favoritos.map(() => true);
+  }
+
+  // Salva favoritos e fecha modal, atualiza UI externa
+  function salvarFavoritosEFechar() {
+    salvarFavoritos();
+    if (modal) modal.style.display = "none";
+    if (typeof atualizarEstacao === "function") atualizarEstacao();
+  }
+
+  // Abre o modal e renderiza
+  function abrirModal() {
+    favoritos = carregarFavoritos();
+    favoritosVisuais = favoritos.map(() => true);
+    renderizarLista();
+    if (modal) modal.style.display = "flex";
+  }
+
+  // Bind dos eventos
   if (btnSelecionar) {
-    btnSelecionar.addEventListener("click", () => {
-      if (modal) modal.style.display = "flex";
+    btnSelecionar.addEventListener("click", (e) => {
+      e.preventDefault();
+      abrirModal();
     });
   }
 
   if (closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      if (modal) modal.style.display = "none";
+    closeBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      salvarFavoritosEFechar();
     });
   }
 
+  // Fecha clicando fora e também salva
   window.addEventListener("click", (e) => {
-    if (e.target === modal) modal.style.display = "none";
+    if (e.target === modal) {
+      salvarFavoritosEFechar();
+    }
   });
+
+  // Inicializa (se modal já aberto por algum motivo)
+  renderizarLista();
 });
+
+
+
 
 // ====================================
 // Modal de Agendamento

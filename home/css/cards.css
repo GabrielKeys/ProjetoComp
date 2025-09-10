@@ -12,3 +12,30 @@
 .btn { background: #0a2a66; color: white; border: none; padding: 10px 15px;
   border-radius: 6px; cursor: pointer; }
 .btn:hover { background: #123b8b; }
+
+/* 🔹 Carteira (recarga) */
+.wallet-recharge {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.wallet-recharge input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.wallet-recharge button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.wallet-recharge button:hover {
+  background: #218838;
+}
