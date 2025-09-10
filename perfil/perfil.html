@@ -1,39 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VW Carregamento - Perfil</title>
-  <link rel="stylesheet" href="../home/css/reset.css">
-  <link rel="stylesheet" href="../home/css/sidebar.css">
-  <link rel="stylesheet" href="../home/css/layout.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VW Carregamento - Perfil</title>
+
+    <!-- Estilos do projeto -->
+    <link rel="stylesheet" href="../home/css/reset.css">
+    <link rel="stylesheet" href="../global/Sidebar.css">
+    <link rel="stylesheet" href="../home/css/layout.css">
+    <link rel="stylesheet" href="../global/Header.css">
 </head>
+
 <body>
-  <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <h2>VoltWay</h2>
-      <nav>
-        <a href="../home/home.html">Início</a>
-        <a href="../mapa/mapa.html">Mapa</a>
-        <a href="../assinatura/assinatura.html">Assinatura</a>
-        <a href="../perfil/perfil.html" class="active">Perfil</a>
-      </nav>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>VoltWay</h2>
+            <nav>
+                <a href="../home/home.html">Início</a>
+                <a href="../mapa/mapa.html">Mapa</a>
+                <a href="../assinatura/assinatura.html">Assinatura</a>
+                <a href="../perfil/perfil.html" class="active">Perfil</a>
+            </nav>
 
-      <div class="user-box">
-        <p id="nomeUsuario"></p>
-        <button class="logout-btn" onclick="logout()">Sair</button>
-      </div>
-    </aside>
+            <div class="user-box">
+                <p id="nomeUsuario"></p>
+                <button class="logout-btn" onclick="logout()">Sair</button>
+            </div>
+        </aside>
 
-    <!-- Conteúdo -->
-    <main class="main">
-      <h1>Página de Perfil</h1>
-      <p>Espaço reservado para informações do usuário.</p>
-    </main>
-  </div>
+        <!-- Conteúdo principal -->
+        <main class="main">            
+                <!-- Cabeçalho   -->
+            <section class="header">
+                <div class="header-top">
+                    <img src="../assets/logo.png" alt="Logo" class="header-logo" />
 
-  <script src="../home/js/logout.js"></script>
-  <script src="../home/js/main.js"></script>
+                    <div class="header-text">
+                        <h1 id="stationTitle">Pagina de Perfil</h1>
+                        <p>Espaço reservado para informações do usuário.</p>
+                    </div>
+                </div>
 </body>
+
 </html>

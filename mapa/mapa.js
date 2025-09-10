@@ -233,13 +233,13 @@ function toggleFavorito(nomeEstacao, elemento) {
 
   if (index >= 0) {
     favoritos.splice(index, 1);
-    mostrarMensagem(`❌ ${nomeEstacao} removida dos favoritos.`, "erro", true);
+    mostrarMensagem(`${nomeEstacao} removida dos favoritos.`, "erro", true);
     if (elemento) elemento.classList.remove("favorita");
   } else {
     const estacao = estacoes.find((e) => e.nome === nomeEstacao);
     if (estacao) {
       favoritos.push(estacao);
-      mostrarMensagem(`⭐ ${nomeEstacao} adicionada aos favoritos!`, "sucesso", true);
+      mostrarMensagem(`${nomeEstacao} adicionada aos favoritos!`, "sucesso", true);
       if (elemento) elemento.classList.add("favorita");
     }
   }
