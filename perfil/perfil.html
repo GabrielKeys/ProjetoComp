@@ -2,16 +2,15 @@
 <html lang="pt-BR">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VW Carregamento - Perfil</title>
 
   <!-- Estilos do projeto -->
   <link rel="stylesheet" href="../home/css/reset.css">
   <link rel="stylesheet" href="../global/Sidebar.css">
-  <link rel="stylesheet" href="../home/css/layout.css">
   <link rel="stylesheet" href="../global/Header.css">
-  <link rel="stylesheet" href="perfil.css">
+  <link rel="stylesheet" href="../global/Layout.css">
 </head>
 
 <body>
@@ -27,7 +26,15 @@
       </nav>
 
       <div class="user-box">
-        <p id="nomeUsuario">Usuário Exemplo</p>
+        <p id="nomeUsuario">
+          <span class="user-photo">
+            <img src="../assets/foto.png" alt="Foto do usuário" />
+          </span>
+          <span class="user-name">Usuário</span>
+          <button class="settings-icon">
+            <img src="../assets/engrenagem.png" alt="Configurações" width="20" height="20">
+          </button>
+        </p>
         <button class="logout-btn" onclick="logout()">Sair</button>
       </div>
     </aside>
@@ -48,31 +55,45 @@
       <!-- Foto do Usuário -->
       <section class="card perfil-container perfil-foto-container">
         <div class="perfil-foto">
-          <img src="../assets/foto.png">
-          <button class="btn-upload">Alterar Foto</button>
+          <img src="../assets/foto.png" id="fotoUsuario" alt="Foto do usuário">
+          <div style="margin-top:8px;">
+            <button id="btnUploadFoto" class="btn">Alterar Foto</button>
+            <button id="btnRemoverFoto" class="btn btn-ghost" style="margin-left:8px;">Remover</button>
+          </div>
         </div>
+        <!-- input file escondido -->
+        <input type="file" id="inputFoto" accept="image/*" style="display:none" />
       </section>
 
       <!-- Informações do Usuário -->
       <section class="card perfil-container">
         <h2>Informações do Usuário</h2>
-        <p><strong>👤 Nome:</strong> ----</p>
-        <p><strong>Email:</strong> ----</p>
-        <p><strong>Telefone:</strong> ----</p>
-        <p><strong>Plano Atual:</strong> Gold</p>
-        <button class="btn">Editar Perfil</button>
+        <div id="userDetalhes" class="vehicle-fields"></div>
+        <div id="perfilActions" class="form-actions hidden">
+          <button id="btnSalvarPerfil">Salvar</button>
+          <button id="btnCancelarPerfil" class="btn-cancelar">Cancelar</button>
+        </div>
       </section>
 
       <!-- Veículo do Usuário -->
-      <section class="card perfil-container">
+      <section class="card vehicle">
         <h2>Meu Veículo</h2>
-        <img src="../assets/carro.png" alt="Veículo do Usuário">
-        <p><strong>Modelo:</strong> ----</p>
-        <p><strong>Ano:</strong> ----</p>
-        <p><strong>Placa:</strong> ----</p>
-        <p><strong>Bateria:</strong> ----</p>
-        <p><strong>Potência de Carga:</strong> ----</p>
-        <button class="btn">Editar Veículo</button>
+        <div class="vehicle-info">
+          <img src="../assets/carro.png" alt="Carro Elétrico Genérico">
+          <div id="veiculoDetalhes">
+            <div class="vehicle-fields">
+              <div class="field-row"><label>Modelo:</label><span id="veiculoModelo">----</span></div>
+              <div class="field-row"><label>Ano:</label><span id="veiculoAno">----</span></div>
+              <div class="field-row"><label>Placa:</label><span id="veiculoPlaca">----</span></div>
+              <div class="field-row"><label>Bateria:</label><span id="veiculoBateria">---- kWh</span></div>
+              <div class="field-row"><label>Potência de Carga:</label><span id="veiculoCarregamento">---- kW</span></div>
+            </div>
+          </div>
+          <!-- Botão de edição -->
+          <div class="editar-wrapper">
+            <button id="btnEditarVeiculo" class="btn-editar">Editar Veículo</button>
+          </div>
+        </div>
       </section>
 
       <!-- Preferências -->
@@ -97,12 +118,7 @@
     </main>
   </div>
 
-  <!-- scripts -->
-  <script src="../home/js/logout.js"></script>
-  <script src="../home/js/main.js"></script>
-  <script src="../global/Global.js"></script>
-
-  <!-- Ação do botão da engrenagem (gearBtn) -->
+    <!-- Ação do botão da engrenagem (gearBtn) -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const scrollTarget = localStorage.getItem("scrollToPerfilSection");
@@ -119,8 +135,10 @@
     });
   </script>
 
-
+  <!-- scripts -->
+  <script src="../home/js/main.js"></script>
+  <script src="perfil.js"></script>
+  <script src="../global/Global.js"></script>
 
 </body>
-
 </html>

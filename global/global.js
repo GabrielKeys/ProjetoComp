@@ -45,6 +45,43 @@ function mostrarMensagem(texto, tipo = "aviso") {
   }, 3000);
 }
 
+// ====================================
+// Função para atualizar a Sidebar
+// ====================================
+function atualizarSidebar() {
+  const usuario = localStorage.getItem("usuario") || "Usuário";
+  const usuarioEmail = localStorage.getItem("usuarioEmail");
+  const foto = localStorage.getItem("usuarioFoto") || "../assets/foto.png";
+
+  const nomeUsuario = document.getElementById("nomeUsuario");
+  if (nomeUsuario) {
+    nomeUsuario.innerHTML = `
+      <span class="user-photo">
+        <img src="${foto}" alt="Foto do usuário" />
+      </span>
+      ${usuario}
+      <button id="gearBtn" class="settings-icon" title="Configurações">
+        <img src="../assets/engrenagem.png" alt="Configurações" />
+      </button>
+    `;
+  }
+}
+
+// ====================================
+// Verificação de login e inicialização
+// ====================================
+document.addEventListener("DOMContentLoaded", () => {
+  const logado = localStorage.getItem("logado");
+  const usuarioEmail = localStorage.getItem("usuarioEmail");
+
+  if (!logado || !usuarioEmail) {
+    window.location.href = "../login/login.html";
+    return;
+  }
+
+  atualizarSidebar();
+});
+
 // =====================================================
 // Ação do botão da engrenagem (gearBtn)
 // =====================================================
@@ -91,3 +128,9 @@ function smoothScrollTo(element, duration = 800) {
   requestAnimationFrame(animation);
 }
 
+// ---- Função de logout ----
+function logout() {
+  localStorage.removeItem("logado");
+  localStorage.removeItem("usuario");
+  window.location.href = "../login/login.html";
+}

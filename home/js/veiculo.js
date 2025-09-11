@@ -13,11 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderVehicle() {
     detalhes.innerHTML = `
       <div class="vehicle-fields">
-        <div class="field-row"><label>Modelo:</label><span>${localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "---"}</span></div>
+        <div class="field-row"><label>Modelo:</label><span>${localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "----"}</span></div>
         <div class="field-row"><label>Ano:</label><span>${localStorage.getItem(`veiculoAno_${usuarioAtual}`) || "----"}</span></div>
         <div class="field-row"><label>Placa:</label><span>${localStorage.getItem(`veiculoPlaca_${usuarioAtual}`) || "----"}</span></div>
-        <div class="field-row"><label>Bateria:</label><span>${localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "-- kWh"}</span></div>
-        <div class="field-row"><label>Carregando:</label><span>${localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "---- kW"}</span></div>
+        <div class="field-row"><label>Bateria:</label><span>${localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "---- kWh"}</span></div>
+        <div class="field-row"><label>Carga:</label><span>${localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "---- kW"}</span></div>
       </div>
     `;
     btnEditar.classList.remove("hidden"); // garante que volta a aparecer
@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="field-row"><label>Ano:</label><input type="text" id="editAno" value="${localStorage.getItem(`veiculoAno_${usuarioAtual}`) || ""}" placeholder="Ano"></div>
         <div class="field-row"><label>Placa:</label><input type="text" id="editPlaca" value="${localStorage.getItem(`veiculoPlaca_${usuarioAtual}`) || ""}" placeholder="AAA-0000" maxlength="8"></div>
         <div class="field-row"><label>Bateria:</label><input type="text" id="editBateria" value="${(localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "").replace(" kWh", "")}" placeholder="Em kWh"></div>
-        <div class="field-row"><label>Carregamento:</label><input type="text" id="editCarregamento" value="${(localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "").replace(" kW", "")}" placeholder="Em kW"></div>
+        <div class="field-row"><label>Carga:</label><input type="text" id="editCarregamento" value="${(localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "").replace(" kW", "")}" placeholder="Em kW"></div>
       </div>
       <div class="form-actions">
         <button id="btnSalvarVeiculo">Salvar</button>

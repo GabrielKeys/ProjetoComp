@@ -139,14 +139,25 @@ function handleCredentialResponse(response) {
   const picture = data.picture || "";
 
   let users = JSON.parse(localStorage.getItem("users")) || [];
-  const userFound = users.find(u => u.email === email);
+  let userIndex = users.findIndex(u => u.email === email);
 
-  if (userFound) {
-    // Usuário já existe → entra direto
+  if (userIndex !== -1) {
+    let userFound = users[userIndex];
+
+    // 🔹 Mantém a foto personalizada se já existir
+    const fotoFinal = userFound.photo || picture;
+
     localStorage.setItem("logado", "true");
     localStorage.setItem("usuario", userFound.fullName || userFound.email);
     localStorage.setItem("usuarioEmail", userFound.email);
-    localStorage.setItem("usuarioFoto", userFound.foto || picture);
+    localStorage.setItem("usuarioFoto", fotoFinal);
+
+    // 🔹 Atualiza o objeto users para garantir que a foto fique salva
+    if (!userFound.photo && picture) {
+      userFound.photo = picture;
+      users[userIndex] = userFound;
+      localStorage.setItem("users", JSON.stringify(users));
+    }
 
     window.location.href = "../home/home.html";
   } else {
@@ -155,6 +166,7 @@ function handleCredentialResponse(response) {
     window.location.href = "../login/login.html?registerGoogle=true";
   }
 }
+
 
 function parseJwt(token) {
   try {
