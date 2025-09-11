@@ -1,4 +1,4 @@
-// carteira.js (versão com Google Pay TEST + fallback local)
+// carteira.js (versão com Google Pay TEST + input moeda formatado)
 // ----------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioAtual = localStorage.getItem("usuario") || "default";
@@ -46,6 +46,27 @@ document.addEventListener("DOMContentLoaded", () => {
     persistir();
     atualizarCarteiraUI();
     info(`✅ Recarga de R$${valor.toFixed(2)} aplicada (modo local).`, "sucesso");
+  }
+
+  // ===============================
+  // Input de moeda formatado (BRL)
+  // ===============================
+  if (inputValor) {
+    inputValor.value = "R$ 0,00"; // inicia formatado
+
+    inputValor.addEventListener("input", () => {
+      let valor = inputValor.value.replace(/\D/g, ""); // só números
+      if (!valor) valor = "0";
+
+      // divide centavos
+      valor = (parseInt(valor, 10) / 100).toFixed(2);
+
+      // aplica formatação BRL
+      inputValor.value = new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      }).format(valor);
+    });
   }
 
   // ===============================
@@ -150,9 +171,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const raw = (inputValor.value || "").toString().trim().replace(/\s+/g, "");
-      const normalized = raw.replace(",", ".");
-      const valor = parseFloat(normalized);
+      // pega só dígitos e divide por 100
+      let valor = inputValor.value.replace(/\D/g, "");
+      valor = parseFloat(valor) / 100;
 
       if (isNaN(valor) || valor <= 0) {
         info("Digite um valor válido para recarga.", "erro");
@@ -160,6 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       iniciarGooglePay(valor);
+      inputValor.value = "R$ 0,00"; // resetar
     });
   } else {
     console.warn("Botão #btnRecarregar não encontrado no DOM.");

@@ -1,76 +1,186 @@
-body {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    display: flex;
-    height: 100vh;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .container {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    width: 400px;
-  }
-  
-  .tabs {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 15px;
-  }
-  
-  .tabs button {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    background: #eee;
-    cursor: pointer;
-  }
-  
-  .tabs button.active {
-    background: #007BFF;
-    color: white;
-    font-weight: bold;
-  }
-  
-  .form {
-    display: none;
-  }
-  
-  .form.active {
-    display: block;
-  }
-  
-  input {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-  }
-  
-  button {
-    padding: 8px 12px;
-    background: #007BFF;
-    border: none;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background: #0056b3;
-  }
-  
-  ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  li {
-    background: #f1f1f1;
-    margin: 5px 0;
-    padding: 8px;
-    border-radius: 5px;
-  }
+/* ===============================
+   Container principal
+=============================== */
+.login-container {
+  width: 350px;
+  margin: 100px auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* ===============================
+   Títulos
+=============================== */
+.login-container h2 {
+  margin-bottom: 20px;
+  color: #002b64;
+  font-size: 22px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* ===============================
+   Forms
+=============================== */
+.form {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form.active {
+  display: flex;
+}
+
+/* ===============================
+   Labels e Inputs
+=============================== */
+.form label {
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+/* ===============================
+   Botões principais
+=============================== */
+.btn {
+  background: #007bff;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+  width: 100%;
+}
+
+.btn:hover {
+  background: #0056b3;
+}
+
+/* ===============================
+   Links extras (registrar / voltar)
+=============================== */
+.extra-actions {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.extra-actions a {
+  font-size: 13px;
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.extra-actions a:hover {
+  color: #0056b3;
+}
+
+/* ===============================
+   Mensagens
+=============================== */
+.msg {
+  font-size: 13px;
+  margin-top: 5px;
+  text-align: left;
+}
+
+.msg.error {
+  color: red;
+}
+
+.msg.success {
+  color: green;
+}
+
+/* ===============================
+   Google button container
+=============================== */
+#googleLoginBtn {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+}
+
+.car-fields {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  background: #f9f9f9;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+}
+
+.car-fields.show {
+  max-height: 600px; /* grande o suficiente pros campos */
+  opacity: 1;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #007bff;
+  color: #007bff;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.2s;
+}
+
+.btn-outline:hover {
+  background: #007bff;
+  color: white;
+}
+
+/* Botão de adicionar veículo */
+.add-vehicle-btn {
+  background: transparent;
+  color: #007bff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.add-vehicle-btn:hover {
+  color: #0056b3;
+}
+
+/* Container do veículo */
+.vehicle-section {
+  display: none;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f9f9f9;
+}
+
+/* Campo de input somente leitura */
+input[readonly] {
+  background-color: #f0f0f0;
+  color: #666;
+  cursor: not-allowed;
+}

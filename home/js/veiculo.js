@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const usuarioAtual = localStorage.getItem("usuario");
+  const usuarioAtual = localStorage.getItem("usuarioEmail");
   if (!usuarioAtual) return;
 
   const detalhes = document.getElementById("veiculoDetalhes");

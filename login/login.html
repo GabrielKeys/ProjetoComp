@@ -1,36 +1,90 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
-  <title>Login / Registro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - VoltWay</title>
   <link rel="stylesheet" href="login.css">
 </head>
-<body>
-  <div class="container">
-    <div class="tabs">
-      <button id="loginTab" class="active">Login</button>
-      <button id="registerTab">Registrar</button>
-    </div>
 
-    <!-- Formulário de Login -->
+<body>
+  <div class="login-container">
+
+    <!-- ==================== LOGIN ==================== -->
     <form id="loginForm" class="form active">
       <h2>Login</h2>
-      <input type="text" id="username" placeholder="Usuário" required>
-      <input type="password" id="password" placeholder="Senha" required>
-      <button type="submit">Entrar</button>
-      <p id="errorMsg" class="error"></p>
+      <label for="username">Email</label>
+      <input type="email" id="username" required placeholder="Digite seu email">
+
+      <label for="password">Senha</label>
+      <input type="password" id="password" required placeholder="Digite sua senha">
+
+      <p id="errorMsg" class="msg"></p>
+
+      <button type="submit" class="btn">Entrar</button>
+
+      <!-- Botão Google -->
+      <div id="googleLoginBtn" style="margin-top: 15px;"></div>
+
+      <!-- Link Registrar -->
+      <div class="extra-actions">
+        <a href="#" id="goToRegister">Registrar-se</a>
+      </div>
     </form>
 
-    <!-- Formulário de Registro -->
+    <!-- ==================== REGISTRO ==================== -->
     <form id="registerForm" class="form">
-      <h2>Registrar</h2>
-      <input type="text" id="newUser" placeholder="Usuário" required>
-      <input type="password" id="newPass" placeholder="Senha" required>
-      <button type="submit">Criar Conta</button>
-      <p id="registerMsg"></p>
+      <h2>Criar Conta</h2>
+
+      <label for="fullName">Nome</label>
+      <input type="text" id="fullName" required placeholder="Seu nome">
+
+      <label for="newEmail">Email</label>
+      <input type="email" id="newEmail" required placeholder="exemplo@email.com">
+
+      <label for="newPass">Senha</label>
+      <input type="password" id="newPass" required placeholder="Mínimo 8 caracteres">
+
+      <label for="phone">Número de Telefone (opcional)</label>
+      <input type="tel" id="phone" placeholder="(99) 99999-9999">
+
+      <!-- 🔽 Botão para abrir aba -->
+      <button type="button" class="add-vehicle-btn" id="toggleVehicle">
+        + Adicionar Veículo (Opcional)
+      </button>
+
+      <div id="vehicleSection" class="vehicle-section">
+        <h3>Informações do Carro</h3>
+
+        <label for="carModel">Modelo</label>
+        <input type="text" id="carModel" placeholder="Modelo do carro">
+
+        <label for="carYear">Ano</label>
+        <input type="number" id="carYear" placeholder="Ano">
+
+        <label for="carPlate">Placa</label>
+        <input type="text" id="carPlate" placeholder="AAA-0000">
+
+        <label for="carBattery">Bateria (kWh)</label>
+        <input type="text" id="carBattery" placeholder="Ex: 75">
+
+
+        <label for="carPower">Potência de Carga (kW)</label>
+        <input type="text" id="carPower" placeholder="Ex: 150 kW">
+      </div>
+
+      <p id="registerMsg" class="msg"></p>
+      <button type="submit" class="btn">Registrar</button>
+
+      <!-- Link Voltar ao Login -->
+      <div class="extra-actions">
+        <a href="#" id="goToLogin">Já tem conta? Entrar</a>
+      </div>
     </form>
   </div>
 
   <script src="login.js"></script>
 </body>
+
 </html>
