@@ -1,9 +1,11 @@
-/* Função: Estilização da barra lateral, incluindo navegação, caixa de usuário e botão de logout. */
+/* -------------------------
+   Sidebar fixa no desktop, gaveta no mobile
+------------------------- */
 .sidebar {
-  position: fixed;       /* fixa no lado esquerdo */
+  position: fixed;
   top: 0;
-  left: 0;
-  height: 100vh;         /* ocupa a tela toda */
+  left: 0; /* 🔹 sempre visível no desktop */
+  height: 100vh;
   width: 250px;
   background: #0a2a66;
   color: white;
@@ -12,20 +14,33 @@
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
+  z-index: 1000;
+  transition: transform 0.3s ease;
 }
 
-/* Corrige o deslocamento do conteúdo principal */
+/* Conteúdo principal no desktop */
 .main {
-  margin-left: 250px;    /* evita que o conteúdo sobreponha a sidebar */
+  margin-left: 250px;
   padding: 20px;
+  transition: margin-left 0.3s ease;
 }
 
-.sidebar h2 { 
-  margin-bottom: 20px; 
+/* -------------------------
+   Título da sidebar
+------------------------- */
+.sidebar h2 {
+  margin: 0 0 20px 10px; /* 🔹 encostado à esquerda no desktop */
+  font-size: 20px;
+  font-weight: bold;
 }
 
+/* -------------------------
+   Links
+------------------------- */
 .sidebar nav a {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 10px;
   margin: 5px 0;
   color: white;
@@ -33,9 +48,9 @@
   border-radius: 6px;
 }
 
-.sidebar nav a:hover, 
-.sidebar nav .active { 
-  background: #123b8b; 
+.sidebar nav a:hover,
+.sidebar nav .active {
+  background: #123b8b;
 }
 
 .user-box {
@@ -46,33 +61,28 @@
   font-size: 14px;
 }
 
-.badge { 
-  padding: 2px 6px; 
-  border-radius: 4px; 
-  font-size: 12px; 
-}
-
-.gold { 
-  background: gold; 
-  color: black; 
-}
-
+/* -------------------------
+   Botão de logout
+------------------------- */
 .logout-btn {
   margin-top: 10px;
-  padding: 6px 12px;
+  padding: 10px 14px;
   background: #ff4d4d;
   border: none;
   color: white;
-  border-radius: 5px;
+  border-radius: 6px;
   cursor: pointer;
   width: 100%;
+  font-size: 14px;
 }
 
-.logout-btn:hover { 
-  background: #cc0000; 
+.logout-btn:hover {
+  background: #cc0000;
 }
 
-/* Botão da engrenagem */
+/* -------------------------
+   Ícones e engrenagem
+------------------------- */
 .settings-icon img {
   margin-left: 8px;
   cursor: pointer;
@@ -91,7 +101,7 @@
 }
 
 #gearBtn:hover img {
-  transform: rotate(45deg); /* efeito ao passar o mouse */
+  transform: rotate(45deg);
 }
 
 .user-photo img {
@@ -103,50 +113,68 @@
   vertical-align: middle;
 }
 
-    /* Estilos mínimos para retrátil */
-    .sidebar.collapsed {
-      width: 60px;
-      transition: width 0.3s ease;
-    }
-    .main.collapsed {
-      margin-left: 60px;
-      transition: margin-left 0.3s ease;
-    }
-    #toggleSidebar {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 22px;
-      cursor: pointer;
-      margin-bottom: 15px;
-    }
-    .sidebar.collapsed h2,
-    .sidebar.collapsed nav a span,
-    .sidebar.collapsed .user-box {
-      display: none;
-    }
-    .sidebar nav a {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    /* Cabeçalho da sidebar (título + botão retrátil) */
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+/* -------------------------
+   Overlay escuro atrás da sidebar (apenas mobile)
+------------------------- */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 900;
 }
 
+.sidebar.open + .sidebar-overlay {
+  display: block;
+}
+
+/* -------------------------
+   Botão fixo de abrir sidebar (só no mobile)
+------------------------- */
 #toggleSidebar {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 22px;
-  cursor: pointer;
-  line-height: 1;
-  position: relative;
-  top: -2px; /* 🔥 sobe um pouco o botão */
+  display: none; /* 🔹 escondido no desktop */
 }
 
+/* -------------------------
+   Mobile (sidebar vira gaveta)
+------------------------- */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 220px;
+    transform: translateX(-100%); /* 🔹 escondida */
+  }
+
+  .sidebar.open {
+    transform: translateX(0); /* 🔹 abre */
+  }
+
+  .main {
+    margin-left: 0; /* 🔹 ocupa toda tela */
+    padding: 12px;
+    margin-bottom: 70px; /* espaço pra navbar inferior */
+  }
+
+  /* 🔹 botão só aparece no mobile */
+  #toggleSidebar {
+    display: block;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: #0a2a66;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 24px;
+    padding: 6px 12px;
+    cursor: pointer;
+    z-index: 1100;
+  }
+
+  /* 🔹 título ao lado do botão no mobile */
+  .sidebar h2 {
+    margin-left: 50px; /* 🔹 empurra para a direita do botão */
+  }
+}

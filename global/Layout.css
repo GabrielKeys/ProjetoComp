@@ -1,17 +1,31 @@
 /* =============================
-   LAYOUT BASE
+   Layout base
 ============================= */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; /* 🔹 impede scroll lateral */
+}
+
 .container { 
   display: flex; 
   min-height: 100vh; 
+  width: 100%;
+  box-sizing: border-box;
 }
+
 .main { 
   flex: 1; 
   padding: 20px; 
+  transition: margin-left 0.3s ease;
+  margin-left: 250px; /* espaço da sidebar desktop */
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* =============================
-   CARDS GERAIS
+   Cards gerais
 ============================= */
 .card {
   background: #fff;
@@ -22,56 +36,60 @@
 }
 
 /* =============================
-   PERFIL DO USUÁRIO (Cards)
+   Perfil do usuário
 ============================= */
 .perfil-container h2 {
   font-size: 20px;
   margin-bottom: 12px;
   color: #002b64;
 }
-.perfil-container p {
-  font-size: 15px;
-  margin: 6px 0;
-  color: #333;
+
+.perfil-container p { 
+  font-size: 15px; 
+  margin: 6px 0; 
+  color: #333; 
 }
-.perfil-container ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+
+.perfil-container ul { 
+  list-style: none; 
+  padding: 0; 
+  margin: 0; 
 }
+
 .perfil-container ul li {
   padding: 8px 0;
   border-bottom: 1px solid #eee;
   font-size: 14px;
   color: #444;
 }
-.perfil-container ul li:last-child {
-  border-bottom: none;
+
+.perfil-container ul li:last-child { 
+  border-bottom: none; 
 }
 
 /* =============================
-   FOTO DO USUÁRIO
+   Foto do usuário
 ============================= */
-.perfil-foto-container {
-  text-align: center;
+.perfil-foto-container { 
+  text-align: center; 
 }
+
 .perfil-foto {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+
 .perfil-foto img {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  object-fit: cover;   
+  object-fit: cover;
   border: 3px solid #007bff;
   margin-bottom: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
-
-/* Caixa de confirmação de foto */
 #fotoConfirmBox {
   margin-top: 10px;
   display: flex;
@@ -80,15 +98,17 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
 #fotoConfirmBox p {
   margin: 0;
   font-size: 14px;
   color: #333;
-  flex: 0 0 100%; /* força o texto a ficar numa linha só */
+  flex: 0 0 100%;
   text-align: center;
 }
+
 #fotoConfirmBox button {
-  min-width: 110px; /* 🔹 padroniza largura dos botões */
+  min-width: 110px;
   padding: 8px 0;
   border-radius: 6px;
   font-weight: bold;
@@ -97,35 +117,42 @@
 }
 
 /* =============================
-   CAMPOS DE VEÍCULO / PERFIL
+   Campos de veículo
 ============================= */
 .vehicle-info {
   display: flex;
   align-items: flex-start;
   gap: 20px;
 }
+
 .vehicle-info img {
   width: 140px;
   height: auto;
   border-radius: 10px;
   object-fit: contain;
 }
+
 .vehicle-fields {
   display: flex;
   flex-direction: column;
   gap: 10px;
   font-size: 15px;
 }
+
 .vehicle-fields .field-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: nowrap; /* 🔹 evita quebrar linha */
 }
+
 .vehicle-fields label {
   font-weight: bold;
   width: 120px;
   text-align: right;
+  white-space: nowrap; /* 🔹 mantém label numa linha */
 }
+
 .vehicle-fields input {
   padding: 8px 12px;
   border: 1px solid #ccc;
@@ -133,8 +160,10 @@
   font-size: 14px;
   flex: 1;
   max-width: 400px;
+  min-width: 0; /* 🔹 permite encolher sem quebrar */
   transition: all 0.2s ease-in-out;
 }
+
 .vehicle-fields input:focus {
   border-color: #007bff;
   box-shadow: 0 0 4px rgba(0, 123, 255, 0.4);
@@ -142,25 +171,9 @@
 }
 
 /* =============================
-   ÍCONE EDITAR (nome/tel/senha)
+   Botões gerais
 ============================= */
-.icon-edit {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  margin-left: 6px;
-  color: #e67e22;
-}
-.icon-edit:hover {
-  color: #d35400;
-}
-
-/* =============================
-   BOTÕES GERAIS
-============================= */
-.btn,
-.btn-upload {
+.btn, .btn-upload {
   background: #007bff;
   color: white;
   padding: 8px 16px;
@@ -170,16 +183,16 @@
   transition: background 0.2s, transform 0.2s;
   font-weight: bold;
 }
-.btn:hover,
-.btn-upload:hover {
+
+.btn:hover, .btn-upload:hover {
   background: #0056b3;
   transform: scale(1.02);
 }
 
-/* Botão editar veículo */
-.vehicle {
-  position: relative;
+.vehicle { 
+  position: relative; 
 }
+
 .btn-editar {
   position: absolute;
   bottom: 15px;
@@ -193,20 +206,19 @@
   font-weight: bold;
   transition: background 0.3s, transform 0.2s;
 }
-.btn-editar:hover {
-  background: #0056b3;
-  transform: scale(1.03);
+
+.btn-editar:hover { 
+  background: #0056b3; 
+  transform: scale(1.03); 
 }
 
-/* =============================
-   BOTÕES DE FORMULÁRIOS
-============================= */
 .form-actions {
   margin-top: 12px;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
+
 .form-actions button {
   width: 120px;
   padding: 10px 0;
@@ -217,7 +229,6 @@
   transition: background 0.3s;
 }
 
-/* Salvar */
 #btnSalvarPerfil,
 #btnSalvarSenha,
 #btnSalvarVeiculo,
@@ -225,27 +236,23 @@
   background: #27ae60;
   color: #fff;
 }
+
 #btnSalvarPerfil:hover,
 #btnSalvarSenha:hover,
 #btnSalvarVeiculo:hover,
-.btn-salvar-inline:hover {
-  background: #219150;
+.btn-salvar-inline:hover { 
+  background: #219150; 
 }
 
-/* Cancelar */
-.btn-cancelar,
-.btn-cancelar-inline {
+.btn-cancelar, .btn-cancelar-inline {
   background: #e74c3c;
   color: #fff;
 }
-.btn-cancelar:hover,
-.btn-cancelar-inline:hover {
-  background: #c0392b;
+
+.btn-cancelar:hover, .btn-cancelar-inline:hover { 
+  background: #c0392b; 
 }
 
-/* =============================
-   BOTÕES INLINE (edição Nome/Tel)
-============================= */
 .btn-salvar-inline,
 .btn-cancelar-inline {
   width: 110px;
@@ -258,9 +265,6 @@
   margin-left: 8px;
 }
 
-/* =============================
-   BOTÕES DISCRETOS (links)
-============================= */
 .btn-discreto {
   background: transparent;
   color: #007bff;
@@ -270,13 +274,103 @@
   text-decoration: underline;
   margin-top: 8px;
 }
-.btn-discreto:hover {
-  color: #0056b3;
+
+.btn-discreto:hover { 
+  color: #0056b3; 
+}
+
+.hidden { 
+  display: none !important; 
 }
 
 /* =============================
-   ESTADOS ESPECIAIS
+   Responsividade (mobile/app)
 ============================= */
-.hidden {
-  display: none !important;
+@media (max-width: 768px) {
+  .main {
+    padding: 12px;
+    margin-left: 0; /* sidebar some */
+    margin-bottom: 70px; /* espaço para sidebar mobile fixa */
+  }
+
+  /* Cards */
+  .card {
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+  }
+
+  /* Perfil */
+  .perfil-foto img {
+    width: 90px;
+    height: 90px;
+  }
+
+  /* Veículo */
+  .vehicle-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .vehicle-info img {
+    width: 120px;
+    margin-bottom: 12px;
+  }
+
+  .vehicle-fields {
+    width: 100%;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .vehicle-fields .field-row {
+    display: flex;
+    flex-direction: row; /* 🔹 força label e input lado a lado */
+    align-items: center;
+    gap: 6px;
+  }
+
+  .vehicle-fields label {
+    width: 100px;   /* 🔹 menor largura no mobile */
+    text-align: left;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .vehicle-fields input {
+    flex: 1;
+    font-size: 13px;
+    padding: 6px 10px;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .btn-editar {
+    position: static;
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+  }
+
+  /* Botões grandes */
+  .form-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-actions button {
+    width: 100%;
+    padding: 12px 0;
+    font-size: 15px;
+  }
+
+  .btn-salvar-inline,
+  .btn-cancelar-inline {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 6px;
+    padding: 10px 0;
+    font-size: 14px;
+  }
 }

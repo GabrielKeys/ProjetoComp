@@ -15,17 +15,17 @@
 
 <body>
   <div class="container">
-    <!-- Sidebar -->
+
+   <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <h2>VoltWay</h2>
-        <button id="toggleSidebar">☰</button>
       </div>
       <nav>
         <a href="../home/home.html"><span>Início</span></a>
         <a href="../mapa/mapa.html"><span>Mapa</span></a>
         <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
-        <a href="../perfil/perfil.html" class="active"><span>Perfil</span></a>
+        <a href="../perfil/perfil.html"class="active"><span>Perfil</span></a>
       </nav>
 
       <div class="user-box">
@@ -41,6 +41,14 @@
         <button class="logout-btn" onclick="logout()">Sair</button>
       </div>
     </aside>
+
+
+    <!-- Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Botão fixo -->
+    <button id="toggleSidebar">☰</button>
+
 
     <!-- Conteúdo principal -->
     <main class="main">

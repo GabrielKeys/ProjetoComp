@@ -1,13 +1,27 @@
 /* ===============================
+   Reset básico
+=============================== */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background: #f5f6fa;
+  overflow-x: hidden; /* 🚫 evita deslizar pro lado */
+}
+
+/* ===============================
    Container principal
 =============================== */
 .login-container {
   width: 350px;
-  margin: 100px auto;
+  margin: 100px auto; /* 🔹 centralizado no desktop */
   background: #fff;
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  max-width: 90%; /* 🔹 não estoura em telas pequenas */
 }
 
 /* ===============================
@@ -118,6 +132,9 @@
   justify-content: center;
 }
 
+/* ===============================
+   Campos adicionais do carro
+=============================== */
 .car-fields {
   margin-top: 15px;
   padding: 15px;
@@ -135,6 +152,9 @@
   opacity: 1;
 }
 
+/* ===============================
+   Botões secundários
+=============================== */
 .btn-outline {
   background: transparent;
   border: 1px solid #007bff;
@@ -183,4 +203,34 @@ input[readonly] {
   background-color: #f0f0f0;
   color: #666;
   cursor: not-allowed;
+}
+
+/* ===============================
+   Responsividade
+=============================== */
+@media (max-width: 480px) {
+  html, body {
+    display: flex;
+    justify-content: center; /* horizontal */
+    align-items: center;    /* vertical */
+  }
+
+  .login-container {
+    margin: 0; /* 🔹 centralizado pelo flex */
+    padding: 20px;
+  }
+
+  .login-container h2 {
+    font-size: 18px;
+  }
+
+  .form input {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .btn {
+    padding: 8px;
+    font-size: 14px;
+  }
 }

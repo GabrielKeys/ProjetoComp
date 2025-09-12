@@ -135,8 +135,39 @@ function logout() {
   window.location.href = "../login/login.html";
 }
 
-// Script para alternar sidebar retrátil
-document.getElementById("toggleSidebar").addEventListener("click", () => {
-  document.getElementById("sidebar").classList.toggle("collapsed");
-  document.getElementById("main").classList.toggle("collapsed");
+// Script para alternar sidebar estilo gaveta com persistência
+const sidebar = document.getElementById("sidebar");
+const overlay = document.querySelector(".sidebar-overlay");
+const toggleBtn = document.getElementById("toggleSidebar");
+
+// 🔹 Restaura o estado salvo ao carregar a página
+if (localStorage.getItem("sidebarOpen") === "true") {
+  sidebar.classList.add("open");
+  overlay.classList.add("show");
+}
+
+// 🔹 Abre/fecha no botão
+toggleBtn.addEventListener("click", () => {
+  sidebar.classList.toggle("open");
+  overlay.classList.toggle("show");
+
+  // Salva o estado atual
+  localStorage.setItem("sidebarOpen", sidebar.classList.contains("open"));
 });
+
+// 🔹 Fecha se clicar no overlay
+overlay.addEventListener("click", () => {
+  sidebar.classList.remove("open");
+  overlay.classList.remove("show");
+
+  // Atualiza o estado salvo
+  localStorage.setItem("sidebarOpen", "false");
+});
+
+
+
+
+
+
+
+

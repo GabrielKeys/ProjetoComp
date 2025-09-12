@@ -1,38 +1,73 @@
-  /* Função: Estilização do cabeçalho superior da home (logo, título, estatísticas e ícone de configurações). */
-  /* Header e estatísticas */
+/* ================================
+   Header e estatísticas (Home)
+================================ */
+.stat {
+  background: #0a3d91;
+  padding: 10px 15px;       /* 🔹 compactos no desktop */
+  border-radius: 8px;
+  text-align: center;
+  min-width: 100px;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  margin: 5px;              /* 🔹 garante espaço entre eles */
+}
+
+.stat strong {
+  display: block;
+  font-size: 1.1rem;        /* 🔹 tamanho original */
+  margin-bottom: 2px;
+}
+
+/* ================================
+   Botões principais (Home)
+================================ */
+button#btnSelecionarEstacao,
+button#btnAgendar {
+  margin-top: 15px;
+  background: #007bff;
+  border: none;
+  padding: 10px 15px;       /* 🔹 tamanho original no desktop */
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;          /* 🔹 original */
+  transition: background 0.2s, transform 0.2s;
+}
+
+button#btnSelecionarEstacao:hover,
+button#btnAgendar:hover {
+  background: #0056b3;
+  transform: scale(1.03);
+}
+
+button#btnAgendar:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ================================
+   Ajustes mobile (modo app)
+================================ */
+@media (max-width: 768px) {
   .stat {
-    background: #0a3d91;
-    padding: 10px 15px;
-    border-radius: 8px;
-    text-align: center;
-    min-width: 100px;
+    min-width: auto;
+    flex: 1;                /* 🔹 distribui melhor em linha */
+    padding: 12px 18px;     /* 🔹 mais espaçados */
+    border-radius: 10px;
+    font-size: 0.95rem;
   }
 
   .stat strong {
-    display: block;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    margin-bottom: 4px;
   }
 
-  /* Botões principais */
   button#btnSelecionarEstacao,
   button#btnAgendar {
-    margin-top: 15px;
-    background: #007bff;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
+    font-size: 16px;        /* 🔹 maior para toque */
+    padding: 14px;
+    border-radius: 10px;
+    width: 100%;            /* 🔹 ocupa toda a largura */
+    font-weight: bold;
   }
-
-  button#btnSelecionarEstacao:hover,
-  button#btnAgendar:hover {
-    background: #0056b3;
-  }
-
-  button#btnAgendar:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-  }
-
-  
+}

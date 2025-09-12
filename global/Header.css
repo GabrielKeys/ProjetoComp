@@ -1,4 +1,6 @@
-/* Header estilizado */
+/* -------------------------
+   Header padrão (desktop)
+------------------------- */
 .header {
   background: #052c65;
   color: #fff;
@@ -6,17 +8,20 @@
   border-radius: 10px;
   margin-bottom: 20px;
 
-  display: flex;               
-  align-items: center;         
-  justify-content: space-between; 
-  gap: 20px;                   
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 }
 
-.header-left { flex: 1; }
+.header-left { 
+  flex: 1; 
+}
+
 .stats {
   display: flex;
   gap: 15px;
-  flex: 2;  
+  flex: 2;
 }
 
 .header-top {
@@ -25,6 +30,67 @@
   gap: 15px;
 }
 
-.header-logo{ width: 50px; height: 50px; }
-.header-text h1 { font-size: 1.3rem; margin: 0; }
-.header-text p { margin: 5px 0 15px; font-size: 0.9rem; }
+.header-logo {
+  width: 50px;
+  height: 50px;
+}
+
+.header-text h1 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.header-text p {
+  margin: 5px 0 15px;
+  font-size: 0.9rem;
+}
+
+/* -------------------------
+   🔥 Versão Mobile (App-like)
+------------------------- */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: center;
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .header-top {
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+  }
+
+  .header-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-text h1 {
+    font-size: 1.1rem;
+  }
+
+  .header-text p {
+    font-size: 0.8rem;
+    margin: 4px 0 10px;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .stats .stat {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.8rem;
+  }
+}

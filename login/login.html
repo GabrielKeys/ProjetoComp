@@ -12,13 +12,13 @@
   <div class="login-container">
 
     <!-- ==================== LOGIN ==================== -->
-    <form id="loginForm" class="form active">
+    <form id="loginForm" class="form active" autocomplete="off">
       <h2>Login</h2>
       <label for="username">Email</label>
-      <input type="email" id="username" required placeholder="Digite seu email">
+      <input type="email" id="username" name="username" required placeholder="Digite seu email" autocomplete="off">
 
       <label for="password">Senha</label>
-      <input type="password" id="password" required placeholder="Digite sua senha">
+      <input type="password" id="password" name="password" required placeholder="Digite sua senha" autocomplete="off">
 
       <p id="errorMsg" class="msg"></p>
 
@@ -34,20 +34,20 @@
     </form>
 
     <!-- ==================== REGISTRO ==================== -->
-    <form id="registerForm" class="form">
+    <form id="registerForm" class="form" autocomplete="off">
       <h2>Criar Conta</h2>
 
       <label for="fullName">Nome</label>
-      <input type="text" id="fullName" required placeholder="Seu nome">
+      <input type="text" id="fullName" name="fullName" required placeholder="Seu nome" autocomplete="off">
 
       <label for="newEmail">Email</label>
-      <input type="email" id="newEmail" required placeholder="exemplo@email.com">
+      <input type="email" id="newEmail" name="newEmail" required placeholder="exemplo@email.com" autocomplete="off">
 
       <label for="newPass">Senha</label>
-      <input type="password" id="newPass" required placeholder="Mínimo 8 caracteres">
+      <input type="password" id="newPass" name="newPass" required placeholder="Mínimo 8 caracteres" autocomplete="new-password">
 
       <label for="phone">Número de Telefone (opcional)</label>
-      <input type="tel" id="phone" placeholder="(99) 99999-9999">
+      <input type="tel" id="phone" name="phone" placeholder="(99) 99999-9999" autocomplete="off">
 
       <!-- 🔽 Botão para abrir aba -->
       <button type="button" class="add-vehicle-btn" id="toggleVehicle">
@@ -58,20 +58,19 @@
         <h3>Informações do Carro</h3>
 
         <label for="carModel">Modelo</label>
-        <input type="text" id="carModel" placeholder="Modelo do carro">
+        <input type="text" id="carModel" name="carModel" placeholder="Modelo do carro" autocomplete="off">
 
         <label for="carYear">Ano</label>
-        <input type="number" id="carYear" placeholder="Ano">
+        <input type="number" id="carYear" name="carYear" placeholder="Ano" autocomplete="off">
 
         <label for="carPlate">Placa</label>
-        <input type="text" id="carPlate" placeholder="AAA-0000">
+        <input type="text" id="carPlate" name="carPlate" placeholder="AAA-0000" autocomplete="off">
 
         <label for="carBattery">Bateria (kWh)</label>
-        <input type="text" id="carBattery" placeholder="Ex: 75">
-
+        <input type="text" id="carBattery" name="carBattery" placeholder="Ex: 75" autocomplete="off">
 
         <label for="carPower">Potência de Carga (kW)</label>
-        <input type="text" id="carPower" placeholder="Ex: 150 kW">
+        <input type="text" id="carPower" name="carPower" placeholder="Ex: 150 kW" autocomplete="off">
       </div>
 
       <p id="registerMsg" class="msg"></p>

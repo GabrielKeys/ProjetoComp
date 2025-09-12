@@ -30,20 +30,17 @@ function initMap() {
 
   console.log("🗺️ Mapa inicializado.");
 
-  // 1. Sempre carrega estações fictícias primeiro
   carregarEstacoesFicticias();
 
-  // 2. Tenta geolocalização
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        const precisao = pos.coords.accuracy; // 🔹 metros
+        const precisao = pos.coords.accuracy;
 
         map.setCenter(userLocation);
         map.setZoom(15);
 
-        // marcador do usuário
         userMarker = new google.maps.Marker({
           position: userLocation,
           map: map,
@@ -57,27 +54,14 @@ function initMap() {
 
         console.log("📍 Localização encontrada:", userLocation, "Precisão:", precisao);
 
-        // ===============================
-        // Mensagem adaptada conforme precisão
-        // ===============================
         if (precisao <= 50) {
-          mostrarMensagem(
-            `📍 Localização encontrada (precisão: ${Math.round(precisao)}m)`,
-            "sucesso"
-          );
+          mostrarMensagem(`📍 Localização encontrada (precisão: ${Math.round(precisao)}m)`, "sucesso");
         } else if (precisao <= 200) {
-          mostrarMensagem(
-            `📍 Localização aproximada (precisão: ${Math.round(precisao)}m)`,
-            "aviso"
-          );
+          mostrarMensagem(`📍 Localização aproximada (precisão: ${Math.round(precisao)}m)`, "aviso");
         } else {
-          mostrarMensagem(
-            `⚠️ Localização imprecisa (precisão: ${Math.round(precisao)}m)`,
-            "erro"
-          );
+          mostrarMensagem(`⚠️ Localização imprecisa (precisão: ${Math.round(precisao)}m)`, "erro");
         }
 
-        // 3. carrega reais depois de 1,5s
         setTimeout(() => carregarEstacoesReais(userLocation), 1500);
       },
       (err) => {
@@ -100,7 +84,6 @@ function initMap() {
     setTimeout(() => carregarEstacoesReais(fallback), 1500);
   }
 
-  // Restaurar filtro salvo
   const filtroCheckbox = document.getElementById("filtroRecarga");
   if (filtroCheckbox) {
     const estadoSalvo = localStorage.getItem("filtroRecarga");
@@ -116,10 +99,8 @@ function initMap() {
   }
 }
 
-
-
 // ===============================
-// Carregar estações registradas (fictícias do app)
+// Carregar estações registradas
 // ===============================
 function carregarEstacoesFicticias() {
   estacoes.forEach((estacao) => {
@@ -131,12 +112,11 @@ function carregarEstacoesFicticias() {
       map,
       title: estacao.nome,
       icon: {
-        url: "../assets/bateria-verde.png", // 🔋 verde = registrada
+        url: "../assets/bateria-verde.png",
         scaledSize: new google.maps.Size(28, 28),
       },
     });
 
-    // favoritos
     const usuarioAtual = localStorage.getItem("usuario");
     const chaveFavoritos = `favoritos_${usuarioAtual}`;
     let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
@@ -153,8 +133,8 @@ function carregarEstacoesFicticias() {
           Horário: ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}
         </div>
         <div class="popup-footer">
-          <button class="btn-reservar" data-estacao='${JSON.stringify(estacao)}'>Reservar</button>
-          <span class="estrela ${jaFavorito ? "favorita" : ""}" onclick="toggleFavorito('${estacao.nome}', this)"></span>
+          <button class="btn-reservar">Reservar</button>
+          <span class="estrela ${jaFavorito ? "favorita" : ""}" data-estacao="${estacao.nome}"></span>
         </div>
       </div>
     `;
@@ -175,6 +155,19 @@ function carregarEstacoesFicticias() {
             atualizarEstacao();
           });
         }
+
+        const estrela = document.querySelector(".estrela");
+        if (estrela) {
+          const handler = (e) => {
+            e.stopPropagation();
+            toggleFavorito(estacao.nome, estrela);
+          };
+          estrela.addEventListener("click", handler);
+          estrela.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            handler(e);
+          });
+        }
       });
     });
 
@@ -186,7 +179,7 @@ function carregarEstacoesFicticias() {
 }
 
 // ===============================
-// Carregar estações não registradas (Google Places)
+// Carregar estações não registradas
 // ===============================
 function carregarEstacoesReais(location) {
   const service = new google.maps.places.PlacesService(map);
@@ -205,7 +198,7 @@ function carregarEstacoesReais(location) {
             map,
             title: place.name,
             icon: {
-              url: "../assets/bateria-cinza.png", // 🔋 cinza = não registrada
+              url: "../assets/bateria-cinza.png",
               scaledSize: new google.maps.Size(26, 26),
             },
           });
@@ -217,11 +210,32 @@ function carregarEstacoesReais(location) {
                 ${place.vicinity || ""}<br>
                 <span style="color:#666;font-size:12px">(Não registrada no app)</span>
               </div>
+              <div class="popup-footer">
+                <span class="estrela" data-estacao="${place.name}"></span>
+              </div>
             </div>
           `;
 
           const infowindow = new google.maps.InfoWindow({ content: contentString });
-          marker.addListener("click", () => infowindow.open(map, marker));
+
+          marker.addListener("click", () => {
+            infowindow.open(map, marker);
+
+            google.maps.event.addListenerOnce(infowindow, "domready", () => {
+              const estrela = document.querySelector(".estrela");
+              if (estrela) {
+                const handler = (e) => {
+                  e.stopPropagation();
+                  toggleFavorito(place.name, estrela);
+                };
+                estrela.addEventListener("click", handler);
+                estrela.addEventListener("touchstart", (e) => {
+                  e.preventDefault();
+                  handler(e);
+                });
+              }
+            });
+          });
 
           carregadores.push(marker);
         });
@@ -229,7 +243,6 @@ function carregarEstacoesReais(location) {
         console.log(`⚡ ${results.length} estações não registradas carregadas.`);
         mostrarMensagem(`${results.length} estações não registradas carregadas.`, "aviso", true);
 
-        // Reaplica o filtro depois de carregar
         const filtroAtivo = document.getElementById("filtroRecarga")?.checked ?? true;
         aplicarFiltro(filtroAtivo);
       } else {
@@ -240,7 +253,7 @@ function carregarEstacoesReais(location) {
 }
 
 // ===============================
-// Função central do filtro
+// Filtro
 // ===============================
 function aplicarFiltro(somenteRegistradas) {
   ficticios.forEach((m) => m.setMap(map));
@@ -248,7 +261,7 @@ function aplicarFiltro(somenteRegistradas) {
 }
 
 // ===============================
-// Favoritar / Desfavoritar estação
+// Favoritar / Desfavoritar
 // ===============================
 function toggleFavorito(nomeEstacao, elemento) {
   const usuarioAtual = localStorage.getItem("usuario");
@@ -262,19 +275,17 @@ function toggleFavorito(nomeEstacao, elemento) {
     mostrarMensagem(`${nomeEstacao} removida dos favoritos.`, "erro", true);
     if (elemento) elemento.classList.remove("favorita");
   } else {
-    const estacao = estacoes.find((e) => e.nome === nomeEstacao);
-    if (estacao) {
-      favoritos.push(estacao);
-      mostrarMensagem(`${nomeEstacao} adicionada aos favoritos!`, "sucesso", true);
-      if (elemento) elemento.classList.add("favorita");
-    }
+    const estacao = estacoes.find((e) => e.nome === nomeEstacao) || { nome: nomeEstacao };
+    favoritos.push(estacao);
+    mostrarMensagem(`${nomeEstacao} adicionada aos favoritos!`, "sucesso", true);
+    if (elemento) elemento.classList.add("favorita");
   }
 
   localStorage.setItem(chaveFavoritos, JSON.stringify(favoritos));
 }
 
 // ===============================
-// Mostrar mensagem sem duplicar
+// Mensagens
 // ===============================
 function mostrarMensagem(texto, tipo, evitarDuplicado = false) {
   if (evitarDuplicado) {
@@ -291,7 +302,6 @@ function mostrarMensagem(texto, tipo, evitarDuplicado = false) {
   setTimeout(() => div.remove(), 4000);
 }
 
-// Se entrou no perfil com hash, rolar suavemente até a seção
 document.addEventListener("DOMContentLoaded", () => {
   if (window.location.hash) {
     const alvo = document.querySelector(window.location.hash);
