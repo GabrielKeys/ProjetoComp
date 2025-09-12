@@ -1,7 +1,7 @@
 /* Função: Arquivo principal que importa todos os estilos específicos mantendo a modularização do projeto.*/
-@import url("reset.css");
-@import url("layout.css");
-@import url("sidebar.css");
+@import url("../../global/Header.css");
+@import url("../../global/Layout.css");
+@import url("../../global/Sidebar.css");
 @import url("header.css");
 @import url("cards.css");
 @import url("modal.css");

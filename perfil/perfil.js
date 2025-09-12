@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <span style="color:gray;">${userData.email}</span>
         </div>
         <div class="field-row">
-          <label>Número de Telefone:</label>
+          <label>Número:</label>
           <span id="telefoneSpan">${userData.phone || "(--) ---------"}</span>
           <button class="icon-edit" id="editTelefoneBtn">
             <img src="../assets/icone-editar.png" alt="editar" width="18">

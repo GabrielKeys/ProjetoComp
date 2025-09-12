@@ -1,43 +1,37 @@
 /* ================================
-   Header e estatísticas (Home)
+   Header e estatísticas (Desktop)
 ================================ */
 .stat {
   background: #0a3d91;
-  padding: 10px 15px;       /* 🔹 compactos no desktop */
+  padding: 10px 15px;
   border-radius: 8px;
   text-align: center;
   min-width: 100px;
   color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  margin: 5px;              /* 🔹 garante espaço entre eles */
 }
 
 .stat strong {
   display: block;
-  font-size: 1.1rem;        /* 🔹 tamanho original */
-  margin-bottom: 2px;
+  font-size: 1.1rem;
 }
 
 /* ================================
-   Botões principais (Home)
+   Botões principais (Desktop)
 ================================ */
 button#btnSelecionarEstacao,
 button#btnAgendar {
   margin-top: 15px;
   background: #007bff;
   border: none;
-  padding: 10px 15px;       /* 🔹 tamanho original no desktop */
+  padding: 10px 15px;
   border-radius: 6px;
   color: white;
   cursor: pointer;
-  font-size: 14px;          /* 🔹 original */
-  transition: background 0.2s, transform 0.2s;
 }
 
 button#btnSelecionarEstacao:hover,
 button#btnAgendar:hover {
   background: #0056b3;
-  transform: scale(1.03);
 }
 
 button#btnAgendar:disabled {
@@ -46,15 +40,24 @@ button#btnAgendar:disabled {
 }
 
 /* ================================
-   Ajustes mobile (modo app)
+   Ajustes Mobile (modo app)
 ================================ */
 @media (max-width: 768px) {
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 🔹 sempre 2 colunas */
+    gap: 10px;
+    justify-items: center;  /* 🔹 centraliza os itens */
+    width: 100%;
+  }
+
   .stat {
-    min-width: auto;
-    flex: 1;                /* 🔹 distribui melhor em linha */
-    padding: 12px 18px;     /* 🔹 mais espaçados */
+    width: 100%;
+    max-width: 160px;  /* 🔹 limite pra não esticar demais */
+    padding: 12px 18px;
     border-radius: 10px;
     font-size: 0.95rem;
+    text-align: center;
   }
 
   .stat strong {
@@ -62,12 +65,18 @@ button#btnAgendar:disabled {
     margin-bottom: 4px;
   }
 
+  /* 🔹 Se for número ímpar de cards, o último ocupa as duas colunas */
+  .stats .stat:last-child:nth-child(odd) {
+    grid-column: span 2;
+    justify-self: center; /* 🔹 centraliza na linha */
+  }
+
   button#btnSelecionarEstacao,
   button#btnAgendar {
-    font-size: 16px;        /* 🔹 maior para toque */
+    font-size: 16px;
     padding: 14px;
     border-radius: 10px;
-    width: 100%;            /* 🔹 ocupa toda a largura */
+    width: 100%;
     font-weight: bold;
   }
 }

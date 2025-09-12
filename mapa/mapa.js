@@ -100,7 +100,7 @@ function initMap() {
 }
 
 // ===============================
-// Carregar estações registradas
+// Carregar estações registradas (fictícias)
 // ===============================
 function carregarEstacoesFicticias() {
   estacoes.forEach((estacao) => {
@@ -179,77 +179,83 @@ function carregarEstacoesFicticias() {
 }
 
 // ===============================
-// Carregar estações não registradas
+// Carregar estações não registradas (Places API New)
 // ===============================
-function carregarEstacoesReais(location) {
-  const service = new google.maps.places.PlacesService(map);
+async function carregarEstacoesReais(location) {
+  try {
+    const { Place } = await google.maps.importLibrary("places");
 
-  service.nearbySearch(
-    {
-      location,
-      radius: 15000,
-      keyword: "estação de carregamento de veículos elétricos",
-    },
-    (results, status) => {
-      if (status === google.maps.places.PlacesServiceStatus.OK) {
-        results.forEach((place) => {
-          const marker = new google.maps.Marker({
-            position: place.geometry.location,
-            map,
-            title: place.name,
-            icon: {
-              url: "../assets/bateria-cinza.png",
-              scaledSize: new google.maps.Size(26, 26),
-            },
-          });
+    const request = {
+      fields: ["displayName", "location", "formattedAddress"],
+      locationRestriction: {
+        center: location,
+        radius: 15000, // 15 km
+      },
+      includedTypes: ["electric_vehicle_charging_station"],
+    };
 
-          const contentString = `
-            <div class="popup-estacao">
-              <div class="popup-conteudo">
-                <b>${place.name}</b>
-                ${place.vicinity || ""}<br>
-                <span style="color:#666;font-size:12px">(Não registrada no app)</span>
-              </div>
-              <div class="popup-footer">
-                <span class="estrela" data-estacao="${place.name}"></span>
-              </div>
-            </div>
-          `;
+    const { places } = await Place.searchNearby(request);
 
-          const infowindow = new google.maps.InfoWindow({ content: contentString });
-
-          marker.addListener("click", () => {
-            infowindow.open(map, marker);
-
-            google.maps.event.addListenerOnce(infowindow, "domready", () => {
-              const estrela = document.querySelector(".estrela");
-              if (estrela) {
-                const handler = (e) => {
-                  e.stopPropagation();
-                  toggleFavorito(place.name, estrela);
-                };
-                estrela.addEventListener("click", handler);
-                estrela.addEventListener("touchstart", (e) => {
-                  e.preventDefault();
-                  handler(e);
-                });
-              }
-            });
-          });
-
-          carregadores.push(marker);
-        });
-
-        console.log(`⚡ ${results.length} estações não registradas carregadas.`);
-        mostrarMensagem(`${results.length} estações não registradas carregadas.`, "aviso", true);
-
-        const filtroAtivo = document.getElementById("filtroRecarga")?.checked ?? true;
-        aplicarFiltro(filtroAtivo);
-      } else {
-        mostrarMensagem("Nenhuma estação não registrada encontrada.", "erro", true);
-      }
+    if (!places || places.length === 0) {
+      mostrarMensagem("Nenhuma estação não registrada encontrada.", "erro", true);
+      return;
     }
-  );
+
+    places.forEach((place) => {
+      const marker = new google.maps.Marker({
+        position: place.location,
+        map,
+        title: place.displayName,
+        icon: {
+          url: "../assets/bateria-cinza.png",
+          scaledSize: new google.maps.Size(26, 26),
+        },
+      });
+
+      const contentString = `
+        <div class="popup-estacao">
+          <div class="popup-conteudo">
+            <b>${place.displayName}</b>
+            ${place.formattedAddress || ""}<br>
+            <span style="color:#666;font-size:12px">(Não registrada no app)</span>
+          </div>
+          <div class="popup-footer">
+            <span class="estrela" data-estacao="${place.displayName}"></span>
+          </div>
+        </div>
+      `;
+
+      const infowindow = new google.maps.InfoWindow({ content: contentString });
+
+      marker.addListener("click", () => {
+        infowindow.open(map, marker);
+
+        google.maps.event.addListenerOnce(infowindow, "domready", () => {
+          const estrela = document.querySelector(".estrela");
+          if (estrela) {
+            const handler = (e) => {
+              e.stopPropagation();
+              toggleFavorito(place.displayName, estrela);
+            };
+            estrela.addEventListener("click", handler);
+            estrela.addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              handler(e);
+            });
+          }
+        });
+      });
+
+      carregadores.push(marker);
+    });
+
+    mostrarMensagem(`${places.length} estações não registradas carregadas.`, "aviso", true);
+    aplicarFiltro(document.getElementById("filtroRecarga")?.checked ?? true);
+
+  } catch (err) {
+    console.error("Erro ao carregar estações (Places API New):", err);
+    mostrarMensagem("Erro ao buscar estações.", "erro", true);
+  }
 }
 
 // ===============================

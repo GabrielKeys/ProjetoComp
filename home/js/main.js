@@ -61,5 +61,5 @@
       detalhesModal.style.display = "none";
     }
   });
-});
+
 

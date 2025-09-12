@@ -7,7 +7,6 @@
     <title>VW Carregamento - Mapa</title>
 
     <!-- Estilos do projeto -->
-    <link rel="stylesheet" href="../home/css/reset.css">
     <link rel="stylesheet" href="../global/Sidebar.css">
     <link rel="stylesheet" href="../global/Layout.css">
     <link rel="stylesheet" href="mapa.css">
@@ -28,30 +27,30 @@
 
 <body>
     <div class="container">
-        
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <h2>VoltWay</h2>
-      </div>
-      <nav>
-        <a href="../home/home.html"><span>Início</span></a>
-        <a href="../mapa/mapa.html"class="active"><span>Mapa</span></a>
-        <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
-        <a href="../perfil/perfil.html"><span>Perfil</span></a>
-      </nav>
-      <div class="user-box">
-        <p id="nomeUsuario"></p>
-        <button class="logout-btn" onclick="logout()">Sair</button>
-      </div>
-    </aside>
 
-    <!-- Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>VoltWay</h2>
+            </div>
+            <nav>
+                <a href="../home/home.html"><span>Início</span></a>
+                <a href="../mapa/mapa.html" class="active"><span>Mapa</span></a>
+                <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
+                <a href="../perfil/perfil.html"><span>Perfil</span></a>
+            </nav>
+            <div class="user-box">
+                <p id="nomeUsuario"></p>
+                <button class="logout-btn" onclick="logout()">Sair</button>
+            </div>
+        </aside>
 
-    <!-- Botão fixo -->
-    <button id="toggleSidebar">☰</button>
-    
+        <!-- Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Botão fixo -->
+        <button id="toggleSidebar">☰</button>
+
         <!-- Conteúdo principal -->
         <main class="main">
 
@@ -146,9 +145,8 @@
     </script>
 
     <!-- Google Maps API (adicione sua chave aqui) -->
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY&libraries=places&callback=initMap">
-        </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY&callback=initMap&v=beta"></script>
+
 
 </body>
 
