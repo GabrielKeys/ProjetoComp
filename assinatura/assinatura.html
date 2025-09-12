@@ -17,20 +17,23 @@
 <body>
   <div class="container">
     <!-- Sidebar -->
-    <aside class="sidebar">
-      <h2>VoltWay</h2>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>VoltWay</h2>
+        <button id="toggleSidebar">☰</button>
+      </div>
       <nav>
-        <a href="../home/home.html">Início</a>
-        <a href="../mapa/mapa.html">Mapa</a>
-        <a href="../assinatura/assinatura.html" class="active">Assinatura</a>
-        <a href="../perfil/perfil.html">Perfil</a>
+        <a href="../home/home.html"><span>Início</span></a>
+        <a href="../mapa/mapa.html"><span>Mapa</span></a>
+        <a href="../assinatura/assinatura.html"class="active"><span>Assinatura</span></a>
+        <a href="../perfil/perfil.html"><span>Perfil</span></a>
       </nav>
 
       <div class="user-box">
         <p id="nomeUsuario"></p>
         <button class="logout-btn" onclick="logout()">Sair</button>
       </div>
-    </aside>
+    </aside></span>
 
     <!-- Conteúdo principal -->
     <main class="main">

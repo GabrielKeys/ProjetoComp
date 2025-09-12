@@ -134,3 +134,9 @@ function logout() {
   localStorage.removeItem("usuario");
   window.location.href = "../login/login.html";
 }
+
+// Script para alternar sidebar retrátil
+document.getElementById("toggleSidebar").addEventListener("click", () => {
+  document.getElementById("sidebar").classList.toggle("collapsed");
+  document.getElementById("main").classList.toggle("collapsed");
+});

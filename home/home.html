@@ -13,25 +13,27 @@
 
 <body>
   <div class="container">
-    <!-- Barra lateral -->
-    <aside class="sidebar">
-      <h2>VoltWay</h2>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>VoltWay</h2>
+        <button id="toggleSidebar">☰</button>
+      </div>
       <nav>
-        <a href="#" class="active">Início</a>
-        <a href="../mapa/mapa.html">Mapa</a>
-        <a href="../assinatura/assinatura.html">Assinatura</a>
-        <a href="../perfil/perfil.html">Perfil</a>
+        <a href="#" class="active"><span>Início</span></a>
+        <a href="../mapa/mapa.html"><span>Mapa</span></a>
+        <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
+        <a href="../perfil/perfil.html"><span>Perfil</span></a>
       </nav>
-
       <!-- Caixa de usuário -->
       <div class="user-box">
         <p id="nomeUsuario"></p>
         <button class="logout-btn" onclick="logout()">Sair</button>
       </div>
-    </aside> <!-- ✅ fechamento correto da sidebar -->
-
+    </aside>
+    
     <!-- Conteúdo principal -->
-    <main class="main">
+    <main class="main" id="main">
       <!-- Cabeçalho -->
       <section class="header">
         <div class="header-top">
@@ -104,7 +106,8 @@
               <div class="field-row"><label>Ano:</label><span id="veiculoAno">----</span></div>
               <div class="field-row"><label>Placa:</label><span id="veiculoPlaca">----</span></div>
               <div class="field-row"><label>Bateria:</label><span id="veiculoBateria">---- kWh</span></div>
-              <div class="field-row"><label>Potência de Carga:</label><span id="veiculoCarregamento">---- kW</span></div>
+              <div class="field-row"><label>Potência de Carga:</label><span id="veiculoCarregamento">---- kW</span>
+              </div>
             </div>
           </div>
           <!-- Botão de edição -->
@@ -145,7 +148,7 @@
           <h2>Próxima Reserva</h2>
           <p id="textoReserva">Nenhuma reserva agendada.</p>
         </div>
-        <div id="listaReservas"></div> <!-- Aqui vão aparecer as reservas seguintes -->
+        <div id="listaReservas"></div>
       </section>
       <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
     </main>
@@ -175,7 +178,6 @@
   <!-- Google Pay API -->
   <script async src="https://pay.google.com/gp/p/js/pay.js"></script>
 
-
   <!-- Scripts no final -->
   <script src="js/reserva.js"></script>
   <script src="js/validacao_reserva.js"></script>
@@ -183,7 +185,6 @@
   <script src="js/carteira.js"></script>
   <script src="js/main.js"></script>
   <script src="../global/Global.js"></script>
-
 </body>
 
 </html>

@@ -16,13 +16,16 @@
 <body>
   <div class="container">
     <!-- Sidebar -->
-    <aside class="sidebar">
-      <h2>VoltWay</h2>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>VoltWay</h2>
+        <button id="toggleSidebar">☰</button>
+      </div>
       <nav>
-        <a href="../home/home.html">Início</a>
-        <a href="../mapa/mapa.html">Mapa</a>
-        <a href="../assinatura/assinatura.html">Assinatura</a>
-        <a href="../perfil/perfil.html" class="active">Perfil</a>
+        <a href="../home/home.html"><span>Início</span></a>
+        <a href="../mapa/mapa.html"><span>Mapa</span></a>
+        <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
+        <a href="../perfil/perfil.html" class="active"><span>Perfil</span></a>
       </nav>
 
       <div class="user-box">
@@ -86,7 +89,8 @@
               <div class="field-row"><label>Ano:</label><span id="veiculoAno">----</span></div>
               <div class="field-row"><label>Placa:</label><span id="veiculoPlaca">----</span></div>
               <div class="field-row"><label>Bateria:</label><span id="veiculoBateria">---- kWh</span></div>
-              <div class="field-row"><label>Potência de Carga:</label><span id="veiculoCarregamento">---- kW</span></div>
+              <div class="field-row"><label>Potência de Carga:</label><span id="veiculoCarregamento">---- kW</span>
+              </div>
             </div>
           </div>
           <!-- Botão de edição -->
@@ -118,7 +122,7 @@
     </main>
   </div>
 
-    <!-- Ação do botão da engrenagem (gearBtn) -->
+  <!-- Ação do botão da engrenagem (gearBtn) -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const scrollTarget = localStorage.getItem("scrollToPerfilSection");
@@ -141,4 +145,5 @@
   <script src="../global/Global.js"></script>
 
 </body>
+
 </html>

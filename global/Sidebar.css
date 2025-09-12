@@ -94,16 +94,6 @@
   transform: rotate(45deg); /* efeito ao passar o mouse */
 }
 
-/* Online dot */
-.online-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  background: #28a745; 
-  border-radius: 50%;
-  margin-right: 6px;
-}
-
 .user-photo img {
   width: 28px;
   height: 28px;
@@ -112,3 +102,51 @@
   margin-right: 8px;
   vertical-align: middle;
 }
+
+    /* Estilos mínimos para retrátil */
+    .sidebar.collapsed {
+      width: 60px;
+      transition: width 0.3s ease;
+    }
+    .main.collapsed {
+      margin-left: 60px;
+      transition: margin-left 0.3s ease;
+    }
+    #toggleSidebar {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    .sidebar.collapsed h2,
+    .sidebar.collapsed nav a span,
+    .sidebar.collapsed .user-box {
+      display: none;
+    }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Cabeçalho da sidebar (título + botão retrátil) */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+#toggleSidebar {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  position: relative;
+  top: -2px; /* 🔥 sobe um pouco o botão */
+}
+
