@@ -1,9 +1,25 @@
 // ====================================
+// pequenos utilitários
+// ====================================
+function normalizeName(n) {
+  return (n || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+function namesEqual(a, b) {
+  return normalizeName(a) === normalizeName(b);
+}
+
+// ====================================
 // Atualizar estatísticas da estação
 // ====================================
 function atualizarEstacao() {
   const usuarioAtual = localStorage.getItem("usuario");
-  const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
+  const estacaoSel = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
 
   const statPotencia = document.getElementById("statPotencia");
   const statEspera = document.getElementById("statEspera");
@@ -11,7 +27,13 @@ function atualizarEstacao() {
   const stationMsg = document.getElementById("stationMsg");
   const btnAgendar = document.getElementById("btnAgendar");
 
-  if (estacao) {
+  if (estacaoSel) {
+    // 🔹 tentar resolver objeto completo (stations localStorage -> window.estacoes -> fallback)
+    const stations = JSON.parse(localStorage.getItem("stations")) || [];
+    let estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome)) 
+                 || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
+                 || estacaoSel;
+
     if (statPotencia) statPotencia.textContent = estacao.potencia || "--";
     if (statEspera) statEspera.textContent = estacao.tempoEspera || "--";
     if (statDisponibilidade) statDisponibilidade.textContent = `${estacao.abertura || "?"} - ${estacao.fechamento || "?"}`;
@@ -44,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let favoritos = carregarFavoritos();
   let favoritosVisuais = favoritos.map(() => true);
 
-  // Renderiza lista
+  // Renderiza lista (mostra favoritos, mas resolve dados completos via stations / estacoes)
   function renderizarLista() {
     if (!listaEstacoes) return;
     listaEstacoes.innerHTML = "";
@@ -57,7 +79,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    favoritos.forEach((estacao, idx) => {
+    // pega stations salvas (registradas)
+    const stations = JSON.parse(localStorage.getItem("stations")) || [];
+
+    favoritos.forEach((fav, idx) => {
+      // 🔹 resolve objeto completo: primeiro stations, depois window.estacoes, enfim use fav
+      const estacaoCompleta =
+        stations.find(s => namesEqual(s.nome, fav.nome)) ||
+        (window.estacoes || []).find(s => namesEqual(s.nome, fav.nome)) ||
+        fav;
+
       const li = document.createElement("li");
       li.className = "estacao-item";
 
@@ -67,12 +98,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const nome = document.createElement("span");
       nome.className = "estacao-nome";
-      nome.textContent = estacao.nome;
+      nome.textContent = estacaoCompleta.nome;
 
       const acoes = document.createElement("div");
       acoes.className = "estacao-acoes";
 
-      // Estrela
+      // Estrela (visual) - mantém a lógica anterior de favoritosVisuais
       const estrela = document.createElement("span");
       estrela.className = "estrela-modal favorita";
       estrela.title = "Clique para desfavoritar";
@@ -85,19 +116,19 @@ document.addEventListener("DOMContentLoaded", () => {
         estrela.classList.toggle("favorita", favoritosVisuais[idx]);
 
         if (favoritosVisuais[idx]) {
-          mostrarMensagem(`${estacao.nome} adicionada aos favoritos!`, "sucesso", true);
+          mostrarMensagem(`${estacaoCompleta.nome} adicionada aos favoritos!`, "sucesso", true);
         } else {
-          mostrarMensagem(`${estacao.nome} removida dos favoritos.`, "erro", true);
+          mostrarMensagem(`${estacaoCompleta.nome} removida dos favoritos.`, "erro", true);
         }
       });
 
-      // Botão Selecionar
+      // Botão Selecionar -> salva a estacao completa
       const btnSelect = document.createElement("button");
       btnSelect.className = "btn-selecionar-estacao";
       btnSelect.textContent = "Selecionar";
       btnSelect.addEventListener("click", (e) => {
         e.stopPropagation();
-        localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
+        localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacaoCompleta));
         salvarFavoritosEFechar();
       });
 
@@ -107,14 +138,14 @@ document.addEventListener("DOMContentLoaded", () => {
       linha.appendChild(nome);
       linha.appendChild(acoes);
 
-      // Detalhes sempre visíveis
+      // Detalhes sempre visíveis (usando estacaoCompleta)
       const detalhes = document.createElement("div");
       detalhes.className = "detalhes-estacao ativo";
       detalhes.innerHTML = `
-        <p><strong>Endereço:</strong> ${estacao.rua || "N/D"} ${estacao.numero || ""}</p>
-        <p><strong>Cidade:</strong> ${estacao.cidade || "N/D"} - ${estacao.estado || ""}</p>
-        <p><strong>Potência Máx:</strong> ${estacao.potencia || "N/D"} kW</p>
-        <p><strong>Disponibilidade:</strong> ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}</p>
+        <p><strong>Endereço:</strong> ${estacaoCompleta.rua || "N/D"} ${estacaoCompleta.numero || ""}</p>
+        <p><strong>Cidade:</strong> ${estacaoCompleta.cidade || "N/D"} - ${estacaoCompleta.estado || ""}</p>
+        <p><strong>Potência Máx:</strong> ${estacaoCompleta.potencia || "N/D"} kW</p>
+        <p><strong>Disponibilidade:</strong> ${estacaoCompleta.abertura || "?"} - ${estacaoCompleta.fechamento || "?"}</p>
       `;
 
       li.appendChild(linha);
@@ -275,12 +306,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderizarDetalhes() {
     const reservas = carregarReservas();
     const usuarioAtual = localStorage.getItem("usuario");
+    if (!listaDetalhes) return;
     listaDetalhes.innerHTML = "";
 
     if (reservas.length === 0) {
       listaDetalhes.innerHTML = "<li>Nenhuma reserva encontrada.</li>";
       return;
     }
+
+    const stations = JSON.parse(localStorage.getItem("stations")) || [];
+    const favoritos = JSON.parse(localStorage.getItem(`favoritos_${usuarioAtual}`)) || [];
 
     reservas.forEach((r, idx) => {
       const li = document.createElement("li");
@@ -305,9 +340,11 @@ document.addEventListener("DOMContentLoaded", () => {
       linha.appendChild(nome);
       linha.appendChild(btnCancelar);
 
-      // 🔹 Pega dados completos da estação
-      const estacoes = JSON.parse(localStorage.getItem(`favoritos_${usuarioAtual}`)) || [];
-      const estacaoDados = estacoes.find(e => e.nome === r.estacao);
+      // 🔹 Busca dados completos (stations -> favoritos -> window.estacoes)
+      let estacaoDados = stations.find(e => namesEqual(e.nome, r.estacao))
+                       || favoritos.find(e => namesEqual(e.nome, r.estacao))
+                       || (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao))
+                       || {};
 
       const detalhes = document.createElement("div");
       detalhes.className = "detalhes-reserva";
@@ -384,12 +421,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = document.getElementById("dataReserva").value;
     const hora = document.getElementById("horaReserva").value;
     const usuarioAtual = localStorage.getItem("usuario");
-    const estacao = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
+    const estacaoSel = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
 
-    if (!data || !hora || !estacao) {
+    if (!data || !hora || !estacaoSel) {
       mostrarMensagem("❌ Selecione estação, data e horário!", "erro");
       return;
     }
+
+    // 🔹 garanto usar objeto completo para validar disponibilidade
+    const stations = JSON.parse(localStorage.getItem("stations")) || [];
+    const estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome))
+                   || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
+                   || estacaoSel;
 
     const reservas = carregarReservas();
     const resultado = validarDisponibilidade(estacao, data, hora, reservas);

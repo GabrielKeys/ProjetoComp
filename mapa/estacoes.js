@@ -37,6 +37,7 @@ const estacoes = [
         abertura: "00:00",
         fechamento: "23:59"
     },
+    /*
     {
         nome: "Estação Aeroporto Congonhas",
         lat: -23.6261,
@@ -67,6 +68,6 @@ const estacoes = [
     { nome: "Estação Socorro", lat: -23.6810, lng: -46.7033, potencia: "150 kW", tempoEspera: "10 min", abertura: "06:00", fechamento: "22:00" },
     { nome: "Estação Campo Belo", lat: -23.6265, lng: -46.6712, potencia: "130 kW", tempoEspera: "11 min", abertura: "06:00", fechamento: "22:00" },
     { nome: "Estação Vila Mariana", lat: -23.5881, lng: -46.6340, potencia: "120 kW", tempoEspera: "9 min", abertura: "06:00", fechamento: "23:59" },
-  
+  */
 ];
 

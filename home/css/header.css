@@ -15,6 +15,12 @@
   font-size: 1.1rem;
 }
 
+/* 🔹 Impede o texto da estação de encolher e mexer os cards */
+#stationMsg {
+  display: inline-block;
+  min-width: 34ch; /* largura suficiente para a frase maior */
+}
+
 /* ================================
    Botões principais (Desktop)
 ================================ */
