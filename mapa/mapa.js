@@ -274,20 +274,28 @@ function adicionarEstacaoNoMapa(estacao) {
   ficticios.push(marker);
 }
 
-/* ===============================
-   Carregar estações reais (Places API)
-   =============================== */
+// ===============================
+// Carregar estações não registradas (Places API New)
+// ===============================
 async function carregarEstacoesReais(location) {
   try {
     const { Place } = await google.maps.importLibrary("places");
+
     const request = {
       fields: ["displayName", "location", "formattedAddress"],
-      locationRestriction: { center: location, radius: 15000 },
+      locationRestriction: {
+        center: location,
+        radius: 15000, // 15 km
+      },
       includedTypes: ["electric_vehicle_charging_station"],
     };
 
     const { places } = await Place.searchNearby(request);
-    if (!places || places.length === 0) return;
+
+    if (!places || places.length === 0) {
+      mostrarMensagem("Nenhuma estação não registrada encontrada.", "erro", true);
+      return;
+    }
 
     places.forEach((place) => {
       const marker = new google.maps.Marker({
@@ -303,23 +311,48 @@ async function carregarEstacoesReais(location) {
       const contentString = `
         <div class="popup-estacao">
           <div class="popup-conteudo">
-            <b>${place.displayName}</b><br>
+            <b>${place.displayName}</b>
             ${place.formattedAddress || ""}<br>
             <span style="color:#666;font-size:12px">(Não registrada no app)</span>
+          </div>
+          <div class="popup-footer">
+            <span class="estrela" data-estacao="${place.displayName}"></span>
           </div>
         </div>
       `;
 
       const infowindow = new google.maps.InfoWindow({ content: contentString });
-      marker.addListener("click", () => infowindow.open(map, marker));
+
+      marker.addListener("click", () => {
+        infowindow.open(map, marker);
+
+        google.maps.event.addListenerOnce(infowindow, "domready", () => {
+          const estrela = document.querySelector(".estrela");
+          if (estrela) {
+            const handler = (e) => {
+              e.stopPropagation();
+              toggleFavorito(place.displayName, estrela);
+            };
+            estrela.addEventListener("click", handler);
+            estrela.addEventListener("touchstart", (e) => {
+              e.preventDefault();
+              handler(e);
+            });
+          }
+        });
+      });
+
       carregadores.push(marker);
     });
 
+    mostrarMensagem(`${places.length} estações não registradas carregadas.`, "aviso", true);
+    aplicarFiltro(document.getElementById("filtroRecarga")?.checked ?? true);
+
   } catch (err) {
-    console.error("Erro ao carregar estações (Places API):", err);
+    console.error("Erro ao carregar estações (Places API New):", err);
+    mostrarMensagem("Erro ao buscar estações.", "erro", true);
   }
 }
-
 /* ===============================
    Filtro / Favoritos / Mensagens
    (mantive igual à sua versão original)
