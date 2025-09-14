@@ -160,6 +160,20 @@
         <input type="time" id="stationClose" name="stationClose" required>
       </div>
 
+
+      <!-- Extras -->
+      <div class="input-group">
+        <label for="stationPrice">Preço (R$/kWh):</label>
+        <input type="number" id="stationPrice" step="0.01" placeholder="Ex: 1.50" />
+      </div>
+
+      <div class="input-group">
+        <label for="stationWait">Tempo de espera (minutos):</label>
+        <input type="number" id="stationWait" placeholder="Ex: 15" />
+      </div>
+
+
+
       <p id="stationMsg" class="msg"></p>
       <button type="submit" class="btn">Registrar Estação</button>
 

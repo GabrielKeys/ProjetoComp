@@ -26,24 +26,28 @@ function atualizarEstacao() {
   const statDisponibilidade = document.getElementById("statDisponibilidade");
   const stationMsg = document.getElementById("stationMsg");
   const btnAgendar = document.getElementById("btnAgendar");
+  const statPreco = document.getElementById("statPreco"); // Extras
+
 
   if (estacaoSel) {
     // 🔹 tentar resolver objeto completo (stations localStorage -> window.estacoes -> fallback)
     const stations = JSON.parse(localStorage.getItem("stations")) || [];
-    let estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome)) 
-                 || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
-                 || estacaoSel;
+    let estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome))
+      || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
+      || estacaoSel;
 
-    if (statPotencia) statPotencia.textContent = estacao.potencia || "--";
+    if (statPotencia) statPotencia.textContent = estacao.potencia || "--"; 
     if (statEspera) statEspera.textContent = estacao.tempoEspera || "--";
     if (statDisponibilidade) statDisponibilidade.textContent = `${estacao.abertura || "?"} - ${estacao.fechamento || "?"}`;
     if (stationMsg) stationMsg.textContent = `Estação selecionada: ${estacao.nome}`;
+    if (statPreco) statPreco.textContent = estacao.preco || "--"; // Extras
     if (btnAgendar) btnAgendar.disabled = false;
   } else {
     if (statPotencia) statPotencia.textContent = "--";
     if (statEspera) statEspera.textContent = "--";
     if (statDisponibilidade) statDisponibilidade.textContent = "--";
     if (stationMsg) stationMsg.textContent = "Nenhuma estação de recarga selecionada.";
+    if (statPreco) statPreco.textContent = "--"; //Extras
     if (btnAgendar) btnAgendar.disabled = true;
   }
 }
@@ -146,6 +150,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <p><strong>Cidade:</strong> ${estacaoCompleta.cidade || "N/D"} - ${estacaoCompleta.estado || ""}</p>
         <p><strong>Potência Máx:</strong> ${estacaoCompleta.potencia || "N/D"} kW</p>
         <p><strong>Disponibilidade:</strong> ${estacaoCompleta.abertura || "?"} - ${estacaoCompleta.fechamento || "?"}</p>
+
+      <!-- Extras -->
+        <p><strong>Tempo de Espera:</strong> ${estacaoCompleta.tempoEspera || "--"}</p>
+        <p><strong>Preço:</strong> ${estacaoCompleta.preco || "--"}</p>
       `;
 
       li.appendChild(linha);
@@ -342,9 +350,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 🔹 Busca dados completos (stations -> favoritos -> window.estacoes)
       let estacaoDados = stations.find(e => namesEqual(e.nome, r.estacao))
-                       || favoritos.find(e => namesEqual(e.nome, r.estacao))
-                       || (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao))
-                       || {};
+        || favoritos.find(e => namesEqual(e.nome, r.estacao))
+        || (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao))
+        || {};
 
       const detalhes = document.createElement("div");
       detalhes.className = "detalhes-reserva";
@@ -355,6 +363,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <p><strong>Cidade:</strong> ${estacaoDados?.cidade || "N/D"} - ${estacaoDados?.estado || ""}</p>
         <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia || "N/D"} kW</p>
         <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || "?"} - ${estacaoDados?.fechamento || "?"}</p>
+
+              <!-- Extras -->
+        <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera || "--"}</p>
+        <p><strong>Preço:</strong> ${estacaoDados?.preco || "--"}</p>
       `;
 
       li.appendChild(linha);
@@ -431,8 +443,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // 🔹 garanto usar objeto completo para validar disponibilidade
     const stations = JSON.parse(localStorage.getItem("stations")) || [];
     const estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome))
-                   || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
-                   || estacaoSel;
+      || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
+      || estacaoSel;
 
     const reservas = carregarReservas();
     const resultado = validarDisponibilidade(estacao, data, hora, reservas);

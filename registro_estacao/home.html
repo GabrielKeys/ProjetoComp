@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VW Carregamento - Início</title>
-  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="../home/css/home.css">
 </head>
 
 <body>
@@ -18,9 +18,7 @@
       </div>
       <nav>
         <a href="#" class="active"><span>Início</span></a>
-        <a href="../mapa/mapa.html"><span>Mapa</span></a>
-        <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
-        <a href="../perfil/perfil.html"><span>Perfil</span></a>
+        <a href="perfil.html"><span>Perfil</span></a>
       </nav>
       <div class="user-box">
         <p id="nomeUsuario"></p>
@@ -46,7 +44,6 @@
             <h1 id="stationTitle">Bem-vindo</h1>
             <p id="stationMsg">
               Experimente o futuro da mobilidade com nossa rede de carregamento.
-              Selecione uma estação para ver os detalhes.
             </p>
           </div>
         </div>
@@ -65,93 +62,15 @@
             <strong id="statDisponibilidade">--</strong>
             <span>Disponibilidade</span>
           </div>
-
-          <!--
           <div class="stat">
             <strong id="statPreco">--</strong>
             <span>Preço (R$/kWh)</span>
           </div>
-        </div> 
-        -->
-
-        <!-- Botões -->
-        <button id="btnSelecionarEstacao">Selecionar Estação</button>
-        <button id="btnAgendar" disabled>Agendar Reserva</button>
-
-        <!-- Modal de seleção -->
-        <div id="stationModal" class="modal">
-          <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Selecione uma Estação</h3>
-            <ul id="listaEstacoes"></ul>
-          </div>
-        </div>
-
-        <!-- Modal de agendamento -->
-        <div id="agendamentoModal" class="modal">
-          <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Agendar Reserva</h3>
-            <form id="formAgendamento">
-              <label for="dataReserva">Data:</label>
-              <input type="date" id="dataReserva" required>
-
-              <label for="horaReserva">Hora:</label>
-              <input type="time" id="horaReserva" required>
-
-              <button type="submit">Confirmar</button>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      <!-- Veículo -->
-      <section class="card vehicle">
-        <h2>Meu Veículo</h2>
-        <div class="vehicle-info">
-          <img src="../assets/carro.png" alt="Carro Elétrico Genérico">
-          <div id="veiculoDetalhes">
-            <div class="vehicle-fields">
-              <div class="field-row"><label>Modelo:</label><span id="veiculoModelo">----</span></div>
-              <div class="field-row"><label>Ano:</label><span id="veiculoAno">----</span></div>
-              <div class="field-row"><label>Placa:</label><span id="veiculoPlaca">----</span></div>
-              <div class="field-row"><label>Bateria:</label><span id="veiculoBateria">---- kWh</span></div>
-              <div class="field-row"><label>Potência de Carga:</label><span id="veiculoCarregamento">---- kW</span>
-              </div>
-            </div>
-          </div>
-          <!-- Botão de edição -->
-          <div class="editar-wrapper">
-            <button id="btnEditarVeiculo" class="btn-editar">Editar Veículo</button>
-          </div>
-      </section>
-
-      <!-- Carteira & Status -->
-      <section class="grid">
-        <div class="card">
-          <h2>Minha Carteira</h2>
-          <p class="balance" id="saldoCarteira">R$0,00</p>
-
-          <div class="transactions" id="listaTransacoes">
-            <p>Nenhuma transação ainda.</p>
-          </div>
-
-          <!-- Recarga com máscara de moeda -->
-          <div class="wallet-recharge">
-            <input type="text" id="valorRecarga" placeholder="R$ 0,00">
-            <button id="btnRecarregar">Recarregar</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>Seu Status</h2>
-          <p>Pontos: <strong>0 pts</strong></p>
-          <p>Reservas Semanais: 0/999 (Ilimitadas)</p>
-          <span class="badge gold">Plano Gold</span>
         </div>
       </section>
 
 
+     
       <!-- Próxima Reserva -->
       <section class="card next-reservation" id="proximaReservaCard">
         <div>

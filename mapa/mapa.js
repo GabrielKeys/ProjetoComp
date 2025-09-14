@@ -16,7 +16,7 @@ function initMap() {
     streetViewControl: true,
     fullscreenControl: true,
     gestureHandling: "greedy",
-        styles: [
+    styles: [
       { featureType: "poi", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
       { featureType: "poi.business", stylers: [{ visibility: "off" }] },
       { featureType: "poi.medical", stylers: [{ visibility: "off" }] },
@@ -132,7 +132,12 @@ async function carregarEstacoesFicticias() {
         cep: st.cep || "",
         potencia: st.power ? (st.power + " kW") : (st.potencia || "N/D"),
         abertura: st.open || st.abertura || "",
-        fechamento: st.close || st.fechamento || ""
+        fechamento: st.close || st.fechamento || "",
+
+
+        //Extras
+        preco: st.preco || st.price || "",
+        tempoEspera: st.tempoEspera || "",
       });
     });
 
@@ -141,7 +146,7 @@ async function carregarEstacoesFicticias() {
     // Processa sequencialmente para evitar muitos requests ao mesmo tempo
     for (let i = 0; i < todasEstacoes.length; i++) {
       const estacao = todasEstacoes[i];
-      console.log(`→ Processando (${i+1}/${todasEstacoes.length}):`, estacao.nome);
+      console.log(`→ Processando (${i + 1}/${todasEstacoes.length}):`, estacao.nome);
 
       if (estacao.lat && estacao.lng) {
         // já tem coordenadas
@@ -221,20 +226,27 @@ function adicionarEstacaoNoMapa(estacao) {
   const jaFavorito = favoritos.some((fav) => fav.nome === estacao.nome);
 
   const contentString = `
-    <div class="popup-estacao">
-      <div class="popup-conteudo">
-        <b>${estacao.nome}</b><br>
-        ${estacao.rua || ""} ${estacao.numero || ""}<br>
-        ${estacao.cidade || ""} ${estacao.estado || ""} ${estacao.cep || ""}<br>
-        Potência: ${estacao.potencia || "N/D"}<br>
-        Horário: ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}
-      </div>
-      <div class="popup-footer">
-        <button class="btn-reservar">Reservar</button>
-        <span class="estrela ${jaFavorito ? "favorita" : ""}" data-estacao="${estacao.nome}"></span>
-      </div>
+  <div class="popup-estacao">
+    <div class="popup-conteudo">
+      <b>${estacao.nome}</b><br>
+      ${estacao.rua || ""} ${estacao.numero || ""}<br>
+      ${estacao.cidade || ""} ${estacao.estado || ""} ${estacao.cep || ""}<br>
+      Potência: ${estacao.potencia || "N/D"}<br>
+      Horário: ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}<br>
+
+      <!-- Extras -->
+      Preço: ${estacao.preco || "N/D"}<br> 
+      Tempo de espera: ${estacao.tempoEspera || "N/D"}<br> 
+
+
     </div>
-  `;
+    <div class="popup-footer">
+      <button class="btn-reservar">Reservar</button>
+      <span class="estrela ${jaFavorito ? "favorita" : ""}" data-estacao="${estacao.nome}"></span>
+    </div>
+  </div>
+`;
+
 
   const infowindow = new google.maps.InfoWindow({ content: contentString });
 

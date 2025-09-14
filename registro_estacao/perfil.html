@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VW Carregamento - Perfil</title>
+
+  <!-- Estilos do projeto -->
+  <link rel="stylesheet" href="../global/Sidebar.css">
+  <link rel="stylesheet" href="../global/Header.css">
+  <link rel="stylesheet" href="../global/Layout.css">
+</head>
+
+<body>
+  <div class="container">
+
+   <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>VoltWay</h2>
+      </div>
+      <nav>
+        <a href="home.html"><span>Início</span></a>
+        <a href="#"class="active"><span>Perfil</span></a>
+      </nav>
+
+      <div class="user-box">
+        <p id="nomeUsuario">
+          <span class="user-photo">
+            <img src="../assets/foto.png" alt="Foto do usuário" />
+          </span>
+          <span class="user-name">Usuário</span>
+          <button class="settings-icon">
+            <img src="../assets/engrenagem.png" alt="Configurações" width="20" height="20">
+          </button>
+        </p>
+        <button class="logout-btn" onclick="logout()">Sair</button>
+      </div>
+    </aside>
+
+
+    <!-- Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Botão fixo -->
+    <button id="toggleSidebar">☰</button>
+
+
+    <!-- Conteúdo principal -->
+    <main class="main">
+      <!-- Cabeçalho -->
+      <section class="header">
+        <div class="header-top">
+          <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+          <div class="header-text">
+            <h1>Perfil do Local</h1>
+            <p>Gerencie suas informações do local e preferências.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Foto do Usuário -->
+      <section class="card perfil-container perfil-foto-container">
+        <div class="perfil-foto">
+          <img src="../assets/foto.png" id="fotoUsuario" alt="Foto do usuário">
+          <div style="margin-top:8px;">
+            <button id="btnUploadFoto" class="btn">Alterar Foto</button>
+            <button id="btnRemoverFoto" class="btn btn-ghost" style="margin-left:8px;">Remover</button>
+          </div>
+        </div>
+        <!-- input file escondido -->
+        <input type="file" id="inputFoto" accept="image/*" style="display:none" />
+      </section>
+
+      <!-- Informações do Usuário -->
+      <section class="card perfil-container">
+        <h2>Informações do Perfil do Local</h2>
+        <div id="userDetalhes" class="vehicle-fields"></div>
+        <div id="perfilActions" class="form-actions hidden">
+          <button id="btnSalvarPerfil">Salvar</button>
+          <button id="btnCancelarPerfil" class="btn-cancelar">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- Preferências -->
+      <section class="card perfil-container">
+        <h2>Preferências</h2>
+        <p>Notificações: Ativadas</p>
+        <p>Tema: Claro</p>
+        <p>Localização Automática: Ativada</p>
+        <button class="btn">Alterar Preferências</button>
+      </section>
+
+  <!-- Ação do botão da engrenagem (gearBtn) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const scrollTarget = localStorage.getItem("scrollToPerfilSection");
+      if (scrollTarget) {
+        const alvo = document.getElementById(scrollTarget);
+        if (alvo) {
+          setTimeout(() => {
+            const targetY = alvo.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({ top: targetY, behavior: "smooth" });
+          }, 200); // espera a página renderizar
+        }
+        localStorage.removeItem("scrollToPerfilSection");
+      }
+    });
+  </script>
+
+  <!-- scripts -->
+  <script src="../home/js/main.js"></script>
+  <script src="perfil.js"></script>
+  <script src="../global/Global.js"></script>
+
+</body>
+
+</html>
