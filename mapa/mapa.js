@@ -1,20 +1,22 @@
+/* mapa.js - versão com logs e geocoding robusto */
+
 let map;
 let userMarker;
 let carregadores = [];
 let ficticios = [];
 
-// ===============================
-// Inicializa o mapa Google Maps
-// ===============================
+/* ===============================
+   Inicializa o mapa Google Maps
+   =============================== */
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: -23.5505, lng: -46.6333 }, // fallback SP
+    center: { lat: -23.5505, lng: -46.6333 },
     zoom: 13,
     mapTypeControl: false,
     streetViewControl: true,
     fullscreenControl: true,
     gestureHandling: "greedy",
-    styles: [
+        styles: [
       { featureType: "poi", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
       { featureType: "poi.business", stylers: [{ visibility: "off" }] },
       { featureType: "poi.medical", stylers: [{ visibility: "off" }] },
@@ -30,20 +32,22 @@ function initMap() {
 
   console.log("🗺️ Mapa inicializado.");
 
-  carregarEstacoesFicticias();
+  // Carrega as estações (fixas + registradas)
+  carregarEstacoesFicticias()
+    .then(() => console.log("✅ carregarEstacoesFicticias finalizado."))
+    .catch(err => console.error("Erro em carregarEstacoesFicticias:", err));
 
+  // Geolocalização do usuário
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        const precisao = pos.coords.accuracy;
-
         map.setCenter(userLocation);
         map.setZoom(15);
 
         userMarker = new google.maps.Marker({
           position: userLocation,
-          map: map,
+          map,
           title: "Você está aqui",
           icon: {
             url: "../assets/carro-icone.png",
@@ -52,46 +56,30 @@ function initMap() {
           },
         });
 
-        console.log("📍 Localização encontrada:", userLocation, "Precisão:", precisao);
-
-        if (precisao <= 50) {
-          mostrarMensagem(`📍 Localização encontrada (precisão: ${Math.round(precisao)}m)`, "sucesso");
-        } else if (precisao <= 200) {
-          mostrarMensagem(`📍 Localização aproximada (precisão: ${Math.round(precisao)}m)`, "aviso");
-        } else {
-          mostrarMensagem(`⚠️ Localização imprecisa (precisão: ${Math.round(precisao)}m)`, "erro");
-        }
-
+        console.log("📍 Localização encontrada:", userLocation, "Precisão:", pos.coords.accuracy);
         setTimeout(() => carregarEstacoesReais(userLocation), 1500);
       },
       (err) => {
-        console.error(err);
-        mostrarMensagem("Não foi possível obter sua localização precisa.", "erro");
+        console.warn("Não foi possível obter localização do usuário:", err);
         const fallback = { lat: -23.5505, lng: -46.6333 };
         map.setCenter(fallback);
         setTimeout(() => carregarEstacoesReais(fallback), 1500);
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0,
-      }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
     );
   } else {
-    mostrarMensagem("Geolocalização não suportada no seu navegador.", "erro");
+    console.warn("Geolocalização não suportada.");
     const fallback = { lat: -23.5505, lng: -46.6333 };
     map.setCenter(fallback);
     setTimeout(() => carregarEstacoesReais(fallback), 1500);
   }
 
+  // Filtro persistente
   const filtroCheckbox = document.getElementById("filtroRecarga");
   if (filtroCheckbox) {
     const estadoSalvo = localStorage.getItem("filtroRecarga");
-    if (estadoSalvo !== null) {
-      filtroCheckbox.checked = (estadoSalvo === "true");
-    }
+    if (estadoSalvo !== null) filtroCheckbox.checked = (estadoSalvo === "true");
     aplicarFiltro(filtroCheckbox.checked);
-
     filtroCheckbox.addEventListener("change", () => {
       localStorage.setItem("filtroRecarga", filtroCheckbox.checked);
       aplicarFiltro(filtroCheckbox.checked);
@@ -99,107 +87,207 @@ function initMap() {
   }
 }
 
-// ===============================
-// Carregar estações registradas (fictícias)
-// ===============================
-function carregarEstacoesFicticias() {
-  estacoes.forEach((estacao) => {
-    if (!estacao.lat || !estacao.lng) return;
-    const position = { lat: estacao.lat, lng: estacao.lng };
-
-    const marker = new google.maps.Marker({
-      position,
-      map,
-      title: estacao.nome,
-      icon: {
-        url: "../assets/bateria-verde.png",
-        scaledSize: new google.maps.Size(28, 28),
-      },
+/* ===============================
+   Geocode (versão Promise)
+   =============================== */
+function geocodeEnderecoPromise(endereco) {
+  return new Promise((resolve) => {
+    const geocoder = new google.maps.Geocoder();
+    console.log("📌 Geocoding:", endereco);
+    geocoder.geocode({ address: endereco }, (results, status) => {
+      console.log("📡 Status geocode:", status, results && results[0] ? results[0].geometry.location.toString() : results);
+      if (status === "OK" && results && results[0]) {
+        resolve(results[0].geometry.location);
+      } else {
+        resolve(null);
+      }
     });
+  });
+}
 
-    const usuarioAtual = localStorage.getItem("usuario");
-    const chaveFavoritos = `favoritos_${usuarioAtual}`;
-    let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
-    const jaFavorito = favoritos.some((fav) => fav.nome === estacao.nome);
+/* ===============================
+   Carregar estações registradas (fixas + localStorage)
+   - Faz geocode sequencial para evitar sobrecarga
+   =============================== */
+async function carregarEstacoesFicticias() {
+  try {
+    if (typeof estacoes === "undefined") {
+      console.error("❌ estacoes não definido. Verifique se estacoes.js foi carregado antes do mapa.js");
+      return;
+    }
 
-    const contentString = `
-      <div class="popup-estacao">
-        <div class="popup-conteudo">
-          <b>${estacao.nome}</b>
-          ${estacao.rua || ""} ${estacao.numero || ""}<br>
-          ${estacao.cidade || ""} ${estacao.estado || ""} ${estacao.cep || ""}<br>
-          Potência: ${estacao.potencia || "N/D"}<br>
-          Tempo de Espera: ${estacao.tempoEspera || "N/D"}<br>
-          Horário: ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}
-        </div>
-        <div class="popup-footer">
-          <button class="btn-reservar">Reservar</button>
-          <span class="estrela ${jaFavorito ? "favorita" : ""}" data-estacao="${estacao.nome}"></span>
-        </div>
-      </div>
-    `;
+    // copia lista original
+    let todasEstacoes = Array.isArray(estacoes) ? [...estacoes] : [];
+    // traz as registradas (salvas via form)
+    let registradas = JSON.parse(localStorage.getItem("stations")) || [];
 
-    const infowindow = new google.maps.InfoWindow({ content: contentString });
-
-    marker.addListener("click", () => {
-      infowindow.open(map, marker);
-
-      google.maps.event.addListenerOnce(infowindow, "domready", () => {
-        const btn = document.querySelector(".btn-reservar");
-        if (btn) {
-          btn.addEventListener("click", () => {
-            const usuarioAtual = localStorage.getItem("usuario");
-            localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
-            const agendamentoModal = document.getElementById("agendamentoModal");
-            if (agendamentoModal) agendamentoModal.style.display = "flex";
-            atualizarEstacao();
-          });
-        }
-
-        const estrela = document.querySelector(".estrela");
-        if (estrela) {
-          const handler = (e) => {
-            e.stopPropagation();
-            toggleFavorito(estacao.nome, estrela);
-          };
-          estrela.addEventListener("click", handler);
-          estrela.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            handler(e);
-          });
-        }
+    registradas.forEach(st => {
+      todasEstacoes.push({
+        nome: st.stationName || st.name || st.stationName || st.nome || "Estação",
+        rua: st.address || st.rua || "",
+        numero: st.number || st.numero || "",
+        bairro: st.district || st.bairro || "",
+        cidade: st.city || st.cidade || "",
+        estado: st.state || st.estado || "",
+        cep: st.cep || "",
+        potencia: st.power ? (st.power + " kW") : (st.potencia || "N/D"),
+        abertura: st.open || st.abertura || "",
+        fechamento: st.close || st.fechamento || ""
       });
     });
 
-    ficticios.push(marker);
-  });
+    console.log("🔎 Total estações a processar:", todasEstacoes.length);
 
-  console.log(`✅ ${estacoes.length} estações registradas carregadas.`);
-  mostrarMensagem(`${estacoes.length} estações registradas carregadas.`, "sucesso", true);
+    // Processa sequencialmente para evitar muitos requests ao mesmo tempo
+    for (let i = 0; i < todasEstacoes.length; i++) {
+      const estacao = todasEstacoes[i];
+      console.log(`→ Processando (${i+1}/${todasEstacoes.length}):`, estacao.nome);
+
+      if (estacao.lat && estacao.lng) {
+        // já tem coordenadas
+        adicionarEstacaoNoMapa(estacao);
+      } else {
+        const enderecoParts = [
+          estacao.rua,
+          estacao.numero,
+          estacao.bairro,
+          estacao.cidade,
+          estacao.estado,
+          estacao.cep
+        ].filter(Boolean);
+
+        if (enderecoParts.length === 0) {
+          console.warn("⛔ Endereço incompleto / vazio para:", estacao.nome);
+          continue;
+        }
+
+        const endereco = enderecoParts.join(", ");
+        const pos = await geocodeEnderecoPromise(endereco);
+
+        if (!pos) {
+          console.warn("⛔ Geocode falhou para", estacao.nome, "endereco:", endereco);
+          continue;
+        }
+
+        estacao.lat = pos.lat();
+        estacao.lng = pos.lng();
+        adicionarEstacaoNoMapa(estacao);
+        // pequena pausa opcional para reduzir carga (se quiser, descomente)
+        // await new Promise(r => setTimeout(r, 200));
+      }
+    }
+
+    console.log(`✅ Processadas ${todasEstacoes.length} estações (fixas + registradas).`);
+    mostrarMensagem(`${todasEstacoes.length} estações carregadas.`, "sucesso", true);
+
+  } catch (err) {
+    console.error("Erro em carregarEstacoesFicticias:", err);
+  }
 }
 
-// ===============================
-// Carregar estações não registradas (Places API New)
-// ===============================
+/* ===============================
+   Adicionar estação no mapa (mantém popup/reservar/favoritar)
+   =============================== */
+function adicionarEstacaoNoMapa(estacao) {
+  const position = { lat: Number(estacao.lat), lng: Number(estacao.lng) };
+  if (!isFinite(position.lat) || !isFinite(position.lng)) {
+    console.warn("⚠️ Coordenadas inválidas para:", estacao.nome, estacao);
+    return;
+  }
+
+  // 🔑 Se não tiver nome definido, usar endereço como fallback
+  if (!estacao.nome || estacao.nome.trim() === "") {
+    estacao.nome = [
+      estacao.rua,
+      estacao.numero,
+      estacao.cidade,
+      estacao.estado
+    ].filter(Boolean).join(", ");
+  }
+
+  const marker = new google.maps.Marker({
+    position,
+    map,
+    title: estacao.nome,
+    icon: {
+      url: "../assets/bateria-verde.png",
+      scaledSize: new google.maps.Size(28, 28),
+    },
+  });
+
+  const usuarioAtual = localStorage.getItem("usuario");
+  const chaveFavoritos = `favoritos_${usuarioAtual}`;
+  let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
+  const jaFavorito = favoritos.some((fav) => fav.nome === estacao.nome);
+
+  const contentString = `
+    <div class="popup-estacao">
+      <div class="popup-conteudo">
+        <b>${estacao.nome}</b><br>
+        ${estacao.rua || ""} ${estacao.numero || ""}<br>
+        ${estacao.cidade || ""} ${estacao.estado || ""} ${estacao.cep || ""}<br>
+        Potência: ${estacao.potencia || "N/D"}<br>
+        Horário: ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}
+      </div>
+      <div class="popup-footer">
+        <button class="btn-reservar">Reservar</button>
+        <span class="estrela ${jaFavorito ? "favorita" : ""}" data-estacao="${estacao.nome}"></span>
+      </div>
+    </div>
+  `;
+
+  const infowindow = new google.maps.InfoWindow({ content: contentString });
+
+  marker.addListener("click", () => {
+    infowindow.open(map, marker);
+
+    // após abrir a janela, registra handlers
+    google.maps.event.addListenerOnce(infowindow, "domready", () => {
+      const btn = document.querySelector(".btn-reservar");
+      if (btn) {
+        btn.addEventListener("click", () => {
+          const usuarioAtual = localStorage.getItem("usuario");
+          localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
+          const agendamentoModal = document.getElementById("agendamentoModal");
+          if (agendamentoModal) agendamentoModal.style.display = "flex";
+          if (typeof atualizarEstacao === "function") {
+            atualizarEstacao();
+          }
+        });
+      }
+
+      const estrela = document.querySelector(".estrela");
+      if (estrela) {
+        const handler = (e) => {
+          e.stopPropagation();
+          toggleFavorito(estacao.nome, estrela);
+        };
+        estrela.addEventListener("click", handler);
+        estrela.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          handler(e);
+        });
+      }
+    });
+  });
+
+  ficticios.push(marker);
+}
+
+/* ===============================
+   Carregar estações reais (Places API)
+   =============================== */
 async function carregarEstacoesReais(location) {
   try {
     const { Place } = await google.maps.importLibrary("places");
-
     const request = {
       fields: ["displayName", "location", "formattedAddress"],
-      locationRestriction: {
-        center: location,
-        radius: 15000, // 15 km
-      },
+      locationRestriction: { center: location, radius: 15000 },
       includedTypes: ["electric_vehicle_charging_station"],
     };
 
     const { places } = await Place.searchNearby(request);
-
-    if (!places || places.length === 0) {
-      mostrarMensagem("Nenhuma estação não registrada encontrada.", "erro", true);
-      return;
-    }
+    if (!places || places.length === 0) return;
 
     places.forEach((place) => {
       const marker = new google.maps.Marker({
@@ -215,60 +303,32 @@ async function carregarEstacoesReais(location) {
       const contentString = `
         <div class="popup-estacao">
           <div class="popup-conteudo">
-            <b>${place.displayName}</b>
+            <b>${place.displayName}</b><br>
             ${place.formattedAddress || ""}<br>
             <span style="color:#666;font-size:12px">(Não registrada no app)</span>
-          </div>
-          <div class="popup-footer">
-            <span class="estrela" data-estacao="${place.displayName}"></span>
           </div>
         </div>
       `;
 
       const infowindow = new google.maps.InfoWindow({ content: contentString });
-
-      marker.addListener("click", () => {
-        infowindow.open(map, marker);
-
-        google.maps.event.addListenerOnce(infowindow, "domready", () => {
-          const estrela = document.querySelector(".estrela");
-          if (estrela) {
-            const handler = (e) => {
-              e.stopPropagation();
-              toggleFavorito(place.displayName, estrela);
-            };
-            estrela.addEventListener("click", handler);
-            estrela.addEventListener("touchstart", (e) => {
-              e.preventDefault();
-              handler(e);
-            });
-          }
-        });
-      });
-
+      marker.addListener("click", () => infowindow.open(map, marker));
       carregadores.push(marker);
     });
 
-    mostrarMensagem(`${places.length} estações não registradas carregadas.`, "aviso", true);
-    aplicarFiltro(document.getElementById("filtroRecarga")?.checked ?? true);
-
   } catch (err) {
-    console.error("Erro ao carregar estações (Places API New):", err);
-    mostrarMensagem("Erro ao buscar estações.", "erro", true);
+    console.error("Erro ao carregar estações (Places API):", err);
   }
 }
 
-// ===============================
-// Filtro
-// ===============================
+/* ===============================
+   Filtro / Favoritos / Mensagens
+   (mantive igual à sua versão original)
+   =============================== */
 function aplicarFiltro(somenteRegistradas) {
   ficticios.forEach((m) => m.setMap(map));
   carregadores.forEach((m) => m.setMap(somenteRegistradas ? null : map));
 }
 
-// ===============================
-// Favoritar / Desfavoritar
-// ===============================
 function toggleFavorito(nomeEstacao, elemento) {
   const usuarioAtual = localStorage.getItem("usuario");
   const chaveFavoritos = `favoritos_${usuarioAtual}`;
@@ -281,7 +341,7 @@ function toggleFavorito(nomeEstacao, elemento) {
     mostrarMensagem(`${nomeEstacao} removida dos favoritos.`, "erro", true);
     if (elemento) elemento.classList.remove("favorita");
   } else {
-    const estacao = estacoes.find((e) => e.nome === nomeEstacao) || { nome: nomeEstacao };
+    const estacao = (typeof estacoes !== "undefined" && estacoes.find((e) => e.nome === nomeEstacao)) || { nome: nomeEstacao };
     favoritos.push(estacao);
     mostrarMensagem(`${nomeEstacao} adicionada aos favoritos!`, "sucesso", true);
     if (elemento) elemento.classList.add("favorita");
@@ -290,29 +350,25 @@ function toggleFavorito(nomeEstacao, elemento) {
   localStorage.setItem(chaveFavoritos, JSON.stringify(favoritos));
 }
 
-// ===============================
-// Mensagens
-// ===============================
 function mostrarMensagem(texto, tipo, evitarDuplicado = false) {
   if (evitarDuplicado) {
     const jaExiste = document.querySelector(`.msg-${tipo}[data-texto="${texto}"]`);
     if (jaExiste) return;
   }
-
   const div = document.createElement("div");
   div.className = `mensagem msg-${tipo}`;
   div.innerText = texto;
   div.setAttribute("data-texto", texto);
-
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 4000);
 }
 
+/* ===============================
+   Ao carregar a página, scroll para hash se houver
+   =============================== */
 document.addEventListener("DOMContentLoaded", () => {
   if (window.location.hash) {
     const alvo = document.querySelector(window.location.hash);
-    if (alvo) {
-      alvo.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 });

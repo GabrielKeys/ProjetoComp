@@ -206,6 +206,29 @@ input[readonly] {
 }
 
 /* ===============================
+   Botão Registrar Estação no canto superior direito
+=============================== */
+.top-right-register {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+}
+
+.top-right-register a {
+  background-color: #007bff;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.top-right-register a:hover {
+  background-color: #0056b3;
+}
+
+/* ===============================
    Responsividade
 =============================== */
 @media (max-width: 480px) {

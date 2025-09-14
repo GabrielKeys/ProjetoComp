@@ -102,6 +102,16 @@ html, body {
   border-bottom: none; 
 }
 
+.badge { 
+  padding: 2px 6px; 
+  border-radius: 4px; 
+  font-size: 12px; 
+}
+
+.gold { 
+  background: gold; 
+  color: black; 
+}
 /* =============================
    Foto do usuário
 ============================= */

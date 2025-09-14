@@ -6,13 +6,14 @@
 const estacoes = [
     {
         nome: "Estação Cotia",
-        lat: -23.60477,
+        lat: -23.66477,
         lng: -46.90269,
         potencia: "150 kW",
         tempoEspera: "10 min",
         abertura: "08:00",
         fechamento: "22:00"
     },
+
     {
         nome: "Estação Shopping",
         rua: "Avenida Paulista",
@@ -66,20 +67,6 @@ const estacoes = [
     { nome: "Estação Socorro", lat: -23.6810, lng: -46.7033, potencia: "150 kW", tempoEspera: "10 min", abertura: "06:00", fechamento: "22:00" },
     { nome: "Estação Campo Belo", lat: -23.6265, lng: -46.6712, potencia: "130 kW", tempoEspera: "11 min", abertura: "06:00", fechamento: "22:00" },
     { nome: "Estação Vila Mariana", lat: -23.5881, lng: -46.6340, potencia: "120 kW", tempoEspera: "9 min", abertura: "06:00", fechamento: "23:59" },
-
-
-    // === Mais 170 espalhadas pela capital ===
-/*
-  ...Array.from({ length: 170 }, (_, i) => ({
-    nome: `Estação Zona ${i + 1}`,
-    lat: -23.4 - Math.random() * 0.3, // varia entre -23.4 e -23.7
-    lng: -46.3 - Math.random() * 0.5, // varia entre -46.3 e -46.8
-    potencia: `${80 + Math.floor(Math.random() * 120)} kW`,
-    tempoEspera: `${5 + Math.floor(Math.random() * 20)} min`,
-    abertura: "06:00",
-    fechamento: "23:00"
-  }))
-*/
   
 ];
 

@@ -140,12 +140,6 @@ const sidebar = document.getElementById("sidebar");
 const overlay = document.querySelector(".sidebar-overlay");
 const toggleBtn = document.getElementById("toggleSidebar");
 
-// 🔹 Restaura o estado salvo ao carregar a página
-if (localStorage.getItem("sidebarOpen") === "true") {
-  sidebar.classList.add("open");
-  overlay.classList.add("show");
-}
-
 // 🔹 Abre/fecha no botão
 toggleBtn.addEventListener("click", () => {
   sidebar.classList.toggle("open");

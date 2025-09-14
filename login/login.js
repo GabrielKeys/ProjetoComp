@@ -14,29 +14,71 @@ document.getElementById("goToLogin")?.addEventListener("click", (e) => {
 });
 
 // ===============================
-// LOGIN LOCAL (por email)
+// Troca para Registrar Estação
+// ===============================
+document.getElementById("goToRegisterStation")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("registerForm").classList.remove("active");
+  document.getElementById("registerStationForm").classList.add("active");
+});
+
+document.getElementById("goToLoginFromStation")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("registerStationForm").classList.remove("active");
+  document.getElementById("loginForm").classList.add("active");
+});
+
+// ===============================
+// LOGIN LOCAL (por email) - verifica USERS e STATIONS
 // ===============================
 const loginForm = document.getElementById("loginForm");
-const registerForm = document.getElementById("registerForm");
 
 if (loginForm) {
   loginForm.addEventListener("submit", function (event) {
     event.preventDefault();
 
-    const email = document.getElementById("username").value;
-    const pass = document.getElementById("password").value;
+    const emailRaw = document.getElementById("username").value || "";
+    const pass = (document.getElementById("password").value || "").trim();
+
+    const email = emailRaw.trim().toLowerCase();
 
     let users = JSON.parse(localStorage.getItem("users")) || [];
-    const userFound = users.find(u => u.email === email && u.password === pass);
+    let stations = JSON.parse(localStorage.getItem("stations")) || [];
+
+    // procura usuário normal
+    const userFound = users.find(u =>
+      (u.email || "").toLowerCase() === email && (u.password || "") === pass
+    );
+
+    // procura estação
+    const stationFound = stations.find(s =>
+      (s.email || "").toLowerCase() === email && (s.password || "") === pass
+    );
 
     if (userFound) {
+      // login como usuário
       localStorage.setItem("logado", "true");
-      localStorage.setItem("usuario", userFound.fullName || email);
-      localStorage.setItem("usuarioEmail", email);
+      localStorage.setItem("usuario", userFound.fullName || userFound.email || email);
+      localStorage.setItem("usuarioEmail", userFound.email || email);
       window.location.href = "../home/home.html";
-    } else {
-      document.getElementById("errorMsg").innerText = "Email ou senha incorretos!";
+      return;
     }
+
+    if (stationFound) {
+      // login como estação
+      localStorage.setItem("logado", "true");
+      localStorage.setItem("usuario", stationFound.name || stationFound.email || email);
+      localStorage.setItem("usuarioEmail", stationFound.email || email);
+      // salva a estação inteira para uso posterior (lista, seleção, etc.)
+      localStorage.setItem("estacaoSelecionada", JSON.stringify(stationFound));
+      // também pode salvar só o nome se preferir:
+      localStorage.setItem("estacaoNome", stationFound.name || "");
+      window.location.href = "../home/home.html";
+      return;
+    }
+
+    // nenhum dos dois encontrou
+    document.getElementById("errorMsg").innerText = "Email ou senha incorretos!";
   });
 }
 
@@ -307,5 +349,148 @@ if (toggleVehicle && vehicleSection) {
     toggleVehicle.innerText = isVisible
       ? "+ Adicionar Veículo (Opcional)"
       : "− Remover Veículo";
+  });
+}
+
+// ===============================
+// Troca entre Login e Registro de Estação
+// ===============================
+document.getElementById("goToRegisterStation")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("loginForm").classList.remove("active");
+  document.getElementById("registerStationForm").classList.add("active");
+});
+
+document.getElementById("goToLoginFromStation")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  document.getElementById("registerStationForm").classList.remove("active");
+  document.getElementById("loginForm").classList.add("active");
+});
+
+// ===============================
+// REGISTRO DE ESTAÇÃO
+// ===============================
+const registerStationForm = document.getElementById("registerStationForm");
+
+if (registerStationForm) {
+  registerStationForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const stationFullName = registerStationForm.querySelector("#fullName")?.value.trim() || "";
+
+    const name = document.getElementById("stationName").value.trim();
+    const email = document.getElementById("stationEmail").value.trim();
+    const pass = document.getElementById("stationPass").value.trim();
+    const phone = document.getElementById("stationPhone").value.trim();
+    const cep = document.getElementById("stationCep").value.trim();
+    const address = document.getElementById("stationAddress").value.trim();
+    const number = document.getElementById("stationNumber").value.trim();
+    const district = document.getElementById("stationDistrict").value.trim();
+    const city = document.getElementById("stationCity").value.trim();
+    const state = document.getElementById("stationState").value.trim();
+    const power = document.getElementById("stationPower").value.trim();
+    const open = document.getElementById("stationOpen").value.trim();
+    const close = document.getElementById("stationClose").value.trim();
+
+    let stations = JSON.parse(localStorage.getItem("stations")) || [];
+
+    // validações
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById("stationMsg").innerText = "Digite um email válido!";
+      document.getElementById("stationMsg").style.color = "red";
+      return;
+    }
+
+    if (pass.length < 8) {
+      document.getElementById("stationMsg").innerText = "A senha deve ter pelo menos 8 caracteres!";
+      document.getElementById("stationMsg").style.color = "red";
+      return;
+    }
+
+    if (stations.some(s => (s.email || "").toLowerCase() === email.toLowerCase())) {
+      document.getElementById("stationMsg").innerText = "Já existe uma estação registrada com esse email!";
+      document.getElementById("stationMsg").style.color = "red";
+      return;
+    }
+
+    // Criar objeto da nova estação (mesmos nomes de estacoes.js)
+    const novaEstacao = {
+      fullName: stationFullName,
+      nome: name,
+      email,
+      senha: pass,
+      telefone: phone,
+      cep,
+      rua: address,
+      numero: number,
+      bairro: district,
+      cidade: city,
+      estado: state,
+      potencia: power,
+      abertura: open,
+      fechamento: close
+    };
+
+    stations.push(novaEstacao);
+    localStorage.setItem("stations", JSON.stringify(stations));
+
+    document.getElementById("stationMsg").innerText = "✅ Estação registrada com sucesso!";
+    document.getElementById("stationMsg").style.color = "green";
+
+    // login automático
+    localStorage.setItem("logado", "true");
+    localStorage.setItem("usuario", novaEstacao.fullName || novaEstacao.nome || novaEstacao.email);
+    localStorage.setItem("usuarioEmail", novaEstacao.email);
+    localStorage.setItem("estacaoSelecionada", JSON.stringify(novaEstacao));
+
+    registerStationForm.reset();
+
+    setTimeout(() => {
+      window.location.href = "../home/home.html";
+    }, 1200);
+  });
+}
+
+
+
+// ===============================
+// AUTO-PREENCHER ENDEREÇO PELO CEP (ViaCEP)
+// ===============================
+const cepInput = document.getElementById("stationCep");
+
+if (cepInput) {
+  cepInput.addEventListener("blur", () => {
+    let cep = cepInput.value.replace(/\D/g, "");
+    if (cep.length === 8) {
+      fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.erro) {
+            // Endereço
+            const addressField = document.getElementById("stationAddress");
+            addressField.value = data.logradouro || "";
+            addressField.readOnly = !!data.logradouro;
+
+            // Bairro
+            const districtField = document.getElementById("stationDistrict");
+            districtField.value = data.bairro || "";
+            districtField.readOnly = !!data.bairro;
+
+            // Cidade
+            const cityField = document.getElementById("stationCity");
+            cityField.value = data.localidade || "";
+            cityField.readOnly = !!data.localidade;
+
+            // Estado
+            const stateField = document.getElementById("stationState");
+            stateField.value = data.uf || "";
+            stateField.readOnly = !!data.uf;
+
+          } else {
+            alert("CEP não encontrado!");
+          }
+        })
+        .catch(() => alert("Erro ao buscar CEP!"));
+    }
   });
 }
