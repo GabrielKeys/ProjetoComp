@@ -1,4 +1,8 @@
 // ====================================
+// reserva.js (usuário) - versão robusta e defensiva
+// ====================================
+
+// ====================================
 // pequenos utilitários
 // ====================================
 function normalizeName(n) {
@@ -12,6 +16,40 @@ function normalizeName(n) {
 }
 function namesEqual(a, b) {
   return normalizeName(a) === normalizeName(b);
+}
+
+// ====================================
+// Aux: encontra qual identificador de usuário usar para os keys do veículo
+// tenta: r.usuario / r.usuarioEmail / localStorage.usuarioEmail / localStorage.usuario
+// retorna string (pode ser vazia se não achar)
+function findUsuarioIdForVeiculo(preferredId) {
+  const candidates = [];
+  if (preferredId) candidates.push(preferredId);
+  const fromLocalEmail = localStorage.getItem("usuarioEmail");
+  const fromLocal = localStorage.getItem("usuario");
+  if (fromLocalEmail && !candidates.includes(fromLocalEmail)) candidates.push(fromLocalEmail);
+  if (fromLocal && !candidates.includes(fromLocal)) candidates.push(fromLocal);
+
+  // devolve o primeiro que tenha qualquer chave de veículo presente (compatibilidade)
+  for (const id of candidates) {
+    if (!id) continue;
+    if (localStorage.getItem(`veiculoModelo_${id}`) ||
+        localStorage.getItem(`veiculoAno_${id}`) ||
+        localStorage.getItem(`veiculoPlaca_${id}`)) {
+      return id;
+    }
+  }
+  // se nenhum tem dados, devolve preferido ou o primeiro candidato (p/ leitura/escrita posterior)
+  return preferredId || fromLocalEmail || fromLocal || "";
+}
+
+// helper para checar se um valor do localStorage conta como "preenchido"
+function isFilledValue(v) {
+  if (!v && v !== 0) return false;
+  const s = String(v).trim();
+  if (s === "" || /^-+$/.test(s)) return false;
+  if (s.toLowerCase().includes("----")) return false;
+  return true;
 }
 
 // ====================================
@@ -119,9 +157,9 @@ document.addEventListener("DOMContentLoaded", () => {
         estrela.classList.toggle("favorita", favoritosVisuais[idx]);
 
         if (favoritosVisuais[idx]) {
-          mostrarMensagem(`${estacaoCompleta.nome} adicionada aos favoritos!`, "sucesso", true);
+          if (typeof mostrarMensagem === "function") mostrarMensagem(`${estacaoCompleta.nome} adicionada aos favoritos!`, "sucesso", true);
         } else {
-          mostrarMensagem(`${estacaoCompleta.nome} removida dos favoritos.`, "erro", true);
+          if (typeof mostrarMensagem === "function") mostrarMensagem(`${estacaoCompleta.nome} removida dos favoritos.`, "erro", true);
         }
       });
 
@@ -192,7 +230,6 @@ document.addEventListener("DOMContentLoaded", () => {
       abrirModal();
     });
   }
-
   if (closeBtn) {
     closeBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -237,10 +274,21 @@ function carregarReservas() {
   const usuario = localStorage.getItem("usuario");
   return JSON.parse(localStorage.getItem(`reservas_${usuario}`)) || [];
 }
-
 function salvarReservas(reservas) {
   const usuario = localStorage.getItem("usuario");
   localStorage.setItem(`reservas_${usuario}`, JSON.stringify(reservas));
+}
+
+// 🔹 Função para validar dados do veículo
+function dadosVeiculoPreenchidos(usuarioIdCandidate) {
+  // uso findUsuarioIdForVeiculo para pegar o id correto/compatível
+  const usuarioId = findUsuarioIdForVeiculo(usuarioIdCandidate);
+  if (!usuarioId) return false;
+  const campos = ["Modelo", "Ano", "Placa", "Bateria", "Carregamento"];
+  return campos.every(campo => {
+    const valor = localStorage.getItem(`veiculo${campo}_${usuarioId}`);
+    return isFilledValue(valor);
+  });
 }
 
 function renderizarReservas() {
@@ -328,72 +376,111 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderizarDetalhes() {
-    const reservas = carregarReservas();
-    const usuarioAtual = localStorage.getItem("usuario");
-    if (!listaDetalhes) return;
-    listaDetalhes.innerHTML = "";
+    try {
+      const reservas = carregarReservas();
+      const usuarioAtual = localStorage.getItem("usuario");
+      if (!listaDetalhes) return;
+      listaDetalhes.innerHTML = "";
 
-    if (reservas.length === 0) {
-      listaDetalhes.innerHTML = "<li>Nenhuma reserva encontrada.</li>";
-      return;
-    }
+      if (reservas.length === 0) {
+        listaDetalhes.innerHTML = "<li>Nenhuma reserva encontrada.</li>";
+        return;
+      }
 
-    const stations = JSON.parse(localStorage.getItem("stations")) || [];
-    const favoritos = JSON.parse(localStorage.getItem(`favoritos_${usuarioAtual}`)) || [];
+      const stations = JSON.parse(localStorage.getItem("stations")) || [];
+      const favoritos = JSON.parse(localStorage.getItem(`favoritos_${usuarioAtual}`)) || [];
 
-    reservas.forEach((r, idx) => {
-      const li = document.createElement("li");
+      reservas.forEach((r, idx) => {
+        const li = document.createElement("li");
 
-      const linha = document.createElement("div");
-      linha.className = "reserva-linha";
+        const linha = document.createElement("div");
+        linha.className = "reserva-linha";
 
-      const nome = document.createElement("span");
-      nome.className = "reserva-nome";
-      nome.textContent = r.estacao;
+        const nome = document.createElement("span");
+        nome.className = "reserva-nome";
+        nome.textContent = r.estacao;
 
-      const statusSpan = document.createElement("span");
-      statusSpan.className = "reserva-status";
-      statusSpan.textContent = r.status ? r.status : "pendente";
+        const statusSpan = document.createElement("span");
+        statusSpan.className = "reserva-status";
+        statusSpan.textContent = r.status ? r.status : "pendente";
 
-      const btnCancelar = document.createElement("button");
-      btnCancelar.className = "btn-cancelar-reserva";
-      btnCancelar.textContent = "Cancelar";
-      btnCancelar.dataset.index = idx;
+        const btnCancelar = document.createElement("button");
+        btnCancelar.className = "btn-cancelar-reserva";
+        btnCancelar.textContent = "Cancelar";
+        btnCancelar.dataset.index = idx;
 
-      btnCancelar.addEventListener("click", () => {
-        reservaIndexParaCancelar = idx;
-        confirmarModal.style.display = "flex";
+        btnCancelar.addEventListener("click", () => {
+          reservaIndexParaCancelar = idx;
+          if (confirmarModal) confirmarModal.style.display = "flex";
+        });
+
+        linha.appendChild(nome);
+        linha.appendChild(statusSpan);
+        linha.appendChild(btnCancelar);
+
+        // 🔹 Busca dados completos
+        let estacaoDados = stations.find(e => namesEqual(e.nome, r.estacao))
+          || favoritos.find(e => namesEqual(e.nome, r.estacao))
+          || (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao))
+          || {};
+
+        // 🔹 Pega dados do veículo: 1) se reservado com veiculo -> usa; 2) tenta encontrar pelos localStorage keys
+        let veiculoHtml = "";
+        let veiculoObj = null;
+
+        if (r.veiculo && typeof r.veiculo === "object") {
+          veiculoObj = r.veiculo;
+        } else {
+          // tenta obter id usado para o veículo (reserva pertence ao usuário atual normalmente)
+          const possibleId = findUsuarioIdForVeiculo(r.usuario || r.usuarioEmail || localStorage.getItem("usuario"));
+          if (possibleId) {
+            const modelo = localStorage.getItem(`veiculoModelo_${possibleId}`);
+            if (modelo) {
+              veiculoObj = {
+                modelo: modelo,
+                ano: localStorage.getItem(`veiculoAno_${possibleId}`) || "",
+                placa: localStorage.getItem(`veiculoPlaca_${possibleId}`) || "",
+                bateria: localStorage.getItem(`veiculoBateria_${possibleId}`) || "",
+                carga: localStorage.getItem(`veiculoCarregamento_${possibleId}`) || ""
+              };
+            }
+          }
+        }
+
+        if (veiculoObj) {
+          veiculoHtml = `
+            <p><strong>Usuário:</strong> ${r.usuario || r.usuarioEmail || localStorage.getItem("usuario")}</p>
+            <p><strong>Modelo:</strong> ${veiculoObj.modelo || "N/D"} ${veiculoObj.ano ? `(${veiculoObj.ano})` : ""}</p>
+            <p><strong>Placa:</strong> ${veiculoObj.placa || "N/D"}</p>
+            <p><strong>Bateria:</strong> ${veiculoObj.bateria || "N/D"}</p>
+            <p><strong>Carga:</strong> ${veiculoObj.carga || "N/D"}</p>
+          `;
+        }
+
+        const detalhes = document.createElement("div");
+        detalhes.className = "detalhes-reserva";
+        detalhes.innerHTML = `
+          <p><strong>Data:</strong> ${r.data}</p>
+          <p><strong>Horário:</strong> ${r.hora}</p>
+          <p><strong>Status:</strong> ${r.status || "pendente"}</p>
+          <p><strong>Endereço:</strong> ${estacaoDados?.rua || "N/D"} ${estacaoDados?.numero || ""}</p>
+          <p><strong>Cidade:</strong> ${estacaoDados?.cidade || "N/D"} - ${estacaoDados?.estado || ""}</p>
+          <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia ? (estacaoDados.potencia + " kW") : "N/D"}</p>
+          <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || "?"} - ${estacaoDados?.fechamento || "?"}</p>
+          <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ? (estacaoDados.tempoEspera + " min") : "--"}</p>
+          <p><strong>Preço:</strong> ${estacaoDados?.preco ? (estacaoDados.preco + " R$/kWh") : "--"}</p>
+          ${veiculoHtml}
+        `;
+
+        li.appendChild(linha);
+        li.appendChild(detalhes);
+
+        listaDetalhes.appendChild(li);
       });
-
-      linha.appendChild(nome);
-      linha.appendChild(statusSpan);
-      linha.appendChild(btnCancelar);
-
-      // 🔹 Busca dados completos
-      let estacaoDados = stations.find(e => namesEqual(e.nome, r.estacao))
-        || favoritos.find(e => namesEqual(e.nome, r.estacao))
-        || (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao))
-        || {};
-
-      const detalhes = document.createElement("div");
-      detalhes.className = "detalhes-reserva";
-      detalhes.innerHTML = `
-        <p><strong>Data:</strong> ${r.data}</p>
-        <p><strong>Horário:</strong> ${r.hora}</p>
-        <p><strong>Status:</strong> ${r.status || "pendente"}</p>
-        <p><strong>Endereço:</strong> ${estacaoDados?.rua || "N/D"} ${estacaoDados?.numero || ""}</p>
-        <p><strong>Cidade:</strong> ${estacaoDados?.cidade || "N/D"} - ${estacaoDados?.estado || ""}</p>
-        <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia ? (estacaoDados.potencia + " kW") : "N/D"}</p>
-        <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || "?"} - ${estacaoDados?.fechamento || "?"}</p>
-        <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ? (estacaoDados.tempoEspera + " min") : "--"}</p>
-        <p><strong>Preço:</strong> ${estacaoDados?.preco ? (estacaoDados.preco + " R$/kWh") : "--"}</p>
-      `;
-
-      li.appendChild(linha);
-      li.appendChild(detalhes);
-
-      listaDetalhes.appendChild(li);
-    });
+    } catch (err) {
+      console.error("Erro em renderizarDetalhes:", err);
+      if (listaDetalhes) listaDetalhes.innerHTML = "<li>Erro ao carregar detalhes — veja console.</li>";
+    }
   }
 
   // Confirmar cancelamento (status → cancelada)
@@ -407,22 +494,25 @@ document.addEventListener("DOMContentLoaded", () => {
           r.status = "cancelada";
           salvarReservas(reservas);
 
-          atualizarStatusReserva(r.estacaoEmail, r.usuario, r.data, r.hora, "cancelada");
+          // atualiza também na key da estação (se possível)
+          try {
+            atualizarStatusReserva(r.estacaoEmail, r.usuario, r.data, r.hora, "cancelada");
+          } catch (e) { /* não crítico */ }
 
           renderizarReservas();
           renderizarDetalhes();
-          mostrarMensagem("❌ Reserva cancelada.", "erro");
+          if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Reserva cancelada.", "erro");
         }
         reservaIndexParaCancelar = null;
       }
-      confirmarModal.style.display = "none";
+      if (confirmarModal) confirmarModal.style.display = "none";
     });
   }
 
   // Fechar modal de confirmação
   if (btnFechar) {
     btnFechar.addEventListener("click", () => {
-      confirmarModal.style.display = "none";
+      if (confirmarModal) confirmarModal.style.display = "none";
       reservaIndexParaCancelar = null;
     });
   }
@@ -435,13 +525,13 @@ document.addEventListener("DOMContentLoaded", () => {
       salvarReservas(reservas);
       renderizarReservas();
       renderizarDetalhes();
-      mostrarMensagem("🗑️ Reservas canceladas removidas.", "sucesso");
+      if (typeof mostrarMensagem === "function") mostrarMensagem("🗑️ Reservas canceladas removidas.", "sucesso");
     });
   }
 
   function abrirModal() {
     renderizarDetalhes();
-    modalDetalhes.style.display = "flex";
+    if (modalDetalhes) modalDetalhes.style.display = "flex";
   }
 
   if (btnDetalhes) btnDetalhes.addEventListener("click", abrirModal);
@@ -449,7 +539,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (closeBtn) {
     closeBtn.addEventListener("click", () => {
-      modalDetalhes.style.display = "none";
+      if (modalDetalhes) modalDetalhes.style.display = "none";
     });
   }
 
@@ -469,54 +559,86 @@ document.addEventListener("DOMContentLoaded", () => {
   formAgendamento.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const data = document.getElementById("dataReserva").value;
-    const hora = document.getElementById("horaReserva").value;
-    const usuarioAtual = localStorage.getItem("usuario");
-    const estacaoSel = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
+    try {
+      const data = document.getElementById("dataReserva").value;
+      const hora = document.getElementById("horaReserva").value;
+      const usuarioAtual = localStorage.getItem("usuario");
+      const estacaoSel = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
 
-    if (!data || !hora || !estacaoSel) {
-      mostrarMensagem("❌ Selecione estação, data e horário!", "erro");
-      return;
+      if (!data || !hora || !estacaoSel) {
+        if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Selecione estação, data e horário!", "erro");
+        return;
+      }
+
+      // 🔹 garanto usar objeto completo para validar disponibilidade
+      const stations = JSON.parse(localStorage.getItem("stations")) || [];
+      const estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome))
+        || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
+        || estacaoSel;
+
+      const reservas = carregarReservas();
+
+      // chamar validarDisponibilidade se existir (proteção caso esteja em outro arquivo)
+      if (typeof validarDisponibilidade === "function") {
+        const resultado = validarDisponibilidade(estacao, data, hora, reservas);
+        if (!resultado.disponivel) {
+          if (typeof mostrarMensagem === "function") mostrarMensagem("❌ " + resultado.mensagem, "erro");
+          return;
+        }
+      } else {
+        // se não existe validarDisponibilidade, apenas log (não bloqueia)
+        console.warn("validarDisponibilidade não encontrada — pulando validação de disponibilidade.");
+      }
+
+      // 🔹 Verificação — só deixa reservar se o veículo estiver preenchido
+      const usuarioIdParaVeiculo = findUsuarioIdForVeiculo(localStorage.getItem("usuarioEmail") || usuarioAtual);
+      if (!dadosVeiculoPreenchidos(usuarioIdParaVeiculo)) {
+        if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Preencha as informações do veículo antes de reservar!", "erro");
+        return;
+      }
+
+      // 🔹 Pega o veículo do usuário atual (prioriza o objeto salvo no localStorage)
+      const veiculo = {
+        modelo: localStorage.getItem(`veiculoModelo_${usuarioIdParaVeiculo}`) || "",
+        ano: localStorage.getItem(`veiculoAno_${usuarioIdParaVeiculo}`) || "",
+        placa: localStorage.getItem(`veiculoPlaca_${usuarioIdParaVeiculo}`) || "",
+        bateria: localStorage.getItem(`veiculoBateria_${usuarioIdParaVeiculo}`) || "",
+        carga: localStorage.getItem(`veiculoCarregamento_${usuarioIdParaVeiculo}`) || ""
+      };
+
+      // 🔹 Salva no perfil do usuário
+      reservas.push({
+        estacao: estacao.nome,
+        estacaoEmail: estacao.email,
+        data,
+        hora,
+        status: "pendente",
+        usuario: usuarioAtual,
+        veiculo
+      });
+      salvarReservas(reservas);
+
+      // 🔹 Salva também na estação
+      let reservasEstacao = JSON.parse(localStorage.getItem(`reservasEstacao_${estacao.email}`)) || [];
+      reservasEstacao.push({
+        usuarioEmail: usuarioIdParaVeiculo || usuarioAtual,
+        data,
+        hora,
+        status: "pendente",
+        veiculo
+      });
+      localStorage.setItem(`reservasEstacao_${estacao.email}`, JSON.stringify(reservasEstacao));
+
+      renderizarReservas();
+
+      const agendamentoModal = document.getElementById("agendamentoModal");
+      if (agendamentoModal) agendamentoModal.style.display = "none";
+
+      if (typeof mostrarMensagem === "function") mostrarMensagem("✅ Reserva realizada com sucesso!", "sucesso");
+    } catch (err) {
+      console.error("Erro no submit de agendamento:", err);
+      if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Erro ao processar a reserva. Veja console.", "erro");
     }
-
-    const stations = JSON.parse(localStorage.getItem("stations")) || [];
-    const estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome))
-      || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
-      || estacaoSel;
-
-    const reservas = carregarReservas();
-    const resultado = validarDisponibilidade(estacao, data, hora, reservas);
-    if (!resultado.disponivel) {
-      mostrarMensagem("❌ " + resultado.mensagem, "erro");
-      return;
-    }
-
-    // Salva no perfil do usuário
-    reservas.push({
-      estacao: estacao.nome,
-      estacaoEmail: estacao.email,
-      data,
-      hora,
-      status: "pendente"
-    });
-    salvarReservas(reservas);
-
-    // Salva também na estação
-    let reservasEstacao = JSON.parse(localStorage.getItem(`reservasEstacao_${estacao.email}`)) || [];
-    reservasEstacao.push({
-      usuarioEmail: usuarioAtual,
-      data,
-      hora,
-      status: "pendente"
-    });
-    localStorage.setItem(`reservasEstacao_${estacao.email}`, JSON.stringify(reservasEstacao));
-
-    renderizarReservas();
-
-    const agendamentoModal = document.getElementById("agendamentoModal");
-    if (agendamentoModal) agendamentoModal.style.display = "none";
-
-    mostrarMensagem("✅ Reserva realizada com sucesso!", "sucesso");
   });
 });
 
@@ -524,6 +646,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // Inicialização Automática
 // ====================================
 document.addEventListener("DOMContentLoaded", () => {
-  atualizarEstacao();
-  renderizarReservas();
+  try {
+    atualizarEstacao();
+    renderizarReservas();
+  } catch (err) {
+    console.error("Erro inicializando reservas:", err);
+  }
 });

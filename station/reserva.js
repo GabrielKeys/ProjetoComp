@@ -44,27 +44,22 @@ function atualizarStatusReservaEstacao(usuarioEmailOrNome, data, hora, status) {
   if (changedEstacao) salvarReservasEstacao(reservasEstacao);
 
   // 2) Atualiza quaisquer reservas de usuários guardadas no localStorage
-  // Percorre todas as chaves que começam com 'reservas_' (exceto 'reservasEstacao_')
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key) continue;
     if (!key.startsWith("reservas_")) continue;
-    if (key.startsWith("reservasEstacao_")) continue; // pula as da estação
+    if (key.startsWith("reservasEstacao_")) continue;
 
     try {
       const arr = JSON.parse(localStorage.getItem(key)) || [];
       let updated = false;
       arr.forEach(item => {
-        // critérios: mesma data/hora, e o usuário bate por email ou por nome;
-        // se o usuário-side salva estacaoEmail/estacao, também confere
         const matchDataHora = item.data === data && item.hora === hora;
         const matchUsuario =
           (item.usuarioEmail && usuarioEmailOrNome && item.usuarioEmail === usuarioEmailOrNome) ||
           (item.usuario && usuarioEmailOrNome && item.usuario === usuarioEmailOrNome) ||
           false;
-        // tenta também casar pelo email da estação (no caso do usuário ter estacaoEmail)
-        const matchEstacao = (item.estacaoEmail && item.estacaoEmail === emailEstacao) ||
-                             (item.estacao && false); // manter compatibilidade se quiser checar por nome
+        const matchEstacao = (item.estacaoEmail && item.estacaoEmail === emailEstacao);
 
         if (matchDataHora && (matchUsuario || matchEstacao)) {
           item.status = status;
@@ -75,9 +70,7 @@ function atualizarStatusReservaEstacao(usuarioEmailOrNome, data, hora, status) {
       if (updated) {
         localStorage.setItem(key, JSON.stringify(arr));
       }
-    } catch (e) {
-      // parsing falhou, ignora
-    }
+    } catch (e) {}
   }
 }
 
@@ -98,7 +91,6 @@ function renderizarReservasEstacao() {
     return;
   }
 
-  // próxima reserva (primeira)
   const prox = reservas[0];
   const nomeProx = resolveNomeUsuario(prox);
   textoReserva.innerHTML = `
@@ -108,7 +100,6 @@ function renderizarReservasEstacao() {
     <strong>Status:</strong> ${prox.status || "pendente"}
   `;
 
-  // lista completa
   reservas.forEach(r => {
     const div = document.createElement("div");
     div.classList.add("reserva-item");
@@ -129,7 +120,6 @@ function renderizarReservasEstacao() {
 document.addEventListener("DOMContentLoaded", () => {
   renderizarReservasEstacao();
 
-  // Agendamento (opcional pra estação)
   const btnAgendar = document.getElementById("btnAgendar");
   const modalAgendamento = document.getElementById("agendamentoModal");
   const closeBtns = document.querySelectorAll("#agendamentoModal .close");
@@ -147,8 +137,25 @@ document.addEventListener("DOMContentLoaded", () => {
       const usuario = localStorage.getItem("usuarioNome") || localStorage.getItem("usuario") || "Usuário Desconhecido";
       if (!data || !hora) { alert("Preencha todos os campos!"); return; }
 
+      // 🔹 Pega veículo do usuário atual
+      const usuarioAtual = localStorage.getItem("usuario");
+      const veiculo = {
+        modelo: (localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "").trim(),
+        ano: (localStorage.getItem(`veiculoAno_${usuarioAtual}`) || "").trim(),
+        placa: (localStorage.getItem(`veiculoPlaca_${usuarioAtual}`) || "").trim(),
+        bateria: (localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "").trim(),
+        carga: (localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "").trim()
+      };
+
       const reservas = carregarReservasEstacao();
-      reservas.push({ usuario, usuarioEmail: localStorage.getItem("usuarioEmail") || "", data, hora, status: "pendente" });
+      reservas.push({ 
+        usuario, 
+        usuarioEmail: localStorage.getItem("usuarioEmail") || "", 
+        data, 
+        hora, 
+        status: "pendente",
+        veiculo
+      });
       salvarReservasEstacao(reservas);
       renderizarReservasEstacao();
       modalAgendamento.style.display = "none";
@@ -156,13 +163,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Modal de detalhes + Confirmar / Cancelar / Remover canceladas
   const btnDetalhes = document.getElementById("btnDetalhesReserva");
   const modalDetalhes = document.getElementById("detalhesReservaModal");
   const listaDetalhes = document.getElementById("listaDetalhesReservas");
   const closeBtn = modalDetalhes ? modalDetalhes.querySelector(".close") : null;
   const confirmarModal = document.getElementById("confirmarCancelamentoModal");
-  const btnConfirmar = document.getElementById("btnCancelarConfirmar"); // botão confirma o cancelamento no modal
+  const btnConfirmar = document.getElementById("btnCancelarConfirmar");
   const btnFechar = document.getElementById("btnCancelarFechar");
   const btnRemoverCanceladas = document.getElementById("btnRemoverCanceladas");
   let reservaIndexParaCancelar = null;
@@ -186,18 +192,16 @@ document.addEventListener("DOMContentLoaded", () => {
       nomeSpan.className = "reserva-nome";
       nomeSpan.textContent = `Usuário: ${resolveNomeUsuario(r)}`;
 
-      // Confirmar
       const btnConfirma = document.createElement("button");
       btnConfirma.className = "btn-confirmar-reserva";
       btnConfirma.textContent = "Confirmar";
       btnConfirma.addEventListener("click", () => {
-        const usuarioEmail = r.usuarioEmail || r.usuario; // tenta email, senão nome (legacy)
+        const usuarioEmail = r.usuarioEmail || r.usuario;
         atualizarStatusReservaEstacao(usuarioEmail, r.data, r.hora, "confirmada");
         renderizarReservasEstacao();
         renderizarDetalhes();
       });
 
-      // Cancelar (abre modal)
       const btnCancelar = document.createElement("button");
       btnCancelar.className = "btn-cancelar-reserva";
       btnCancelar.textContent = "Cancelar";
@@ -216,6 +220,12 @@ document.addEventListener("DOMContentLoaded", () => {
         <p><strong>Data:</strong> ${r.data}</p>
         <p><strong>Horário:</strong> ${r.hora}</p>
         <p><strong>Status:</strong> ${r.status || "pendente"}</p>
+        ${r.veiculo ? `
+          <p><strong>Veículo:</strong> ${r.veiculo.modelo || "----"} (${r.veiculo.ano || "----"})</p>
+          <p><strong>Placa:</strong> ${r.veiculo.placa || "----"}</p>
+          <p><strong>Bateria:</strong> ${r.veiculo.bateria || "----"}</p>
+          <p><strong>Carga:</strong> ${r.veiculo.carga || "----"}</p>
+        ` : ""}
       `;
 
       li.appendChild(linha);
@@ -224,7 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Confirmação do cancelamento no modal (botão "Sim, Cancelar")
   if (btnConfirmar) {
     btnConfirmar.addEventListener("click", () => {
       if (reservaIndexParaCancelar !== null) {
@@ -233,8 +242,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (r) {
           atualizarStatusReservaEstacao(r.usuarioEmail || r.usuario, r.data, r.hora, "cancelada");
         }
-        // opcional: se você preferir remover ao cancelar em vez de marcar, faça splice aqui
-        // reservas.splice(reservaIndexParaCancelar, 1);
         salvarReservasEstacao(carregarReservasEstacao());
         renderizarReservasEstacao();
         renderizarDetalhes();
@@ -251,7 +258,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Remover apenas canceladas
   if (btnRemoverCanceladas) {
     btnRemoverCanceladas.addEventListener("click", () => {
       let reservas = carregarReservasEstacao();
@@ -259,7 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
       salvarReservasEstacao(reservas);
       renderizarReservasEstacao();
       renderizarDetalhes();
-      // se tiver função mostrarMensagem no seu Global.js:
       if (typeof mostrarMensagem === "function") mostrarMensagem("🗑️ Reservas canceladas removidas.", "sucesso");
     });
   }
