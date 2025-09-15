@@ -32,7 +32,6 @@
     <!-- Botão fixo -->
     <button id="toggleSidebar">☰</button>
 
-
     <!-- Conteúdo principal -->
     <main class="main" id="main">
       <!-- Cabeçalho -->
@@ -69,8 +68,6 @@
         </div>
       </section>
 
-
-     
       <!-- Próxima Reserva -->
       <section class="card next-reservation" id="proximaReservaCard">
         <div>
@@ -79,18 +76,25 @@
         </div>
         <div id="listaReservas"></div>
       </section>
+
       <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
     </main>
   </div>
 
   <!-- Modal de Detalhes de Reservas -->
-  <div id="detalhesReservaModal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h3>Minhas Reservas</h3>
-      <ul id="listaDetalhesReservas"></ul>
-    </div>
+<div id="detalhesReservaModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Minhas Reservas</h3>
+    <ul id="listaDetalhesReservas"></ul>
+
+    <!-- Botão extra para limpar canceladas -->
+    <button id="btnRemoverCanceladas" class="btn-remover-canceladas">
+      Remover Canceladas
+    </button>
   </div>
+</div>
+
 
   <!-- Modal de Confirmação de Cancelamento -->
   <div id="confirmarCancelamentoModal" class="modal">
@@ -104,16 +108,32 @@
     </div>
   </div>
 
+  <!-- Modal de Agendamento -->
+  <div id="agendamentoModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Agendar Nova Reserva</h3>
+      <form id="formAgendamento">
+        <label for="dataReserva">Data:</label>
+        <input type="date" id="dataReserva" required>
+
+        <label for="horaReserva">Horário:</label>
+        <input type="time" id="horaReserva" required>
+
+        <div style="margin-top: 15px; text-align: right;">
+          <button type="submit" class="btn">Confirmar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Google Pay API -->
   <script async src="https://pay.google.com/gp/p/js/pay.js"></script>
 
   <!-- Scripts no final -->
-  <script src="js/reserva.js"></script>
-  <script src="js/validacao_reserva.js"></script>
-  <script src="js/veiculo.js"></script>
-  <script src="js/carteira.js"></script>
   <script src="js/main.js"></script>
   <script src="../global/Global.js"></script>
-</body>
+  <script src="reserva.js"></script>
 
+</body>
 </html>

@@ -28,7 +28,6 @@ function atualizarEstacao() {
   const btnAgendar = document.getElementById("btnAgendar");
   const statPreco = document.getElementById("statPreco"); // Extras
 
-
   if (estacaoSel) {
     // 🔹 tentar resolver objeto completo (stations localStorage -> window.estacoes -> fallback)
     const stations = JSON.parse(localStorage.getItem("stations")) || [];
@@ -36,11 +35,11 @@ function atualizarEstacao() {
       || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
       || estacaoSel;
 
-    if (statPotencia) statPotencia.textContent = estacao.potencia || "--"; 
-    if (statEspera) statEspera.textContent = estacao.tempoEspera || "--";
+    if (statPotencia) statPotencia.textContent = estacao.potencia ? (estacao.potencia + " kW") : "--";
+    if (statEspera) statEspera.textContent = estacao.tempoEspera ? (estacao.tempoEspera + " min") : "--";
     if (statDisponibilidade) statDisponibilidade.textContent = `${estacao.abertura || "?"} - ${estacao.fechamento || "?"}`;
     if (stationMsg) stationMsg.textContent = `Estação selecionada: ${estacao.nome}`;
-    if (statPreco) statPreco.textContent = estacao.preco || "--"; // Extras
+    if (statPreco) statPreco.textContent = estacao.preco ? (estacao.preco + " R$/kWh") : "--"; // Extras
     if (btnAgendar) btnAgendar.disabled = false;
   } else {
     if (statPotencia) statPotencia.textContent = "--";
@@ -148,12 +147,12 @@ document.addEventListener("DOMContentLoaded", () => {
       detalhes.innerHTML = `
         <p><strong>Endereço:</strong> ${estacaoCompleta.rua || "N/D"} ${estacaoCompleta.numero || ""}</p>
         <p><strong>Cidade:</strong> ${estacaoCompleta.cidade || "N/D"} - ${estacaoCompleta.estado || ""}</p>
-        <p><strong>Potência Máx:</strong> ${estacaoCompleta.potencia || "N/D"} kW</p>
+        <p><strong>Potência Máx:</strong> ${estacaoCompleta.potencia ? (estacaoCompleta.potencia + " kW") : "N/D"}</p>
         <p><strong>Disponibilidade:</strong> ${estacaoCompleta.abertura || "?"} - ${estacaoCompleta.fechamento || "?"}</p>
 
       <!-- Extras -->
-        <p><strong>Tempo de Espera:</strong> ${estacaoCompleta.tempoEspera || "--"}</p>
-        <p><strong>Preço:</strong> ${estacaoCompleta.preco || "--"}</p>
+        <p><strong>Tempo de Espera:</strong> ${estacaoCompleta.tempoEspera ? (estacaoCompleta.tempoEspera + " min") : "--"}</p>
+        <p><strong>Preço:</strong> ${estacaoCompleta.preco ? (estacaoCompleta.preco + " R$/kWh") : "--"}</p>
       `;
 
       li.appendChild(linha);
@@ -309,7 +308,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmarModal = document.getElementById("confirmarCancelamentoModal");
   const btnConfirmar = document.getElementById("btnCancelarConfirmar");
   const btnFechar = document.getElementById("btnCancelarFechar");
+  const btnRemoverCanceladas = document.getElementById("btnRemoverCanceladas");
+
   let reservaIndexParaCancelar = null;
+
+  // 🔹 Atualiza status tanto no usuário quanto na estação
+  function atualizarStatusReserva(estacaoEmail, usuarioEmail, data, hora, status) {
+    // Atualiza no usuário
+    const reservasUsuario = JSON.parse(localStorage.getItem(`reservasUsuario_${usuarioEmail}`)) || [];
+    const reservaU = reservasUsuario.find(r => r.data === data && r.hora === hora && r.estacaoEmail === estacaoEmail);
+    if (reservaU) reservaU.status = status;
+    localStorage.setItem(`reservasUsuario_${usuarioEmail}`, JSON.stringify(reservasUsuario));
+
+    // Atualiza na estação
+    const reservasEstacao = JSON.parse(localStorage.getItem(`reservasEstacao_${estacaoEmail}`)) || [];
+    const reservaE = reservasEstacao.find(r => r.data === data && r.hora === hora && r.usuarioEmail === usuarioEmail);
+    if (reservaE) reservaE.status = status;
+    localStorage.setItem(`reservasEstacao_${estacaoEmail}`, JSON.stringify(reservasEstacao));
+  }
 
   function renderizarDetalhes() {
     const reservas = carregarReservas();
@@ -335,6 +351,10 @@ document.addEventListener("DOMContentLoaded", () => {
       nome.className = "reserva-nome";
       nome.textContent = r.estacao;
 
+      const statusSpan = document.createElement("span");
+      statusSpan.className = "reserva-status";
+      statusSpan.textContent = r.status ? r.status : "pendente";
+
       const btnCancelar = document.createElement("button");
       btnCancelar.className = "btn-cancelar-reserva";
       btnCancelar.textContent = "Cancelar";
@@ -346,9 +366,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       linha.appendChild(nome);
+      linha.appendChild(statusSpan);
       linha.appendChild(btnCancelar);
 
-      // 🔹 Busca dados completos (stations -> favoritos -> window.estacoes)
+      // 🔹 Busca dados completos
       let estacaoDados = stations.find(e => namesEqual(e.nome, r.estacao))
         || favoritos.find(e => namesEqual(e.nome, r.estacao))
         || (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao))
@@ -359,14 +380,13 @@ document.addEventListener("DOMContentLoaded", () => {
       detalhes.innerHTML = `
         <p><strong>Data:</strong> ${r.data}</p>
         <p><strong>Horário:</strong> ${r.hora}</p>
+        <p><strong>Status:</strong> ${r.status || "pendente"}</p>
         <p><strong>Endereço:</strong> ${estacaoDados?.rua || "N/D"} ${estacaoDados?.numero || ""}</p>
         <p><strong>Cidade:</strong> ${estacaoDados?.cidade || "N/D"} - ${estacaoDados?.estado || ""}</p>
-        <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia || "N/D"} kW</p>
+        <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia ? (estacaoDados.potencia + " kW") : "N/D"}</p>
         <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || "?"} - ${estacaoDados?.fechamento || "?"}</p>
-
-              <!-- Extras -->
-        <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera || "--"}</p>
-        <p><strong>Preço:</strong> ${estacaoDados?.preco || "--"}</p>
+        <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ? (estacaoDados.tempoEspera + " min") : "--"}</p>
+        <p><strong>Preço:</strong> ${estacaoDados?.preco ? (estacaoDados.preco + " R$/kWh") : "--"}</p>
       `;
 
       li.appendChild(linha);
@@ -376,27 +396,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Confirmar cancelamento
+  // Confirmar cancelamento (status → cancelada)
   if (btnConfirmar) {
     btnConfirmar.addEventListener("click", () => {
       if (reservaIndexParaCancelar !== null) {
         const reservas = carregarReservas();
-        reservas.splice(reservaIndexParaCancelar, 1);
-        salvarReservas(reservas);
-        renderizarReservas();
-        renderizarDetalhes();
-        mostrarMensagem("❌ Reserva cancelada.", "erro");
+        const r = reservas[reservaIndexParaCancelar];
+
+        if (r) {
+          r.status = "cancelada";
+          salvarReservas(reservas);
+
+          atualizarStatusReserva(r.estacaoEmail, r.usuario, r.data, r.hora, "cancelada");
+
+          renderizarReservas();
+          renderizarDetalhes();
+          mostrarMensagem("❌ Reserva cancelada.", "erro");
+        }
         reservaIndexParaCancelar = null;
       }
       confirmarModal.style.display = "none";
     });
   }
 
-  // Fechar sem cancelar
+  // Fechar modal de confirmação
   if (btnFechar) {
     btnFechar.addEventListener("click", () => {
       confirmarModal.style.display = "none";
       reservaIndexParaCancelar = null;
+    });
+  }
+
+  // Remover apenas as reservas canceladas
+  if (btnRemoverCanceladas) {
+    btnRemoverCanceladas.addEventListener("click", () => {
+      let reservas = carregarReservas();
+      reservas = reservas.filter(r => r.status !== "cancelada");
+      salvarReservas(reservas);
+      renderizarReservas();
+      renderizarDetalhes();
+      mostrarMensagem("🗑️ Reservas canceladas removidas.", "sucesso");
     });
   }
 
@@ -440,7 +479,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 🔹 garanto usar objeto completo para validar disponibilidade
     const stations = JSON.parse(localStorage.getItem("stations")) || [];
     const estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome))
       || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
@@ -453,8 +491,26 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    reservas.push({ estacao: estacao.nome, data, hora });
+    // Salva no perfil do usuário
+    reservas.push({
+      estacao: estacao.nome,
+      estacaoEmail: estacao.email,
+      data,
+      hora,
+      status: "pendente"
+    });
     salvarReservas(reservas);
+
+    // Salva também na estação
+    let reservasEstacao = JSON.parse(localStorage.getItem(`reservasEstacao_${estacao.email}`)) || [];
+    reservasEstacao.push({
+      usuarioEmail: usuarioAtual,
+      data,
+      hora,
+      status: "pendente"
+    });
+    localStorage.setItem(`reservasEstacao_${estacao.email}`, JSON.stringify(reservasEstacao));
+
     renderizarReservas();
 
     const agendamentoModal = document.getElementById("agendamentoModal");

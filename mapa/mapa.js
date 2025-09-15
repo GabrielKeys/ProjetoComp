@@ -123,21 +123,20 @@ async function carregarEstacoesFicticias() {
 
     registradas.forEach(st => {
       todasEstacoes.push({
-        nome: st.stationName || st.name || st.stationName || st.nome || "Estação",
-        rua: st.address || st.rua || "",
-        numero: st.number || st.numero || "",
-        bairro: st.district || st.bairro || "",
-        cidade: st.city || st.cidade || "",
-        estado: st.state || st.estado || "",
-        cep: st.cep || "",
-        potencia: st.power ? (st.power + " kW") : (st.potencia || "N/D"),
-        abertura: st.open || st.abertura || "",
-        fechamento: st.close || st.fechamento || "",
+    nome: st.stationName || st.name || st.nome || "Estação",
+    rua: st.address || st.rua || "",
+    numero: st.number || st.numero || "",
+    bairro: st.district || st.bairro || "",
+    cidade: st.city || st.cidade || "",
+    estado: st.state || st.estado || "",
+    cep: st.cep || "",
+    potencia: st.potencia ? (st.potencia + " kW") : "N/D",
+    abertura: st.open || st.abertura || "",
+    fechamento: st.close || st.fechamento || "",
 
-
-        //Extras
-        preco: st.preco || st.price || "",
-        tempoEspera: st.tempoEspera || "",
+    //Extras
+    preco: st.preco ? (st.preco + " R$/kWh") : "N/D",
+    tempoEspera: st.tempoEspera ? (st.tempoEspera + " min") : "N/D",
       });
     });
 

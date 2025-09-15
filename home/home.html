@@ -57,22 +57,23 @@
             <strong id="statPotencia">--</strong>
             <span>Potência Máxima</span>
           </div>
+
+          <!--
           <div class="stat">
             <strong id="statEspera">--</strong>
             <span>Tempo Médio de Espera</span>
-          </div>
+          </div>-->
+
           <div class="stat">
             <strong id="statDisponibilidade">--</strong>
             <span>Disponibilidade</span>
           </div>
-
-          <!--
           <div class="stat">
             <strong id="statPreco">--</strong>
             <span>Preço (R$/kWh)</span>
           </div>
-        </div> 
-        -->
+
+        </div>
 
         <!-- Botões -->
         <button id="btnSelecionarEstacao">Selecionar Estação</button>
@@ -170,8 +171,14 @@
       <span class="close">&times;</span>
       <h3>Minhas Reservas</h3>
       <ul id="listaDetalhesReservas"></ul>
+
+      <!-- Botão extra para limpar canceladas -->
+      <button id="btnRemoverCanceladas" class="btn-remover-canceladas">
+        Remover Canceladas
+      </button>
     </div>
   </div>
+
 
   <!-- Modal de Confirmação de Cancelamento -->
   <div id="confirmarCancelamentoModal" class="modal">

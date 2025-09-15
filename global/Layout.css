@@ -330,6 +330,64 @@ html, body {
 }
 
 /* =============================
+   Botões de Reservas (Estação)
+============================= */
+
+/* Botão Confirmar (verde, estilo de salvar) */
+.btn-confirmar-reserva {
+  background: #27ae60;   /* verde */
+  color: #fff;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s, transform 0.2s;
+  margin-left: 8px;
+}
+
+.btn-confirmar-reserva:hover {
+  background: #219150;
+  transform: scale(1.03);
+}
+
+/* Botão Cancelar Reserva (vermelho, já tinha mas reforçando) */
+.btn-cancelar-reserva {
+  background: #e74c3c;   /* vermelho */
+  color: #fff;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s, transform 0.2s;
+  margin-left: 8px;
+}
+
+.btn-cancelar-reserva:hover {
+  background: #c0392b;
+  transform: scale(1.03);
+}
+
+/* Botão Remover Canceladas (cinza neutro, discreto mas com destaque ao hover) */
+#btnRemoverCanceladas {
+  background: #6c757d;   /* cinza */
+  color: #fff;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s, transform 0.2s;
+  margin-top: 12px;
+}
+
+#btnRemoverCanceladas:hover {
+  background: #5a6268;
+  transform: scale(1.03);
+}
+
+/* =============================
    Responsividade (mobile/app)
 ============================= */
 @media (max-width: 768px) {

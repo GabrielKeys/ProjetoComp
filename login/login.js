@@ -60,7 +60,7 @@ if (loginForm) {
       localStorage.setItem("logado", "true");
       localStorage.setItem("usuario", userFound.fullName || userFound.email || email);
       localStorage.setItem("usuarioEmail", userFound.email || email);
-      window.location.href = "../home/home.html";
+      window.location.href = "../home/home.html";   // 🔹 usuário vai para home normal
       return;
     }
 
@@ -73,7 +73,7 @@ if (loginForm) {
       localStorage.setItem("estacaoSelecionada", JSON.stringify(stationFound));
       // também pode salvar só o nome se preferir:
       localStorage.setItem("estacaoNome", stationFound.name || stationFound.nome || "");
-      window.location.href = "../home/home.html";
+      window.location.href = "../station/home.html";   // 🔹 estação vai para home da estação
       return;
     }
 
@@ -81,6 +81,7 @@ if (loginForm) {
     document.getElementById("errorMsg").innerText = "Email ou senha incorretos!";
   });
 }
+
 
 // ===============================
 // REGISTRO LOCAL (Usuário)
@@ -388,13 +389,14 @@ if (registerStationForm) {
     const district = document.getElementById("stationDistrict").value.trim();
     const city = document.getElementById("stationCity").value.trim();
     const state = document.getElementById("stationState").value.trim();
-    const power = document.getElementById("stationPower").value.trim();
+
+    // 🔹 Pega os valores brutos
+    const powerRaw = document.getElementById("stationPower").value.trim();
+    const priceRaw = document.getElementById("stationPrice")?.value.trim() || "";
+    const waitRaw = document.getElementById("stationWait")?.value.trim() || "";
+
     const open = document.getElementById("stationOpen").value.trim();
     const close = document.getElementById("stationClose").value.trim();
-
-    // Extras
-    const preco = document.getElementById("stationPrice")?.value.trim() || "";
-    const wait = document.getElementById("stationWait")?.value.trim() || "";
 
     let stations = JSON.parse(localStorage.getItem("stations")) || [];
 
@@ -416,6 +418,11 @@ if (registerStationForm) {
       document.getElementById("stationMsg").style.color = "red";
       return;
     }
+
+    // 🔹 Remove os sufixos antes de salvar
+    const power = powerRaw.replace(/[^\d.,]/g, "");
+    const preco = priceRaw.replace(/[^\d.,]/g, "");
+    const wait = waitRaw.replace(/[^\d.,]/g, "");
 
     // Criar objeto da nova estação
     const novaEstacao = {
@@ -454,7 +461,7 @@ if (registerStationForm) {
     registerStationForm.reset();
 
     setTimeout(() => {
-      window.location.href = "../home/home.html";
+      window.location.href = "../station/home.html";
     }, 1200);
   });
 
@@ -475,6 +482,44 @@ if (registerStationForm) {
         .catch(() => console.log("Erro ao buscar CEP"));
     }
   });
+
+  // ===============================
+  // 🔹 Funções para aplicar sufixo/prefixo
+  // ===============================
+  function configurarCampoNumeroComSufixo(input, sufixo) {
+    if (!input) return;
+    input.addEventListener("input", () => {
+      input.value = input.value.replace(/[^\d.,]/g, "");
+    });
+    input.addEventListener("blur", () => {
+      if (input.value && !input.value.includes(sufixo)) {
+        input.value = input.value + " " + sufixo;
+      }
+    });
+    input.addEventListener("focus", () => {
+      input.value = input.value.replace(" " + sufixo, "");
+    });
+  }
+
+  function configurarCampoMoeda(input) {
+    if (!input) return;
+    input.addEventListener("input", () => {
+      input.value = input.value.replace(/[^\d.,]/g, "");
+    });
+    input.addEventListener("blur", () => {
+      if (input.value && !input.value.startsWith("R$")) {
+        input.value = "R$ " + input.value;
+      }
+    });
+    input.addEventListener("focus", () => {
+      input.value = input.value.replace("R$ ", "");
+    });
+  }
+
+  // Aplicar nos campos
+  configurarCampoNumeroComSufixo(document.getElementById("stationPower"), "kW");
+  configurarCampoNumeroComSufixo(document.getElementById("stationWait"), "min");
+  configurarCampoMoeda(document.getElementById("stationPrice"));
 }
 
 
