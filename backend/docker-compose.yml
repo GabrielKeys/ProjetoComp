@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: voltway_postgres
+    environment:
+      POSTGRES_DB: voltway
+      POSTGRES_USER: voltway_user
+      POSTGRES_PASSWORD: voltway123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+

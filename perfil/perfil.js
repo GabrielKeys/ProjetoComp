@@ -1,5 +1,18 @@
 // perfil.js
 document.addEventListener("DOMContentLoaded", () => {
+  const API_BASE = 'http://localhost:3000/api';
+  async function apiFetch(path, options = {}) {
+    const headers = Object.assign(
+      { 'Content-Type': 'application/json' },
+      options.headers || {}
+    );
+    const token = localStorage.getItem('token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const resp = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return await resp.json();
+  }
+
   const usuarioEmail = localStorage.getItem("usuarioEmail") || localStorage.getItem("usuario");
   if (!usuarioEmail) return;
 
@@ -7,25 +20,28 @@ document.addEventListener("DOMContentLoaded", () => {
   let userIndex = users.findIndex(u => u.email === usuarioEmail || u.username === usuarioEmail);
   let userData;
 
-  if (userIndex === -1) {
+  // Tenta carregar usuário da API
+  // mantém objeto local como fallback
+  (async () => {
+    const apiUser = await apiFetch(`/usuarios?email=${encodeURIComponent(usuarioEmail)}`);
+    if (apiUser && Array.isArray(apiUser.data) && apiUser.data.length > 0) {
+      const u = apiUser.data[0];
     userData = {
-      fullName: localStorage.getItem("usuario") || "",
-      email: localStorage.getItem("usuarioEmail") || usuarioEmail,
-      phone: "",
+        fullName: u.nome || u.fullName || u.name || localStorage.getItem("usuario") || "",
+        email: u.email || usuarioEmail,
+        phone: u.telefone || u.phone || "",
       car: {},
       photo: localStorage.getItem("usuarioFoto") || "",
     };
+      if (userIndex === -1) {
     users.push(userData);
     userIndex = users.length - 1;
+      } else {
+        users[userIndex] = userData;
+      }
     localStorage.setItem("users", JSON.stringify(users));
   } else {
-    userData = users[userIndex];
-    const fotoLS = localStorage.getItem("usuarioFoto");
-    if (fotoLS && (!userData.photo || userData.photo !== fotoLS)) {
-      userData.photo = fotoLS;
-      users[userIndex] = userData;
-      localStorage.setItem("users", JSON.stringify(users));
-    }
+      throw new Error('Usuário não encontrado na API');
   }
 
   const userDetalhes = document.getElementById("userDetalhes");
@@ -83,6 +99,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function persistirUsers() {
     users[userIndex] = userData;
     localStorage.setItem("users", JSON.stringify(users));
+      // update na API
+      apiFetch(`/usuarios/${encodeURIComponent(userData.email)}`, {
+        method: 'PUT',
+        body: JSON.stringify({ nome: userData.fullName, telefone: userData.phone })
+      }).catch(() => {});
   }
 
   function atualizarSidebar() {
@@ -185,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
     });
 
-    // Editar Senha
+      // Editar Senha (somente local por enquanto)
     document.getElementById("editSenhaBtn").addEventListener("click", () => {
       const span = document.getElementById("senhaSpan");
       span.outerHTML = `
@@ -222,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ================================
-  // Veículo
+    // Veículo (mantém localStorage por ora)
   // ================================
   function renderVeiculo() {
     veiculoDetalhes.innerHTML = `
@@ -421,4 +442,5 @@ document.addEventListener("DOMContentLoaded", () => {
   renderPerfil();
   renderVeiculo();
   atualizarSidebar();
+  })();
 });

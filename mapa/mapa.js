@@ -4,6 +4,19 @@ let map;
 let userMarker;
 let carregadores = [];
 let ficticios = [];
+const API_BASE = 'http://localhost:3000/api';
+
+async function apiFetch(path, options = {}) {
+  const headers = Object.assign(
+    { 'Content-Type': 'application/json' },
+    options.headers || {}
+  );
+  const token = localStorage.getItem('token');
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const resp = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
 
 /* ===============================
    Inicializa o mapa Google Maps
@@ -32,10 +45,15 @@ function initMap() {
 
   console.log("🗺️ Mapa inicializado.");
 
-  // Carrega as estações (fixas + registradas)
+  // Carrega as estações da API (fallback para fixas + registradas)
+  carregarEstacoesDaApi()
+    .then(() => console.log("✅ carregarEstacoesDaApi finalizado."))
+    .catch(err => {
+      console.error("Erro em carregarEstacoesDaApi:", err);
   carregarEstacoesFicticias()
-    .then(() => console.log("✅ carregarEstacoesFicticias finalizado."))
-    .catch(err => console.error("Erro em carregarEstacoesFicticias:", err));
+        .then(() => console.log("✅ carregarEstacoesFicticias finalizado (fallback)."))
+        .catch(e => console.error("Erro em carregarEstacoesFicticias:", e));
+    });
 
   // Geolocalização do usuário
   if (navigator.geolocation) {
@@ -84,6 +102,72 @@ function initMap() {
       localStorage.setItem("filtroRecarga", filtroCheckbox.checked);
       aplicarFiltro(filtroCheckbox.checked);
     });
+  }
+}
+
+/* ===============================
+   Carregar estações da API
+   =============================== */
+async function carregarEstacoesDaApi() {
+  try {
+    const json = await apiFetch(`/estacoes`);
+    const lista = Array.isArray(json?.data) ? json.data : [];
+
+    if (lista.length === 0) {
+      mostrarMensagem("Nenhuma estação encontrada na API.", "aviso", true);
+      return;
+    }
+
+    console.log(`🔎 Estações vindas da API: ${lista.length}`);
+
+    // Mapeia os campos retornados pela API para o formato esperado por adicionarEstacaoNoMapa
+    for (const row of lista) {
+      const estacao = {
+        nome: row.nome || row.name || "Estação",
+        rua: row.rua || row.address || "",
+        numero: row.numero || "",
+        bairro: row.bairro || "",
+        cidade: row.cidade || "",
+        estado: row.estado || "",
+        cep: row.cep || "",
+        potencia: row.potencia || row.potencia_kw || "N/D",
+        abertura: row.abertura || "",
+        fechamento: row.fechamento || "",
+        preco: row.preco || row.preco_kwh || "N/D",
+        tempoEspera: row.tempo_espera || row.tempoEspera || "N/D",
+        lat: row.latitude ?? row.lat,
+        lng: row.longitude ?? row.lng,
+      };
+
+      // Se não vier lat/lng, tentar geocode do endereço
+      if (estacao.lat == null || estacao.lng == null) {
+        const enderecoParts = [
+          estacao.rua,
+          estacao.numero,
+          estacao.bairro,
+          estacao.cidade,
+          estacao.estado,
+          estacao.cep,
+        ].filter(Boolean);
+        if (enderecoParts.length > 0) {
+          const endereco = enderecoParts.join(", ");
+          const pos = await geocodeEnderecoPromise(endereco);
+          if (pos) {
+            estacao.lat = pos.lat();
+            estacao.lng = pos.lng();
+          }
+        }
+      }
+
+      if (estacao.lat != null && estacao.lng != null) {
+        adicionarEstacaoNoMapa(estacao);
+      }
+    }
+
+    mostrarMensagem(`${lista.length} estações carregadas da API.`, "sucesso", true);
+  } catch (err) {
+    console.error("Erro ao carregar estações da API:", err);
+    throw err;
   }
 }
 

@@ -29,56 +29,63 @@ document.getElementById("goToLoginFromStation")?.addEventListener("click", (e) =
 });
 
 // ===============================
-// LOGIN LOCAL (por email) - verifica USERS e STATIONS
+// Login via API (fallback para local)
 // ===============================
+const API_BASE = 'http://localhost:3000/api';
+async function apiFetch(path, options = {}) {
+  try {
+    const headers = Object.assign(
+      { 'Content-Type': 'application/json' },
+      options.headers || {}
+    );
+    const token = localStorage.getItem('token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const resp = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    const text = await resp.text();
+    let json;
+    try { json = text ? JSON.parse(text) : {}; } catch { json = { raw: text }; }
+    if (!resp.ok) {
+      const msg = json?.error || `HTTP ${resp.status}`;
+      throw new Error(msg);
+    }
+    return json;
+  } catch (e) {
+    console.error('Erro na API:', e);
+    throw e;
+  }
+}
 const loginForm = document.getElementById("loginForm");
 
 if (loginForm) {
-  loginForm.addEventListener("submit", function (event) {
+  loginForm.addEventListener("submit", async function (event) {
     event.preventDefault();
+    try { console.log('[LOGIN] submit'); } catch {}
 
     const emailRaw = document.getElementById("username").value || "";
     const pass = (document.getElementById("password").value || "").trim();
 
     const email = emailRaw.trim().toLowerCase();
 
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-    let stations = JSON.parse(localStorage.getItem("stations")) || [];
-
-    // procura usuário normal
-    const userFound = users.find(u =>
-      (u.email || "").toLowerCase() === email && (u.password || "") === pass
-    );
-
-    // procura estação (corrigido: usa 's.senha' e não 's.password')
-    const stationFound = stations.find(s =>
-      (s.email || "").toLowerCase() === email && (s.senha || "") === pass
-    );
-
-    if (userFound) {
-      // login como usuário
-      localStorage.setItem("logado", "true");
-      localStorage.setItem("usuario", userFound.fullName || userFound.email || email);
-      localStorage.setItem("usuarioEmail", userFound.email || email);
-      window.location.href = "../home/home.html";   // 🔹 usuário vai para home normal
+    // Autenticação via API (obrigatória)
+    try {
+      const apiResp = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, senha: pass })
+      });
+      if (apiResp && apiResp.success && apiResp.data?.token) {
+        localStorage.setItem('token', apiResp.data.token);
+        const user = apiResp.data.user || { email };
+        localStorage.setItem('logado', 'true');
+        localStorage.setItem('usuario', user.nome || user.fullName || user.email || email);
+        localStorage.setItem('usuarioEmail', user.email || email);
+        window.location.href = "../home/home.html";
       return;
     }
-
-    if (stationFound) {
-      // login como estação
-      localStorage.setItem("logado", "true");
-      localStorage.setItem("usuario", stationFound.name || stationFound.nome || stationFound.email || email);
-      localStorage.setItem("usuarioEmail", stationFound.email || email);
-      // salva a estação inteira para uso posterior (lista, seleção, etc.)
-      localStorage.setItem("estacaoSelecionada", JSON.stringify(stationFound));
-      // também pode salvar só o nome se preferir:
-      localStorage.setItem("estacaoNome", stationFound.name || stationFound.nome || "");
-      window.location.href = "../station/home.html";   // 🔹 estação vai para home da estação
-      return;
+      document.getElementById("errorMsg").innerText = (apiResp && apiResp.error) ? apiResp.error : "Email ou senha incorretos!";
+    } catch (e) {
+      const el = document.getElementById("errorMsg");
+      if (el) { el.innerText = e.message || 'Falha ao conectar na API'; el.style.color = 'red'; }
     }
-
-    // nenhum dos dois encontrou
-    document.getElementById("errorMsg").innerText = "Email ou senha incorretos!";
   });
 }
 
@@ -161,7 +168,7 @@ if (registerForm) {
 // LOGIN COM GOOGLE
 // ===============================
 function initGoogleLogin() {
-  const CLIENT_ID = "288143953215-o49d879dqorujtkpgfqg80gp7u9ai9ra.apps.googleusercontent.com"; // substitua pelo seu
+  const CLIENT_ID = "31044496725-68tpio897bja07lhvnov4t89r1sn62cu.apps.googleusercontent.com"; // substitua pelo seu
 
   google.accounts.id.initialize({
     client_id: CLIENT_ID,
@@ -177,38 +184,26 @@ function initGoogleLogin() {
 }
 
 function handleCredentialResponse(response) {
-  const data = parseJwt(response.credential);
-  const email = data.email;
-  const name = data.name || "Usuário Google";
-  const picture = data.picture || "";
-
-  let users = JSON.parse(localStorage.getItem("users")) || [];
-  let userIndex = users.findIndex(u => u.email === email);
-
-  if (userIndex !== -1) {
-    let userFound = users[userIndex];
-
-    // 🔹 Mantém a foto personalizada se já existir
-    const fotoFinal = userFound.photo || picture;
-
-    localStorage.setItem("logado", "true");
-    localStorage.setItem("usuario", userFound.fullName || userFound.email);
-    localStorage.setItem("usuarioEmail", userFound.email);
-    localStorage.setItem("usuarioFoto", fotoFinal);
-
-    // 🔹 Atualiza o objeto users para garantir que a foto fique salva
-    if (!userFound.photo && picture) {
-      userFound.photo = picture;
-      users[userIndex] = userFound;
-      localStorage.setItem("users", JSON.stringify(users));
-    }
-
+  (async () => {
+    try {
+      const resp = await apiFetch('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ credential: response.credential })
+      });
+      if (resp && resp.success && resp.data?.token) {
+        localStorage.setItem('token', resp.data.token);
+        const user = resp.data.user;
+        localStorage.setItem('logado', 'true');
+        localStorage.setItem('usuario', user.nome || user.email);
+        localStorage.setItem('usuarioEmail', user.email);
     window.location.href = "../home/home.html";
   } else {
-    // Primeira vez → redireciona para registro
-    localStorage.setItem("googleCadastro", JSON.stringify({ email, name, picture }));
-    window.location.href = "../login/login.html?registerGoogle=true";
-  }
+        document.getElementById('errorMsg').innerText = resp?.error || 'Falha no login com Google';
+      }
+    } catch (e) {
+      document.getElementById('errorMsg').innerText = e.message || 'Erro no login com Google';
+    }
+  })();
 }
 
 function parseJwt(token) {

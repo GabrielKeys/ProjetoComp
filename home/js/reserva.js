@@ -5,6 +5,25 @@
 // ====================================
 // pequenos utilitários
 // ====================================
+const API_BASE = 'http://localhost:3000/api';
+
+async function apiFetch(path, options = {}) {
+  try {
+    const headers = Object.assign(
+      { 'Content-Type': 'application/json' },
+      options.headers || {}
+    );
+    const token = localStorage.getItem('token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const resp = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return await resp.json();
+  } catch (e) {
+    console.error('Erro na API:', e);
+    throw e;
+  }
+}
 function normalizeName(n) {
   return (n || "")
     .toString()
@@ -270,13 +289,36 @@ document.addEventListener("DOMContentLoaded", () => {
 // ====================================
 // Funções de Reservas
 // ====================================
-function carregarReservas() {
-  const usuario = localStorage.getItem("usuario");
-  return JSON.parse(localStorage.getItem(`reservas_${usuario}`)) || [];
+async function carregarReservas() {
+  const usuarioEmail = localStorage.getItem("usuarioEmail") || localStorage.getItem("usuario");
+  const data = await apiFetch(`/reservas?usuario_email=${encodeURIComponent(usuarioEmail || '')}`);
+  return (data.data || []).map((r) => ({
+    estacao: r.estacao_nome || r.estacao || r.nome_estacao || 'Estação',
+    estacaoEmail: r.estacao_email || r.estacaoEmail || '',
+    data: r.data || r.data_reserva || r.dia || '',
+    hora: r.hora || r.hora_reserva || '',
+    status: r.status || 'pendente',
+    usuario: r.usuario_nome || usuarioEmail || '',
+    veiculo: r.veiculo || null,
+  }));
 }
-function salvarReservas(reservas) {
-  const usuario = localStorage.getItem("usuario");
-  localStorage.setItem(`reservas_${usuario}`, JSON.stringify(reservas));
+
+function salvarReservas() { /* desativado: uso somente API */ }
+
+async function criarReservaViaApi(payload) {
+  const body = {
+    estacao_nome: payload.estacao,
+    estacao_email: payload.estacaoEmail || '',
+    data: payload.data,
+    hora: payload.hora,
+    usuario_email: (localStorage.getItem('usuarioEmail') || ''),
+    veiculo: payload.veiculo || null,
+  };
+  const data = await apiFetch('/reservas', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  return data && data.success;
 }
 
 // 🔹 Função para validar dados do veículo
@@ -291,8 +333,8 @@ function dadosVeiculoPreenchidos(usuarioIdCandidate) {
   });
 }
 
-function renderizarReservas() {
-  const reservas = carregarReservas();
+async function renderizarReservas() {
+  const reservas = await carregarReservas();
   const textoReserva = document.getElementById("textoReserva");
   const lista = document.getElementById("listaReservas");
   const textoReservaMapa = document.getElementById("textoReservaMapa");
@@ -556,7 +598,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const formAgendamento = document.getElementById("formAgendamento");
   if (!formAgendamento) return;
 
-  formAgendamento.addEventListener("submit", (e) => {
+  formAgendamento.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     try {
@@ -606,17 +648,17 @@ document.addEventListener("DOMContentLoaded", () => {
         carga: localStorage.getItem(`veiculoCarregamento_${usuarioIdParaVeiculo}`) || ""
       };
 
-      // 🔹 Salva no perfil do usuário
-      reservas.push({
+      // Cria via API (sem fallback)
+      const criada = await criarReservaViaApi({
         estacao: estacao.nome,
         estacaoEmail: estacao.email,
         data,
         hora,
-        status: "pendente",
         usuario: usuarioAtual,
         veiculo
       });
-      salvarReservas(reservas);
+
+      if (!criada) throw new Error('Falha ao criar reserva via API');
 
       // 🔹 Salva também na estação
       let reservasEstacao = JSON.parse(localStorage.getItem(`reservasEstacao_${estacao.email}`)) || [];
@@ -629,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       localStorage.setItem(`reservasEstacao_${estacao.email}`, JSON.stringify(reservasEstacao));
 
-      renderizarReservas();
+      await renderizarReservas();
 
       const agendamentoModal = document.getElementById("agendamentoModal");
       if (agendamentoModal) agendamentoModal.style.display = "none";

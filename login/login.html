@@ -5,14 +5,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - VoltWay</title>
-  <link rel="stylesheet" href="login.css">
+  <link rel="stylesheet" href="/login/login.css">
 </head>
 
 <body>
   <div class="login-container">
 
     <!-- ==================== LOGIN ==================== -->
-    <form id="loginForm" class="form active" autocomplete="off">
+    <form id="loginForm" class="form active" autocomplete="off" onsubmit="return false;">
       <h2>Login</h2>
       <label for="username">Email</label>
       <input type="email" id="username" name="username" required placeholder="Digite seu email" autocomplete="off">
@@ -22,7 +22,7 @@
 
       <p id="errorMsg" class="msg"></p>
 
-      <button type="submit" class="btn">Entrar</button>
+      <button type="submit" id="btnEntrar" class="btn">Entrar</button>
 
       <!-- Botão Google -->
       <div id="googleLoginBtn" style="margin-top: 15px;"></div>
@@ -182,7 +182,8 @@
 
   </div>
 
-  <script src="login.js"></script>
+  
+  <script src="/login/login.js"></script>
 </body>
 
 </html>
