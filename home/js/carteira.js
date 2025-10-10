@@ -2,6 +2,7 @@
 // ----------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioAtual = localStorage.getItem("usuario") || "default";
+  // Carrega saldo e transações iniciais (padrão)
   let saldo = parseFloat(localStorage.getItem(`saldoCarteira_${usuarioAtual}`)) || 0;
   let transacoes = JSON.parse(localStorage.getItem(`transacoesCarteira_${usuarioAtual}`)) || [];
 
@@ -29,7 +30,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Nota: agora esta função RECARREGA os dados do localStorage antes de renderizar,
+  // garantindo que atualizações feitas por outros scripts (ex.: reserva.js) apareçam.
   function atualizarCarteiraUI() {
+    // recarrega valores atuais do localStorage (mantém consistência entre scripts)
+    saldo = parseFloat(localStorage.getItem(`saldoCarteira_${usuarioAtual}`)) || 0;
+    transacoes = JSON.parse(localStorage.getItem(`transacoesCarteira_${usuarioAtual}`)) || [];
+    transacoes = transacoes.map(t => {
+      if (typeof t === "number") return { valor: t, tipo: "Recarga" };
+      return t;
+    });
+
     if (saldoEl) saldoEl.innerText = `R$${saldo.toFixed(2)}`;
     if (listaTransacoes) {
       listaTransacoes.innerHTML = transacoes.length
@@ -37,8 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
             .slice()
             .reverse()
             .map((t) => `
-        <p class="${t.valor >= 0 ? 'pos' : 'neg'}">
-          ${t.valor >= 0 ? '+' : '-'} R$${Math.abs(t.valor).toFixed(2)} (${t.tipo})
+        <p class="${(t.valor || 0) >= 0 ? 'pos' : 'neg'}">
+          ${(t.valor || 0) >= 0 ? '+' : '-'} R$${Math.abs(t.valor || 0).toFixed(2)} (${t.tipo || 'Transação'})
         </p>
       `)
             .join("")
@@ -57,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function recarregarLocal(valor) {
     saldo += valor;
-    transacoes.push({ valor: valor, tipo: "Recarga" }); // ✅ MANTIDO NOVO FORMATO
+    transacoes.push({ valor: valor, tipo: "Recarga" }); // ✅ AGORA NO NOVO FORMATO
     persistir();
     atualizarCarteiraUI();
     info(`✅ Recarga de R$${valor.toFixed(2)} aplicada (modo local).`, "sucesso");
@@ -165,6 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Google Pay - paymentData:", paymentData);
 
       saldo += valor;
+      // garante que usamos o novo formato
       transacoes.push({ valor: valor, tipo: "Recarga" }); // ✅ CORRIGIDO AQUI TAMBÉM
       persistir();
       atualizarCarteiraUI();
