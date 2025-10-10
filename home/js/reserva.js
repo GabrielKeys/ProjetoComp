@@ -34,8 +34,8 @@ function findUsuarioIdForVeiculo(preferredId) {
   for (const id of candidates) {
     if (!id) continue;
     if (localStorage.getItem(`veiculoModelo_${id}`) ||
-        localStorage.getItem(`veiculoAno_${id}`) ||
-        localStorage.getItem(`veiculoPlaca_${id}`)) {
+      localStorage.getItem(`veiculoAno_${id}`) ||
+      localStorage.getItem(`veiculoPlaca_${id}`)) {
       return id;
     }
   }
@@ -362,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 🔹 Atualiza status tanto no usuário quanto na estação
   function atualizarStatusReserva(estacaoEmail, usuarioEmail, data, hora, status) {
-    // Atualiza no usuário
+    // Atualiza no usuário (mantive sua lógica original)
     const reservasUsuario = JSON.parse(localStorage.getItem(`reservasUsuario_${usuarioEmail}`)) || [];
     const reservaU = reservasUsuario.find(r => r.data === data && r.hora === hora && r.estacaoEmail === estacaoEmail);
     if (reservaU) reservaU.status = status;
@@ -373,6 +373,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const reservaE = reservasEstacao.find(r => r.data === data && r.hora === hora && r.usuarioEmail === usuarioEmail);
     if (reservaE) reservaE.status = status;
     localStorage.setItem(`reservasEstacao_${estacaoEmail}`, JSON.stringify(reservasEstacao));
+  }
+
+  // utilitário robusto para recuperar dados do veículo
+  function getVeiculoForReservation(r) {
+    // 1) se já vier na própria reserva, usa direto
+    if (r && r.veiculo && typeof r.veiculo === "object") return r.veiculo;
+
+    // 2) tenta vários ids possíveis (prioriza campos da reserva, depois o usuário logado)
+    const ids = [];
+    if (r) {
+      if (r.usuarioEmail) ids.push(r.usuarioEmail);
+      if (r.usuario) ids.push(r.usuario);
+    }
+    const usuarioAtual = localStorage.getItem("usuario");
+    const usuarioEmailAtual = localStorage.getItem("usuarioEmail");
+    if (usuarioAtual) ids.push(usuarioAtual);
+    if (usuarioEmailAtual) ids.push(usuarioEmailAtual);
+    const uniqueIds = [...new Set(ids.filter(Boolean))];
+
+    for (const id of uniqueIds) {
+      const modelo = localStorage.getItem(`veiculoModelo_${id}`);
+      if (modelo && modelo.toString().trim() !== "") {
+        return {
+          modelo: modelo,
+          ano: localStorage.getItem(`veiculoAno_${id}`) || "",
+          placa: localStorage.getItem(`veiculoPlaca_${id}`) || "",
+          bateria: localStorage.getItem(`veiculoBateria_${id}`) || "",
+          carga: localStorage.getItem(`veiculoCarregamento_${id}`) || ""
+        };
+      }
+    }
+    return null;
   }
 
   function renderizarDetalhes() {
@@ -424,29 +456,9 @@ document.addEventListener("DOMContentLoaded", () => {
           || (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao))
           || {};
 
-        // 🔹 Pega dados do veículo: 1) se reservado com veiculo -> usa; 2) tenta encontrar pelos localStorage keys
+        // 🔹 Pega dados do veículo: 1) se reservado com veiculo -> usa; 2) tenta encontrar nos localStorage keys
+        const veiculoObj = getVeiculoForReservation(r);
         let veiculoHtml = "";
-        let veiculoObj = null;
-
-        if (r.veiculo && typeof r.veiculo === "object") {
-          veiculoObj = r.veiculo;
-        } else {
-          // tenta obter id usado para o veículo (reserva pertence ao usuário atual normalmente)
-          const possibleId = findUsuarioIdForVeiculo(r.usuario || r.usuarioEmail || localStorage.getItem("usuario"));
-          if (possibleId) {
-            const modelo = localStorage.getItem(`veiculoModelo_${possibleId}`);
-            if (modelo) {
-              veiculoObj = {
-                modelo: modelo,
-                ano: localStorage.getItem(`veiculoAno_${possibleId}`) || "",
-                placa: localStorage.getItem(`veiculoPlaca_${possibleId}`) || "",
-                bateria: localStorage.getItem(`veiculoBateria_${possibleId}`) || "",
-                carga: localStorage.getItem(`veiculoCarregamento_${possibleId}`) || ""
-              };
-            }
-          }
-        }
-
         if (veiculoObj) {
           veiculoHtml = `
             <p><strong>Usuário:</strong> ${r.usuario || r.usuarioEmail || localStorage.getItem("usuario")}</p>
@@ -496,7 +508,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // atualiza também na key da estação (se possível)
           try {
-            atualizarStatusReserva(r.estacaoEmail, r.usuario, r.data, r.hora, "cancelada");
+            atualizarStatusReserva(r.estacaoEmail, r.usuario || r.usuarioEmail, r.data, r.hora, "cancelada");
           } catch (e) { /* não crítico */ }
 
           renderizarReservas();
@@ -586,7 +598,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
       } else {
-        // se não existe validarDisponibilidade, apenas log (não bloqueia)
         console.warn("validarDisponibilidade não encontrada — pulando validação de disponibilidade.");
       }
 
@@ -597,7 +608,63 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 🔹 Pega o veículo do usuário atual (prioriza o objeto salvo no localStorage)
+      // ===========================
+      // DÉBITO FIXO: R$10,00 (Reserva)
+      // ===========================
+      const custoReserva = 10.00;
+      const carteiraKey = `saldoCarteira_${usuarioAtual || "default"}`;
+      let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
+
+      if (saldoAtual < custoReserva) {
+        if (typeof mostrarMensagem === "function") {
+          mostrarMensagem("❌ Saldo insuficiente! Recarregue sua carteira com pelo menos R$10.", "erro");
+        }
+        return;
+      }
+
+      // realiza débito e persiste
+      saldoAtual = +(saldoAtual - custoReserva).toFixed(2);
+      localStorage.setItem(carteiraKey, saldoAtual);
+
+      const transKey = `transacoesCarteira_${usuarioAtual || "default"}`;
+      const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
+      // registra transação negativa com label para reserva (será renderizada pela UI)
+      transacoes.push(-custoReserva);
+      localStorage.setItem(transKey, JSON.stringify(transacoes));
+
+      // Atualiza imediatamente a UI da carteira, se os elementos existirem na página
+      try {
+        const saldoEl = document.getElementById("saldoCarteira");
+        if (saldoEl) saldoEl.innerText = `R$${saldoAtual.toFixed(2)}`;
+
+        const listaTransacoes = document.getElementById("listaTransacoes");
+        if (listaTransacoes) {
+          // renderiza as transações com formato consistente (+ R$... (Recarga) ou - R$... (Reserva))
+          listaTransacoes.innerHTML = transacoes.length
+            ? transacoes
+                .slice()
+                .reverse()
+                .map((t) => {
+                  const abs = Math.abs(parseFloat(t)).toFixed(2);
+                  if (parseFloat(t) >= 0) {
+                    return `<p class="pos">+ R$${abs} (Recarga)</p>`;
+                  } else {
+                    return `<p class="neg">- R$${abs} (Reserva)</p>`;
+                  }
+                })
+                .join("")
+            : "<p>Nenhuma transação ainda.</p>";
+        }
+      } catch (e) {
+        // não crítico — se falhar, não impede a reserva
+        console.warn("Não foi possível atualizar UI da carteira imediatamente:", e);
+      }
+
+      if (typeof mostrarMensagem === "function") {
+        mostrarMensagem(`R$${custoReserva.toFixed(2)} debitados da carteira (Reserva).`, "aviso");
+      }
+
+      // 🔹 Pega o veículo do usuário atual
       const veiculo = {
         modelo: localStorage.getItem(`veiculoModelo_${usuarioIdParaVeiculo}`) || "",
         ano: localStorage.getItem(`veiculoAno_${usuarioIdParaVeiculo}`) || "",
@@ -606,15 +673,22 @@ document.addEventListener("DOMContentLoaded", () => {
         carga: localStorage.getItem(`veiculoCarregamento_${usuarioIdParaVeiculo}`) || ""
       };
 
-      // 🔹 Salva no perfil do usuário
+      // 📌 Salva reserva normalmente
       reservas.push({
         estacao: estacao.nome,
         estacaoEmail: estacao.email,
+        usuario: usuarioAtual,
+        usuarioEmail: localStorage.getItem("usuarioEmail") || usuarioAtual,
         data,
         hora,
         status: "pendente",
-        usuario: usuarioAtual,
-        veiculo
+        veiculo: {
+          modelo: localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "",
+          ano: localStorage.getItem(`veiculoAno_${usuarioAtual}`) || "",
+          placa: localStorage.getItem(`veiculoPlaca_${usuarioAtual}`) || "",
+          bateria: localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "",
+          carga: localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || ""
+        }
       });
       salvarReservas(reservas);
 
@@ -634,7 +708,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const agendamentoModal = document.getElementById("agendamentoModal");
       if (agendamentoModal) agendamentoModal.style.display = "none";
 
-      if (typeof mostrarMensagem === "function") mostrarMensagem("✅ Reserva realizada com sucesso!", "sucesso");
     } catch (err) {
       console.error("Erro no submit de agendamento:", err);
       if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Erro ao processar a reserva. Veja console.", "erro");

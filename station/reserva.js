@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const usuario = localStorage.getItem("usuarioNome") || localStorage.getItem("usuario") || "Usuário Desconhecido";
       if (!data || !hora) { alert("Preencha todos os campos!"); return; }
 
-      // 🔹 Pega veículo do usuário atual
+      // 🔹 Pega veículo do usuário atual (robusto)
       const usuarioAtual = localStorage.getItem("usuario");
       const veiculo = {
         modelo: (localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "").trim(),
@@ -173,6 +173,56 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRemoverCanceladas = document.getElementById("btnRemoverCanceladas");
   let reservaIndexParaCancelar = null;
 
+  // 🔹 Atualiza status tanto na estação quanto no usuário
+  function atualizarStatusReservaEstacao(usuarioEmail, data, hora, status) {
+    const emailEstacao = localStorage.getItem("usuarioEmail");
+
+    // 1) Atualiza lista da estação
+    let reservasEstacao = carregarReservasEstacao();
+    let changedEstacao = false;
+    reservasEstacao.forEach(r => {
+      const matchUsuario =
+        (r.usuarioEmail && r.usuarioEmail === usuarioEmail) ||
+        (r.usuario && r.usuario === usuarioEmail);
+      if (matchUsuario && r.data === data && r.hora === hora) {
+        r.status = status;
+        changedEstacao = true;
+      }
+    });
+    if (changedEstacao) salvarReservasEstacao(reservasEstacao);
+
+    // 2) Tenta atualizar reservas do usuário (mantendo compatibilidade)
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (!key.startsWith("reservas_")) continue;
+        if (key.startsWith("reservasEstacao_")) continue;
+
+        const arr = JSON.parse(localStorage.getItem(key)) || [];
+        let updated = false;
+        arr.forEach(item => {
+          const matchDataHora = item.data === data && item.hora === hora;
+          const matchUsuario =
+            (item.usuarioEmail && usuarioEmail && item.usuarioEmail === usuarioEmail) ||
+            (item.usuario && usuarioEmail && item.usuario === usuarioEmail) || false;
+          const matchEstacao = (item.estacaoEmail && item.estacaoEmail === emailEstacao);
+
+          if (matchDataHora && (matchUsuario || matchEstacao)) {
+            item.status = status;
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(key, JSON.stringify(arr));
+        }
+      }
+    } catch (e) {
+      // se falhar aqui não é crítico
+      console.warn("Erro ao sincronizar reservas de usuários:", e);
+    }
+  }
+
   function renderizarDetalhes() {
     const reservas = carregarReservasEstacao();
     if (!listaDetalhes) return;
@@ -192,6 +242,10 @@ document.addEventListener("DOMContentLoaded", () => {
       nomeSpan.className = "reserva-nome";
       nomeSpan.textContent = `Usuário: ${resolveNomeUsuario(r)}`;
 
+      const statusSpan = document.createElement("span");
+      statusSpan.className = "reserva-status";
+      statusSpan.textContent = r.status || "pendente";
+
       const btnConfirma = document.createElement("button");
       btnConfirma.className = "btn-confirmar-reserva";
       btnConfirma.textContent = "Confirmar";
@@ -207,10 +261,11 @@ document.addEventListener("DOMContentLoaded", () => {
       btnCancelar.textContent = "Cancelar";
       btnCancelar.addEventListener("click", () => {
         reservaIndexParaCancelar = idx;
-        confirmarModal.style.display = "flex";
+        if (confirmarModal) confirmarModal.style.display = "flex";
       });
 
       linha.appendChild(nomeSpan);
+      linha.appendChild(statusSpan);
       linha.appendChild(btnConfirma);
       linha.appendChild(btnCancelar);
 
@@ -240,6 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const reservas = carregarReservasEstacao();
         const r = reservas[reservaIndexParaCancelar];
         if (r) {
+          // atualiza ambas as fontes (estação e usuário)
           atualizarStatusReservaEstacao(r.usuarioEmail || r.usuario, r.data, r.hora, "cancelada");
         }
         salvarReservasEstacao(carregarReservasEstacao());
@@ -247,13 +303,13 @@ document.addEventListener("DOMContentLoaded", () => {
         renderizarDetalhes();
         reservaIndexParaCancelar = null;
       }
-      confirmarModal.style.display = "none";
+      if (confirmarModal) confirmarModal.style.display = "none";
     });
   }
 
   if (btnFechar) {
     btnFechar.addEventListener("click", () => {
-      confirmarModal.style.display = "none";
+      if (confirmarModal) confirmarModal.style.display = "none";
       reservaIndexParaCancelar = null;
     });
   }
@@ -271,11 +327,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function abrirModal() {
     renderizarDetalhes();
-    modalDetalhes.style.display = "flex";
+    if (modalDetalhes) modalDetalhes.style.display = "flex";
   }
 
   if (btnDetalhes) btnDetalhes.addEventListener("click", abrirModal);
-  if (closeBtn) closeBtn.addEventListener("click", () => { modalDetalhes.style.display = "none"; });
+  if (closeBtn) closeBtn.addEventListener("click", () => { if (modalDetalhes) modalDetalhes.style.display = "none"; });
 
   window.addEventListener("click", (e) => {
     if (e.target === modalDetalhes) modalDetalhes.style.display = "none";

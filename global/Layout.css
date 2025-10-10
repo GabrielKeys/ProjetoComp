@@ -337,13 +337,13 @@ html, body {
 .btn-confirmar-reserva {
   background: #27ae60;   /* verde */
   color: #fff;
-  padding: 8px 14px;
+  padding: 6px 11px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
   transition: background 0.3s, transform 0.2s;
-  margin-left: 8px;
+  margin-right: -10px;
 }
 
 .btn-confirmar-reserva:hover {
