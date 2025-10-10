@@ -360,8 +360,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let reservaIndexParaCancelar = null;
 
-  // 🔹 Atualiza status tanto no usuário quanto na estação
-  function atualizarStatusReserva(estacaoEmail, usuarioEmail, data, hora, status) {
+  // 🔹 Atualiza status tanto no usuário quanto na estação (função usada mais abaixo)
+  const atualizarStatus = typeof atualizarStatusReservaEstacao === "function"
+    ? atualizarStatusReservaEstacao
+    : atualizarStatusReserva; // compatibilidade com código antigo
+
+  // 🔹 Função que atualiza no usuário e na estação
+  function atualizarStatusReservaEstacao(estacaoEmail, usuarioEmail, data, hora, status) {
     // Atualiza no usuário (mantive sua lógica original)
     const reservasUsuario = JSON.parse(localStorage.getItem(`reservasUsuario_${usuarioEmail}`)) || [];
     const reservaU = reservasUsuario.find(r => r.data === data && r.hora === hora && r.estacaoEmail === estacaoEmail);
@@ -514,7 +519,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Atualiza também na key da estação (se possível)
           try {
-            atualizarStatusReserva(r.estacaoEmail, r.usuario || r.usuarioEmail, r.data, r.hora, "cancelada");
+            atualizarStatusReservaEstacao(
+              r.estacaoEmail || r.estacao,  // primeiro SEMPRE estação
+              r.usuarioEmail || r.usuario,  // segundo SEMPRE usuário
+              r.data,
+              r.hora,
+              "cancelada"
+            );
           } catch (e) { /* não crítico */ }
 
           // ✅ REEMBOLSO FIXO DE R$10
