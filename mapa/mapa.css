@@ -213,3 +213,50 @@
     border-radius: 10px;
   }
 }
+
+
+/* ============================
+   🔹 Estilo do Mapa
+============================ */
+/* Remove os espaços entre os blocos do mapa */
+#map .gm-style img {
+  transform: translateZ(0) scale(1.01);
+}
+
+/* Mantém fundo escuro sem apagar tudo */
+#map {
+  background-color: #1a1a1a !important;
+}
+
+.gmnoprint {
+  bottom: 5px !important;
+  left: 5px !important;
+  right: auto !important;
+}
+
+.gmnoprint,
+.gmnoscreen {
+  opacity: 0.3 !important;
+}
+
+.gmnoprint div {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* remover "informar erro no mapa" */
+button[aria-label="Informar erro no mapa"],
+button[aria-label="Report an issue on the map"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Remove logo do Google no canto inferior esquerdo */
+img[alt="Google"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}

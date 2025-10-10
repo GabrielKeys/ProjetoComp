@@ -4,6 +4,8 @@ let map;
 let userMarker;
 let carregadores = [];
 let ficticios = [];
+let infowindowAtual = null;
+
 
 /* ===============================
    Inicializa o mapa Google Maps
@@ -27,10 +29,71 @@ function initMap() {
       { featureType: "administrative", stylers: [{ visibility: "on" }] },
       { featureType: "landscape", stylers: [{ visibility: "on" }] },
       { featureType: "water", stylers: [{ visibility: "on" }] },
+      { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+      { featureType: "road.highway", elementType: "labels", stylers: [{ visibility: "off" }] },
+
+
+      // Fundo uniforme (sem efeito quadriculado)
+      { elementType: "geometry", stylers: [{ color: "#1a1a1a" }] },
+
+      // Labels do mapa
+      { elementType: "labels.text.stroke", stylers: [{ color: "#1a1a1a" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#8f8f8f" }] },
+
+      // Estradas
+      { featureType: "road", elementType: "geometry", stylers: [{ color: "#2A2A2A" }] },
+      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#131313" }] },
+      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8f8f8f" }] },
+
+      // Admin / fronteiras
+      { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#3A3A3A" }] },
+
+      // Paisagem
+      { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#1E1E1E" }] },
+
+      // Água
+      { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
+      { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#4d4d4d" }] }
     ],
+
+    // Desliga os controles que aparecem na imagem
+    zoomControl: false,        // Botão de + e -
+    streetViewControl: false,  // Bonequinho amarelo (pegman)
+    fullscreenControl: false,  // Botão de tela cheia
+    mapTypeControl: false,     // Botão de tipo de mapa (satélite / padrão)
+    rotateControl: false,      // Controle de rotação
+    scaleControl: false,       // Régua
   });
 
   console.log("🗺️ Mapa inicializado.");
+
+  // Remover Label do google
+google.maps.event.addListenerOnce(map, 'idle', () => {
+  limparFeedbackDoMapa();
+});
+
+function limparFeedbackDoMapa() {
+  const tentarRemover = () => {
+    document.querySelectorAll('*').forEach(el => {
+      const texto = el.innerText?.trim() || "";
+      if (
+        texto === "Informar erro no mapa" ||
+        texto === "Report an issue on the map"
+      ) {
+        console.log("🗑️ Removendo botão de feedback:", el);
+        el.style.display = "none";
+        el.remove();
+      }
+    });
+  };
+  tentarRemover();
+  let tentativas = 0;
+  const intervalo = setInterval(() => {
+    tentarRemover();
+    tentativas++;
+    if (tentativas > 10) clearInterval(intervalo);
+  }, 500);
+}
 
   // Carrega as estações (fixas + registradas)
   carregarEstacoesFicticias()
@@ -123,20 +186,20 @@ async function carregarEstacoesFicticias() {
 
     registradas.forEach(st => {
       todasEstacoes.push({
-    nome: st.stationName || st.name || st.nome || "Estação",
-    rua: st.address || st.rua || "",
-    numero: st.number || st.numero || "",
-    bairro: st.district || st.bairro || "",
-    cidade: st.city || st.cidade || "",
-    estado: st.state || st.estado || "",
-    cep: st.cep || "",
-    potencia: st.potencia ? (st.potencia + " kW") : "N/D",
-    abertura: st.open || st.abertura || "",
-    fechamento: st.close || st.fechamento || "",
+        nome: st.stationName || st.name || st.nome || "Estação",
+        rua: st.address || st.rua || "",
+        numero: st.number || st.numero || "",
+        bairro: st.district || st.bairro || "",
+        cidade: st.city || st.cidade || "",
+        estado: st.state || st.estado || "",
+        cep: st.cep || "",
+        potencia: st.potencia ? (st.potencia + " kW") : "N/D",
+        abertura: st.open || st.abertura || "",
+        fechamento: st.close || st.fechamento || "",
 
-    //Extras
-    preco: st.preco ? (st.preco + " R$/kWh") : "N/D",
-    tempoEspera: st.tempoEspera ? (st.tempoEspera + " min") : "N/D",
+        //Extras
+        preco: st.preco ? (st.preco + " R$/kWh") : "N/D",
+        tempoEspera: st.tempoEspera ? (st.tempoEspera + " min") : "N/D",
       });
     });
 
@@ -250,7 +313,10 @@ function adicionarEstacaoNoMapa(estacao) {
   const infowindow = new google.maps.InfoWindow({ content: contentString });
 
   marker.addListener("click", () => {
+    if (infowindowAtual) infowindowAtual.close();
     infowindow.open(map, marker);
+    infowindowAtual = infowindow;
+
 
     // após abrir a janela, registra handlers
     google.maps.event.addListenerOnce(infowindow, "domready", () => {
@@ -335,7 +401,10 @@ async function carregarEstacoesReais(location) {
       const infowindow = new google.maps.InfoWindow({ content: contentString });
 
       marker.addListener("click", () => {
+        if (infowindowAtual) infowindowAtual.close();
         infowindow.open(map, marker);
+        infowindowAtual = infowindow;
+
 
         google.maps.event.addListenerOnce(infowindow, "domready", () => {
           const estrela = document.querySelector(".estrela");
