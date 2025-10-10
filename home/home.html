@@ -192,6 +192,23 @@
     </div>
   </div>
 
+  <!-- Modal Customizado de Cancelamento -->
+  <div id="cancelamentoAvisoModal" class="modal" style="display:none;">
+    <div class="modal-content cancelamento-content">
+      <h3>Reserva Cancelada</h3>
+      <p id="cancelamentoMensagem">Sua reserva foi cancelada pela estação.</p>
+      <button id="btnFecharCancelamentoAviso">OK</button>
+    </div>
+  </div>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      verificarCancelamentosAutomaticos();                  // Executa assim que abre o Home
+      setInterval(verificarCancelamentosAutomaticos, 5000); // Continua checando a cada 5s
+    });
+  </script>
+
   <!-- Google Pay API -->
   <script async src="https://pay.google.com/gp/p/js/pay.js"></script>
 
@@ -201,7 +218,7 @@
   <script src="js/veiculo.js"></script>
   <script src="js/carteira.js"></script>
   <script src="js/main.js"></script>
-  <script src="../global/Global.js"></script>
+  <script src="../global/global.js"></script>
 </body>
 
 </html>

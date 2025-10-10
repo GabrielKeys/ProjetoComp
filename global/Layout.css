@@ -479,3 +479,62 @@ html, body {
   }
 }
 
+/* Modal customizado (popup de cancelamento) */
+.cancelamento-content {
+  background: #f0f0f0 !important; /* cinza */
+  text-align: center;
+  padding: 25px;
+  border-radius: 10px;
+  max-width: 350px;
+  margin: auto;
+}
+
+/* Evita que clique fora feche o modal */
+#cancelamentoAvisoModal {
+  pointer-events: none;
+}
+#cancelamentoAvisoModal .cancelamento-content {
+  pointer-events: auto;
+}
+
+/* Estiliza o fundo escuro do modal (centralizado e cinza suave) */
+#cancelamentoAvisoModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Caixa interna do modal */
+#cancelamentoAvisoModal .modal-content {
+  background: #f0f0f0;
+  text-align: center;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 350px;
+  width: 90%;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* ✅ Botão OK estilizado */
+#btnFecharCancelamentoAviso {
+  background: #888;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin-top: 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+#btnFecharCancelamentoAviso:hover {
+  background: #666;
+}

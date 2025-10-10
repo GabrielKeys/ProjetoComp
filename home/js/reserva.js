@@ -19,9 +19,8 @@ function namesEqual(a, b) {
 }
 
 // ====================================
-// Aux: encontra qual identificador de usuário usar para os keys do veículo
-// tenta: r.usuario / r.usuarioEmail / localStorage.usuarioEmail / localStorage.usuario
-// retorna string (pode ser vazia se não achar)
+// Encontrar qual identificador de usuário usar para os keys do veículo
+
 function findUsuarioIdForVeiculo(preferredId) {
   const candidates = [];
   if (preferredId) candidates.push(preferredId);
@@ -502,7 +501,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     } catch (err) {
       console.error("Erro em renderizarDetalhes:", err);
-      if (listaDetalhes) listaDetalhes.innerHTML = "<li>Erro ao carregar detalhes — veja console.</li>";
+      if (listaDetalhes) listaDetalhes.innerHTML = "<li>Erro ao carregar detalhes.</li>";
     }
   }
 
@@ -551,7 +550,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           renderizarReservas();
           renderizarDetalhes();
-          if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Reserva cancelada. R$10 reembolsados.", "sucesso");
         }
         reservaIndexParaCancelar = null;
       }
@@ -575,7 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
       salvarReservas(reservas);
       renderizarReservas();
       renderizarDetalhes();
-      if (typeof mostrarMensagem === "function") mostrarMensagem("🗑️ Reservas canceladas removidas.", "sucesso");
+      if (typeof mostrarMensagem === "function") mostrarMensagem("Reservas canceladas removidas.", "sucesso");
     });
   }
 

@@ -158,6 +158,54 @@ overlay.addEventListener("click", () => {
   localStorage.setItem("sidebarOpen", "false");
 });
 
+// ✅ Verifica automaticamente se há reservas canceladas pela estação (com modal customizado)
+// ✅ Função que abre o modal customizado de cancelamento
+function mostrarCancelamentoCustomizado(mensagem) {
+  const modal = document.getElementById("cancelamentoAvisoModal");
+  const msgEl = document.getElementById("cancelamentoMensagem");
+  const btnFechar = document.getElementById("btnFecharCancelamentoAviso");
+
+  msgEl.textContent = mensagem || "Sua reserva foi cancelada.";
+  modal.style.display = "flex";
+
+  btnFechar.onclick = () => {
+    modal.style.display = "none";
+  };
+}
+
+// ✅ Verifica automaticamente se há reservas canceladas pela estação (com modal customizado)
+function verificarCancelamentosPendentes() {
+  const usuarioEmail = localStorage.getItem("usuarioEmail");
+  const usuarioNome = localStorage.getItem("usuario");
+
+  if (!usuarioEmail && !usuarioNome) return;
+
+  // Buscar reservas tanto por email quanto por nome
+  const reservasEmail = JSON.parse(localStorage.getItem(`reservas_${usuarioEmail}`)) || [];
+  const reservasNome = JSON.parse(localStorage.getItem(`reservas_${usuarioNome}`)) || [];
+  const reservas = [...reservasEmail, ...reservasNome];
+
+  const jaNotificados = JSON.parse(localStorage.getItem("cancelamentosNotificados")) || [];
+
+  reservas.forEach(r => {
+    const idReserva = r.data + r.hora;
+
+    if (r.status === "cancelada" && !jaNotificados.includes(idReserva)) {
+      mostrarCancelamentoCustomizado(`⚠️ Sua reserva em ${r.estacao} para ${r.data} às ${r.hora} foi cancelada. Foram reembolsados R$10`);
+      jaNotificados.push(idReserva);
+    }
+  });
+
+  localStorage.setItem("cancelamentosNotificados", JSON.stringify(jaNotificados));
+}
+
+// ✅ Executa assim que abre o Home
+document.addEventListener("DOMContentLoaded", verificarCancelamentosPendentes);
+
+// ✅ Continua verificando a cada 3s
+setInterval(verificarCancelamentosPendentes, 3000);
+
+
 
 
 
