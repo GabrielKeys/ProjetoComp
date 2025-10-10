@@ -6,7 +6,6 @@ let carregadores = [];
 let ficticios = [];
 let infowindowAtual = null;
 
-
 /* ===============================
    Inicializa o mapa Google Maps
    =============================== */
@@ -14,6 +13,8 @@ function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     center: { lat: -23.5505, lng: -46.6333 },
     zoom: 13,
+    minZoom: 12, // NÃO DEIXA AFASTAR MAIS QUE ISSO
+    maxZoom: 25, // NÃO DEIXA APROXIMAR MAIS QUE ISSO
     mapTypeControl: false,
     streetViewControl: true,
     fullscreenControl: true,
@@ -65,35 +66,45 @@ function initMap() {
     scaleControl: false,       // Régua
   });
 
+  let ultimoZoom = map.getZoom();
   console.log("🗺️ Mapa inicializado.");
 
   // Remover Label do google
-google.maps.event.addListenerOnce(map, 'idle', () => {
-  limparFeedbackDoMapa();
-});
+  google.maps.event.addListenerOnce(map, 'idle', () => {
+    limparFeedbackDoMapa();
+  });
 
-function limparFeedbackDoMapa() {
-  const tentarRemover = () => {
-    document.querySelectorAll('*').forEach(el => {
-      const texto = el.innerText?.trim() || "";
-      if (
-        texto === "Informar erro no mapa" ||
-        texto === "Report an issue on the map"
-      ) {
-        console.log("🗑️ Removendo botão de feedback:", el);
-        el.style.display = "none";
-        el.remove();
-      }
-    });
-  };
-  tentarRemover();
-  let tentativas = 0;
-  const intervalo = setInterval(() => {
+  function limparFeedbackDoMapa() {
+    const tentarRemover = () => {
+      document.querySelectorAll('*').forEach(el => {
+        const texto = el.innerText?.trim() || "";
+        if (
+          texto === "Informar erro no mapa" ||
+          texto === "Report an issue on the map"
+        ) {
+          console.log("🗑️ Removendo botão de feedback:", el);
+          el.style.display = "none";
+          el.remove();
+        }
+      });
+    };
     tentarRemover();
-    tentativas++;
-    if (tentativas > 10) clearInterval(intervalo);
-  }, 500);
-}
+    let tentativas = 0;
+    const intervalo = setInterval(() => {
+      tentarRemover();
+      tentativas++;
+      if (tentativas > 10) clearInterval(intervalo);
+    }, 500);
+  }
+
+  google.maps.event.addListenerOnce(map, 'tilesloaded', () => {
+    document.getElementById('map').classList.add('loaded');
+  });
+
+
+
+
+
 
   // Carrega as estações (fixas + registradas)
   carregarEstacoesFicticias()
