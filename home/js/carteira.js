@@ -5,6 +5,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let saldo = parseFloat(localStorage.getItem(`saldoCarteira_${usuarioAtual}`)) || 0;
   let transacoes = JSON.parse(localStorage.getItem(`transacoesCarteira_${usuarioAtual}`)) || [];
 
+  // 🔄 Conversão automática para o novo formato (apenas números → { valor, tipo })
+  transacoes = transacoes.map(t => {
+    if (typeof t === "number") {
+      return { valor: t, tipo: "Recarga" }; // padrão antigo considerado recarga
+    }
+    return t;
+  });
+
   const saldoEl = document.getElementById("saldoCarteira");
   const listaTransacoes = document.getElementById("listaTransacoes");
   const btnRecarregar = document.getElementById("btnRecarregar");
@@ -28,12 +36,19 @@ document.addEventListener("DOMContentLoaded", () => {
         ? transacoes
             .slice()
             .reverse()
-            .map((t) => `<p class="pos">+ R$${parseFloat(t).toFixed(2)} (Recarga)</p>`)
+            .map((t) => `
+        <p class="${t.valor >= 0 ? 'pos' : 'neg'}">
+          ${t.valor >= 0 ? '+' : '-'} R$${Math.abs(t.valor).toFixed(2)} (${t.tipo})
+        </p>
+      `)
             .join("")
         : "<p>Nenhuma transação ainda.</p>";
     }
   }
   atualizarCarteiraUI();
+
+  // Atualiza quando outra parte do sistema avisar
+  window.addEventListener("carteiraAtualizada", atualizarCarteiraUI);
 
   function persistir() {
     localStorage.setItem(`saldoCarteira_${usuarioAtual}`, saldo);
@@ -42,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function recarregarLocal(valor) {
     saldo += valor;
-    transacoes.push(valor);
+    transacoes.push({ valor: valor, tipo: "Recarga" }); // ✅ MANTIDO NOVO FORMATO
     persistir();
     atualizarCarteiraUI();
     info(`✅ Recarga de R$${valor.toFixed(2)} aplicada (modo local).`, "sucesso");
@@ -150,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Google Pay - paymentData:", paymentData);
 
       saldo += valor;
-      transacoes.push(valor);
+      transacoes.push({ valor: valor, tipo: "Recarga" }); // ✅ CORRIGIDO AQUI TAMBÉM
       persistir();
       atualizarCarteiraUI();
       info(`✅ Recarga de R$${valor.toFixed(2)} realizada com sucesso.`, "sucesso");

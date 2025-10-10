@@ -441,10 +441,16 @@ document.addEventListener("DOMContentLoaded", () => {
         btnCancelar.textContent = "Cancelar";
         btnCancelar.dataset.index = idx;
 
-        btnCancelar.addEventListener("click", () => {
-          reservaIndexParaCancelar = idx;
-          if (confirmarModal) confirmarModal.style.display = "flex";
-        });
+        // ❌ Se já estiver cancelada ou outro status inválido → desativa
+        if (r.status && r.status !== "pendente" && r.status !== "confirmada") {
+          btnCancelar.disabled = true;
+          btnCancelar.textContent = "Indisponível";
+        } else {
+          btnCancelar.addEventListener("click", () => {
+            reservaIndexParaCancelar = idx;
+            if (confirmarModal) confirmarModal.style.display = "flex";
+          });
+        }
 
         linha.appendChild(nome);
         linha.appendChild(statusSpan);
@@ -456,7 +462,7 @@ document.addEventListener("DOMContentLoaded", () => {
           || (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao))
           || {};
 
-        // 🔹 Pega dados do veículo: 1) se reservado com veiculo -> usa; 2) tenta encontrar nos localStorage keys
+        // 🔹 Pega dados do veículo
         const veiculoObj = getVeiculoForReservation(r);
         let veiculoHtml = "";
         if (veiculoObj) {
@@ -506,14 +512,35 @@ document.addEventListener("DOMContentLoaded", () => {
           r.status = "cancelada";
           salvarReservas(reservas);
 
-          // atualiza também na key da estação (se possível)
+          // Atualiza também na key da estação (se possível)
           try {
             atualizarStatusReserva(r.estacaoEmail, r.usuario || r.usuarioEmail, r.data, r.hora, "cancelada");
           } catch (e) { /* não crítico */ }
 
+          // ✅ REEMBOLSO FIXO DE R$10
+          try {
+            const usuarioAtual = localStorage.getItem("usuario") || "default";
+            const carteiraKey = `saldoCarteira_${usuarioAtual}`;
+            const transKey = `transacoesCarteira_${usuarioAtual}`;
+            let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
+            saldoAtual = +(saldoAtual + 10).toFixed(2);
+            localStorage.setItem(carteiraKey, saldoAtual);
+
+            const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
+            transacoes.push({ valor: 10, tipo: "Reembolso" }); // ✅ AGORA FICA CORRETO!
+            localStorage.setItem(transKey, JSON.stringify(transacoes));
+
+            // 🔔 Atualiza carteira em tempo real
+            window.dispatchEvent(new Event("carteiraAtualizada"));
+
+          } catch (e) {
+            console.error("Falha ao reembolsar:", e);
+          }
+
+
           renderizarReservas();
           renderizarDetalhes();
-          if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Reserva cancelada.", "erro");
+          if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Reserva cancelada. R$10 reembolsados.", "sucesso");
         }
         reservaIndexParaCancelar = null;
       }
@@ -629,7 +656,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const transKey = `transacoesCarteira_${usuarioAtual || "default"}`;
       const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
       // registra transação negativa com label para reserva (será renderizada pela UI)
-      transacoes.push(-custoReserva);
+      transacoes.push({ valor: -custoReserva, tipo: "Reserva" });
       localStorage.setItem(transKey, JSON.stringify(transacoes));
 
       // Atualiza imediatamente a UI da carteira, se os elementos existirem na página
@@ -639,22 +666,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const listaTransacoes = document.getElementById("listaTransacoes");
         if (listaTransacoes) {
-          // renderiza as transações com formato consistente (+ R$... (Recarga) ou - R$... (Reserva))
           listaTransacoes.innerHTML = transacoes.length
             ? transacoes
-                .slice()
-                .reverse()
-                .map((t) => {
-                  const abs = Math.abs(parseFloat(t)).toFixed(2);
-                  if (parseFloat(t) >= 0) {
-                    return `<p class="pos">+ R$${abs} (Recarga)</p>`;
-                  } else {
-                    return `<p class="neg">- R$${abs} (Reserva)</p>`;
-                  }
-                })
-                .join("")
+              .slice()
+              .reverse()
+              .map((t) => `
+        <p class="${t.valor >= 0 ? 'pos' : 'neg'}">
+          ${t.valor >= 0 ? '+' : '-'} R$${Math.abs(t.valor).toFixed(2)} (${t.tipo})
+        </p>
+      `)
+              .join("")
             : "<p>Nenhuma transação ainda.</p>";
         }
+
       } catch (e) {
         // não crítico — se falhar, não impede a reserva
         console.warn("Não foi possível atualizar UI da carteira imediatamente:", e);
