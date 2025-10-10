@@ -1,10 +1,16 @@
 // carteira.js (versão com Google Pay TEST + input moeda formatado)
 // ----------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  const usuarioAtual = localStorage.getItem("usuario") || "default";
+// Sempre usar email como chave fixa da carteira
+const usuarioAtual = localStorage.getItem("usuarioEmail");
+if (!usuarioAtual) {
+  console.error("⚠ Nenhum usuarioEmail encontrado no localStorage! A carteira não funcionará sem email.");
+}
+
   // Carrega saldo e transações iniciais (padrão)
   let saldo = parseFloat(localStorage.getItem(`saldoCarteira_${usuarioAtual}`)) || 0;
   let transacoes = JSON.parse(localStorage.getItem(`transacoesCarteira_${usuarioAtual}`)) || [];
+
 
   // 🔄 Conversão automática para o novo formato (apenas números → { valor, tipo })
   transacoes = transacoes.map(t => {

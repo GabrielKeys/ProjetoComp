@@ -45,7 +45,7 @@ function atualizarStatusReservaEstacao(estacaoEmail, usuarioEmail, data, hora, s
         const matchUsuario =
           usuarioEmail &&
           ((r.usuarioEmail && r.usuarioEmail === usuarioEmail) ||
-           (r.usuario && r.usuario === usuarioEmail));
+            (r.usuario && r.usuario === usuarioEmail));
         if (matchUsuario && r.data === data && r.hora === hora) {
           r.status = status;
           changedEstacao = true;
@@ -81,13 +81,13 @@ function atualizarStatusReservaEstacao(estacaoEmail, usuarioEmail, data, hora, s
           const matchUsuario =
             usuarioEmail &&
             ((item.usuarioEmail && item.usuarioEmail === usuarioEmail) ||
-             (item.usuario && item.usuario === usuarioEmail));
+              (item.usuario && item.usuario === usuarioEmail));
 
           const matchEstacao =
             estacaoEmail &&
             ((item.estacaoEmail && item.estacaoEmail === estacaoEmail) ||
-             (item.estacao && item.estacao === estacaoEmail) ||
-             (item.estacao && item.estacao === (localStorage.getItem("usuario") || ""))); // fallback
+              (item.estacao && item.estacao === estacaoEmail) ||
+              (item.estacao && item.estacao === (localStorage.getItem("usuario") || ""))); // fallback
 
           if (matchDataHora && (matchUsuario || matchEstacao)) {
             item.status = status;
@@ -305,9 +305,33 @@ document.addEventListener("DOMContentLoaded", () => {
           const usuarioKey = r.usuarioEmail || r.usuario || "";
           const estacaoKey = localStorage.getItem("usuarioEmail") || "";
           atualizarStatusReservaEstacao(estacaoKey, usuarioKey, r.data, r.hora, "cancelada");
+
+          // ✅ REEMBOLSO FIXO DE R$10 PARA O EMAIL DO USUÁRIO
+          try {
+            const usuarioEmail = r.usuarioEmail; // sempre use e-mail
+            const carteiraKey = `saldoCarteira_${usuarioEmail}`;
+            const transKey = `transacoesCarteira_${usuarioEmail}`;
+
+            let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
+            saldoAtual = +(saldoAtual + 10).toFixed(2);
+            localStorage.setItem(carteiraKey, saldoAtual);
+
+            const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
+            transacoes.push({ valor: 10, tipo: "Reembolso" });
+            localStorage.setItem(transKey, JSON.stringify(transacoes));
+
+            console.log("💰 Reembolso enviado para:", carteiraKey);
+            // ❌ Removido: alert("💰 Reembolso enviado para " + usuarioEmail);
+            if (typeof mostrarMensagem === "function") mostrarMensagem("Reserva cancelada com sucesso.", "sucesso");
+            window.dispatchEvent(new Event("carteiraAtualizada"));
+          } catch (e) {
+            console.error("Falha ao reembolsar usuário:", e);
+          }
+
+
         }
 
-        // Recarrega/atualiza a exibição local
+        // Recarrega a UI local
         salvarReservasEstacao(carregarReservasEstacao());
         renderizarReservasEstacao();
         renderizarDetalhes();
@@ -316,6 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (confirmarModal) confirmarModal.style.display = "none";
     });
   }
+
 
   // Fechar modal de confirmação (sem ação)
   if (btnFechar) {

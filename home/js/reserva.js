@@ -530,7 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // ✅ REEMBOLSO FIXO DE R$10
           try {
-            const usuarioAtual = localStorage.getItem("usuario") || "default";
+            const usuarioAtual = localStorage.getItem("usuarioEmail") || "default";
             const carteiraKey = `saldoCarteira_${usuarioAtual}`;
             const transKey = `transacoesCarteira_${usuarioAtual}`;
             let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
@@ -646,58 +646,60 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // ===========================
-      // DÉBITO FIXO: R$10,00 (Reserva)
-      // ===========================
-      const custoReserva = 10.00;
-      const carteiraKey = `saldoCarteira_${usuarioAtual || "default"}`;
-      let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
+// ===========================
+// DÉBITO FIXO: R$10,00 (Reserva)
+// ===========================
+const custoReserva = 10.00;
 
-      if (saldoAtual < custoReserva) {
-        if (typeof mostrarMensagem === "function") {
-          mostrarMensagem("❌ Saldo insuficiente! Recarregue sua carteira com pelo menos R$10.", "erro");
-        }
-        return;
-      }
+// ✅ Sempre usar email como chave fixa
+const usuarioEmail = localStorage.getItem("usuarioEmail");
+const carteiraKey = `saldoCarteira_${usuarioEmail}`;
+let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
 
-      // realiza débito e persiste
-      saldoAtual = +(saldoAtual - custoReserva).toFixed(2);
-      localStorage.setItem(carteiraKey, saldoAtual);
+if (saldoAtual < custoReserva) {
+  if (typeof mostrarMensagem === "function") {
+    mostrarMensagem("❌ Saldo insuficiente! Recarregue sua carteira com pelo menos R$10.", "erro");
+  }
+  return;
+}
 
-      const transKey = `transacoesCarteira_${usuarioAtual || "default"}`;
-      const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
-      // registra transação negativa com label para reserva (será renderizada pela UI)
-      transacoes.push({ valor: -custoReserva, tipo: "Reserva" });
-      localStorage.setItem(transKey, JSON.stringify(transacoes));
+// realiza débito e persiste
+saldoAtual = +(saldoAtual - custoReserva).toFixed(2);
+localStorage.setItem(carteiraKey, saldoAtual);
 
-      // Atualiza imediatamente a UI da carteira, se os elementos existirem na página
-      try {
-        const saldoEl = document.getElementById("saldoCarteira");
-        if (saldoEl) saldoEl.innerText = `R$${saldoAtual.toFixed(2)}`;
+const transKey = `transacoesCarteira_${usuarioEmail}`;
+const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
+// registra transação negativa com label para reserva (será renderizada pela UI)
+transacoes.push({ valor: -custoReserva, tipo: "Reserva" });
+localStorage.setItem(transKey, JSON.stringify(transacoes));
 
-        const listaTransacoes = document.getElementById("listaTransacoes");
-        if (listaTransacoes) {
-          listaTransacoes.innerHTML = transacoes.length
-            ? transacoes
-              .slice()
-              .reverse()
-              .map((t) => `
-        <p class="${t.valor >= 0 ? 'pos' : 'neg'}">
-          ${t.valor >= 0 ? '+' : '-'} R$${Math.abs(t.valor).toFixed(2)} (${t.tipo})
-        </p>
-      `)
-              .join("")
-            : "<p>Nenhuma transação ainda.</p>";
-        }
+// Atualiza imediatamente a UI da carteira, se os elementos existirem na página
+try {
+  const saldoEl = document.getElementById("saldoCarteira");
+  if (saldoEl) saldoEl.innerText = `R$${saldoAtual.toFixed(2)}`;
 
-      } catch (e) {
-        // não crítico — se falhar, não impede a reserva
-        console.warn("Não foi possível atualizar UI da carteira imediatamente:", e);
-      }
+  const listaTransacoes = document.getElementById("listaTransacoes");
+  if (listaTransacoes) {
+    listaTransacoes.innerHTML = transacoes.length
+      ? transacoes
+          .slice()
+          .reverse()
+          .map((t) => `
+    <p class="${t.valor >= 0 ? 'pos' : 'neg'}">
+      ${t.valor >= 0 ? '+' : '-'} R$${Math.abs(t.valor).toFixed(2)} (${t.tipo})
+    </p>
+  `)
+          .join("")
+      : "<p>Nenhuma transação ainda.</p>";
+  }
 
-      if (typeof mostrarMensagem === "function") {
-        mostrarMensagem(`R$${custoReserva.toFixed(2)} debitados da carteira (Reserva).`, "aviso");
-      }
+} catch (e) {
+  console.warn("Não foi possível atualizar UI da carteira imediatamente:", e);
+}
+
+if (typeof mostrarMensagem === "function") {
+  mostrarMensagem(`R$${custoReserva.toFixed(2)} debitados da carteira (Reserva).`, "aviso");
+}
 
       // 🔹 Pega o veículo do usuário atual
       const veiculo = {
