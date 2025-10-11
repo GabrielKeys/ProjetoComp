@@ -26,11 +26,15 @@ function validarDisponibilidade(estacao, data, hora, reservasExistentes = []) {
     };
   }
 
-  const conflito = reservasExistentes.find(r =>
+  // ⬇️ Filtra apenas reservas ATIVAS (ignora canceladas)
+  const reservasAtivas = reservasExistentes.filter(r => r.status !== "cancelada");
+
+  const conflito = reservasAtivas.find(r =>
     r.estacao === estacao.nome &&
     r.data === data &&
     r.hora === hora
   );
+
   if (conflito) {
     return {
       disponivel: false,
@@ -40,6 +44,7 @@ function validarDisponibilidade(estacao, data, hora, reservasExistentes = []) {
 
   return { disponivel: true, mensagem: "Horário disponível ✅" };
 }
+
 
 // ---- Bloqueio de datas e horas inválidas ----
 document.addEventListener("DOMContentLoaded", () => {
@@ -161,4 +166,102 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   mostrarMensagem(`${favoritos.length} estação(ões) favoritada(s) carregada(s).`, "sucesso");
+});
+
+// ===============================
+// Escolha de horarios padronizada
+// ===============================
+
+document.addEventListener("DOMContentLoaded", () => {
+  const selectHora = document.getElementById("horaReserva");
+  const wrapper = document.querySelector(".select-wrapper");
+  const overlay = document.querySelector(".click-overlay");
+
+  // Gerar opções
+  for (let h = 0; h < 24; h++) {
+    ["00", "30"].forEach(m => {
+      const option = document.createElement("option");
+      option.value = `${String(h).padStart(2, "0")}:${m}`;
+      option.textContent = `${String(h).padStart(2, "0")}:${m}`;
+      selectHora.appendChild(option);
+    });
+  }
+
+  overlay.addEventListener("click", () => {
+    wrapper.classList.add("open");
+    selectHora.setAttribute("size", "6");
+    selectHora.focus();
+  });
+
+  selectHora.addEventListener("change", () => {
+    wrapper.classList.remove("open");
+    selectHora.removeAttribute("size");
+  });
+
+  selectHora.addEventListener("blur", () => {
+    wrapper.classList.remove("open");
+    selectHora.removeAttribute("size");
+  });
+});
+
+
+// --- Substituir por este bloco (válido e sem chaves extras) ---
+document.addEventListener("DOMContentLoaded", () => {
+  const selectHora = document.getElementById("horaReserva");
+  const inputData = document.getElementById("dataReserva");
+
+  if (!selectHora || !inputData) return;
+
+  function atualizarHorarios() {
+    const dataSelecionada = inputData.value;
+    // Recupera estacao selecionada usando a mesma key que você usa para salvar (estacaoSelecionada_{usuario})
+    const usuarioAtual = localStorage.getItem("usuario") || localStorage.getItem("usuarioEmail") || "";
+    const estacaoSelRaw = localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`);
+    const estacaoSelecionada = estacaoSelRaw ? JSON.parse(estacaoSelRaw) : {};
+
+    // Limpa opções antigas
+    selectHora.innerHTML = "";
+
+    // define chave de reservas globais por estação (use email se existir, senão nome)
+   const keyGlobais = `reservasGlobais_${getEstacaoKey(estacaoSelecionada)}`;
+const reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
+
+    // Também incluir reservas do próprio usuário
+    const usuarioReservas = JSON.parse(localStorage.getItem(`reservas_${usuarioAtual}`) || "[]");
+
+    // Junta tudo para garantir que o próprio usuário também veja como bloqueado
+    const reservasCompletas = [...reservasGlobais, ...usuarioReservas];
+
+    for (let h = 0; h < 24; h++) {
+      ["00", "30"].forEach(m => {
+        const horario = `${String(h).padStart(2, "0")}:${m}`;
+        const option = document.createElement("option");
+        option.value = horario;
+        option.textContent = horario;
+
+        // Se houver data selecionada, marca como reservado se necessário
+        if (dataSelecionada) {
+          const reservado = reservasCompletas.some(r =>
+            r.data === dataSelecionada &&
+            r.hora === horario &&
+            r.status !== "cancelada" // Só bloqueia se ainda estiver ativa
+          );
+          if (reservado) {
+            option.disabled = true;
+            option.style.background = "#ccc";
+            option.style.color = "#666";
+          }
+        }
+
+        selectHora.appendChild(option);
+      });
+    }
+  }
+
+  // Atualiza horários quando mudar a data
+  inputData.addEventListener("change", atualizarHorarios);
+
+  atualizarHorarios();
+
+
 });

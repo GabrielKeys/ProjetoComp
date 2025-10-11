@@ -18,6 +18,11 @@ function namesEqual(a, b) {
   return normalizeName(a) === normalizeName(b);
 }
 
+
+function getEstacaoKey(estacao) {
+  return (estacao && (estacao.email || estacao.nome)) || "unknown";
+}
+
 // ====================================
 // Encontrar qual identificador de usuário usar para os keys do veículo
 
@@ -516,16 +521,20 @@ document.addEventListener("DOMContentLoaded", () => {
           r.status = "cancelada";
           salvarReservas(reservas);
 
-          // Atualiza também na key da estação (se possível)
+          // ✅ Atualiza também nas reservas globais para liberar o horário
           try {
-            atualizarStatusReservaEstacao(
-              r.estacaoEmail || r.estacao,  // primeiro SEMPRE estação
-              r.usuarioEmail || r.usuario,  // segundo SEMPRE usuário
-              r.data,
-              r.hora,
-              "cancelada"
-            );
-          } catch (e) { /* não crítico */ }
+            const keyGlobais = `reservasGlobais_${r.estacaoEmail || r.estacao}`;
+            let reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
+            reservasGlobais = reservasGlobais.map(g => {
+              if (g.data === r.data && g.hora === r.hora) {
+                return { ...g, status: "cancelada" };
+              }
+              return g;
+            });
+            localStorage.setItem(keyGlobais, JSON.stringify(reservasGlobais));
+          } catch (e) {
+            console.warn("Falha ao atualizar reservas globais", e);
+          }
 
           // ✅ REEMBOLSO FIXO DE R$10
           try {
@@ -550,6 +559,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
           renderizarReservas();
           renderizarDetalhes();
+
+          if (typeof atualizarHorarios === "function") {
+            atualizarHorarios();
+          } else {
+            setTimeout(() => location.reload(), 300);
+          }
         }
         reservaIndexParaCancelar = null;
       }
@@ -644,60 +659,60 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-// ===========================
-// DÉBITO FIXO: R$10,00 (Reserva)
-// ===========================
-const custoReserva = 10.00;
+      // ===========================
+      // DÉBITO FIXO: R$10,00 (Reserva)
+      // ===========================
+      const custoReserva = 10.00;
 
-// ✅ Sempre usar email como chave fixa
-const usuarioEmail = localStorage.getItem("usuarioEmail");
-const carteiraKey = `saldoCarteira_${usuarioEmail}`;
-let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
+      // ✅ Sempre usar email como chave fixa
+      const usuarioEmail = localStorage.getItem("usuarioEmail");
+      const carteiraKey = `saldoCarteira_${usuarioEmail}`;
+      let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
 
-if (saldoAtual < custoReserva) {
-  if (typeof mostrarMensagem === "function") {
-    mostrarMensagem("❌ Saldo insuficiente! Recarregue sua carteira com pelo menos R$10.", "erro");
-  }
-  return;
-}
+      if (saldoAtual < custoReserva) {
+        if (typeof mostrarMensagem === "function") {
+          mostrarMensagem("❌ Saldo insuficiente! Recarregue sua carteira com pelo menos R$10.", "erro");
+        }
+        return;
+      }
 
-// realiza débito e persiste
-saldoAtual = +(saldoAtual - custoReserva).toFixed(2);
-localStorage.setItem(carteiraKey, saldoAtual);
+      // realiza débito e persiste
+      saldoAtual = +(saldoAtual - custoReserva).toFixed(2);
+      localStorage.setItem(carteiraKey, saldoAtual);
 
-const transKey = `transacoesCarteira_${usuarioEmail}`;
-const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
-// registra transação negativa com label para reserva (será renderizada pela UI)
-transacoes.push({ valor: -custoReserva, tipo: "Reserva" });
-localStorage.setItem(transKey, JSON.stringify(transacoes));
+      const transKey = `transacoesCarteira_${usuarioEmail}`;
+      const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
+      // registra transação negativa com label para reserva (será renderizada pela UI)
+      transacoes.push({ valor: -custoReserva, tipo: "Reserva" });
+      localStorage.setItem(transKey, JSON.stringify(transacoes));
 
-// Atualiza imediatamente a UI da carteira, se os elementos existirem na página
-try {
-  const saldoEl = document.getElementById("saldoCarteira");
-  if (saldoEl) saldoEl.innerText = `R$${saldoAtual.toFixed(2)}`;
+      // Atualiza imediatamente a UI da carteira, se os elementos existirem na página
+      try {
+        const saldoEl = document.getElementById("saldoCarteira");
+        if (saldoEl) saldoEl.innerText = `R$${saldoAtual.toFixed(2)}`;
 
-  const listaTransacoes = document.getElementById("listaTransacoes");
-  if (listaTransacoes) {
-    listaTransacoes.innerHTML = transacoes.length
-      ? transacoes
-          .slice()
-          .reverse()
-          .map((t) => `
+        const listaTransacoes = document.getElementById("listaTransacoes");
+        if (listaTransacoes) {
+          listaTransacoes.innerHTML = transacoes.length
+            ? transacoes
+              .slice()
+              .reverse()
+              .map((t) => `
     <p class="${t.valor >= 0 ? 'pos' : 'neg'}">
       ${t.valor >= 0 ? '+' : '-'} R$${Math.abs(t.valor).toFixed(2)} (${t.tipo})
     </p>
   `)
-          .join("")
-      : "<p>Nenhuma transação ainda.</p>";
-  }
+              .join("")
+            : "<p>Nenhuma transação ainda.</p>";
+        }
 
-} catch (e) {
-  console.warn("Não foi possível atualizar UI da carteira imediatamente:", e);
-}
+      } catch (e) {
+        console.warn("Não foi possível atualizar UI da carteira imediatamente:", e);
+      }
 
-if (typeof mostrarMensagem === "function") {
-  mostrarMensagem(`R$${custoReserva.toFixed(2)} debitados da carteira (Reserva).`, "aviso");
-}
+      if (typeof mostrarMensagem === "function") {
+        mostrarMensagem(`R$${custoReserva.toFixed(2)} debitados da carteira (Reserva).`, "aviso");
+      }
 
       // 🔹 Pega o veículo do usuário atual
       const veiculo = {
@@ -737,6 +752,18 @@ if (typeof mostrarMensagem === "function") {
         veiculo
       });
       localStorage.setItem(`reservasEstacao_${estacao.email}`, JSON.stringify(reservasEstacao));
+      // ✅ Salva também como RESERVA GLOBAL (visível para todos os usuários)
+      const keyGlobais = `reservasGlobais_${getEstacaoKey(estacao)}`;
+      let reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
+      reservasGlobais.push({
+        data,
+        hora,
+        usuario: usuarioAtual,
+        usuarioEmail: localStorage.getItem("usuarioEmail") || usuarioAtual,
+        status: "pendente"
+      });
+      localStorage.setItem(keyGlobais, JSON.stringify(reservasGlobais));
+
 
       renderizarReservas();
 
@@ -749,6 +776,8 @@ if (typeof mostrarMensagem === "function") {
     }
   });
 });
+
+
 
 // ====================================
 // Inicialização Automática
