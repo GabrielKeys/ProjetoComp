@@ -98,7 +98,10 @@
               <input type="date" id="dataReserva" required>
 
               <label for="horaReserva">Hora:</label>
-              <input type="time" id="horaReserva" required>
+              <div class="select-wrapper">
+                <div class="click-overlay"></div>
+                <select id="horaReserva" required></select>
+              </div>
 
               <button type="submit">Confirmar</button>
             </form>
@@ -219,6 +222,43 @@
   <script src="js/carteira.js"></script>
   <script src="js/main.js"></script>
   <script src="../global/global.js"></script>
+
+  <script>
+   document.addEventListener("DOMContentLoaded", () => {
+  const selectHora = document.getElementById("horaReserva");
+  const wrapper = document.querySelector(".select-wrapper");
+  const overlay = document.querySelector(".click-overlay");
+
+  // Gerar opções
+  for (let h = 0; h < 24; h++) {
+    ["00", "30"].forEach(m => {
+      const option = document.createElement("option");
+      option.value = `${String(h).padStart(2, "0")}:${m}`;
+      option.textContent = `${String(h).padStart(2, "0")}:${m}`;
+      selectHora.appendChild(option);
+    });
+  }
+
+  overlay.addEventListener("click", () => {
+    wrapper.classList.add("open");
+    selectHora.setAttribute("size", "6");
+    selectHora.focus();
+  });
+
+  selectHora.addEventListener("change", () => {
+    wrapper.classList.remove("open");
+    selectHora.removeAttribute("size");
+  });
+
+  selectHora.addEventListener("blur", () => {
+    wrapper.classList.remove("open");
+    selectHora.removeAttribute("size");
+  });
+});
+
+
+
+  </script>
 
 </body>
 
