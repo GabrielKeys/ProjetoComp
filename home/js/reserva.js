@@ -536,6 +536,22 @@ document.addEventListener("DOMContentLoaded", () => {
             console.warn("Falha ao atualizar reservas globais", e);
           }
 
+          // ✅ Atualiza também na estação para liberar o horário
+          try {
+            const keyEstacao = `reservasEstacao_${r.estacaoEmail || r.estacao}`;
+            let reservasEstacao = JSON.parse(localStorage.getItem(keyEstacao) || "[]");
+            reservasEstacao = reservasEstacao.map(g => {
+              if (g.data === r.data && g.hora === r.hora) {
+                return { ...g, status: "cancelada" };
+              }
+              return g;
+            });
+            localStorage.setItem(keyEstacao, JSON.stringify(reservasEstacao));
+          } catch (e) {
+            console.warn("Falha ao atualizar reservas da estação", e);
+          }
+
+
           // ✅ REEMBOLSO FIXO DE R$10
           try {
             const usuarioAtual = localStorage.getItem("usuarioEmail") || "default";
