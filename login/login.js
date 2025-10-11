@@ -58,22 +58,22 @@ if (loginForm) {
     if (userFound) {
       // login como usuário
       localStorage.setItem("logado", "true");
+      localStorage.setItem("logado_como", "usuario"); // ✅
       localStorage.setItem("usuario", userFound.fullName || userFound.email || email);
       localStorage.setItem("usuarioEmail", userFound.email || email);
-      window.location.href = "../home/home.html";   // 🔹 usuário vai para home normal
+      window.location.href = "../home/home.html";
       return;
     }
 
     if (stationFound) {
       // login como estação
       localStorage.setItem("logado", "true");
+      localStorage.setItem("logado_como", "estacao"); // ✅
       localStorage.setItem("usuario", stationFound.name || stationFound.nome || stationFound.email || email);
       localStorage.setItem("usuarioEmail", stationFound.email || email);
-      // salva a estação inteira para uso posterior (lista, seleção, etc.)
       localStorage.setItem("estacaoSelecionada", JSON.stringify(stationFound));
-      // também pode salvar só o nome se preferir:
       localStorage.setItem("estacaoNome", stationFound.name || stationFound.nome || "");
-      window.location.href = "../station/home.html";   // 🔹 estação vai para home da estação
+      window.location.href = "../station/home.html";
       return;
     }
 
@@ -117,11 +117,15 @@ if (registerForm) {
       return;
     }
 
-    if (users.some(u => u.email === newEmail)) {
-      document.getElementById("registerMsg").innerText = "Email já registrado!";
+    let stations = JSON.parse(localStorage.getItem("stations")) || [];
+
+    // Bloqueia e-mail já usado em usuários OU estações
+    if (users.some(u => u.email === newEmail) || stations.some(s => s.email === newEmail)) {
+      document.getElementById("registerMsg").innerText = "Este email já está em uso!";
       document.getElementById("registerMsg").style.color = "red";
       return;
     }
+
 
     // Criar usuário
     const novoUsuario = {
@@ -147,9 +151,10 @@ if (registerForm) {
 
     // 🔹 Já loga automaticamente
     localStorage.setItem("logado", "true");
+    localStorage.setItem("logado_como", "usuario");
     localStorage.setItem("usuario", fullName || newEmail);
     localStorage.setItem("usuarioEmail", newEmail);
-
+    localStorage.removeItem("googleCadastro"); // Limpa flag do Google
     // 🔹 Aguarda 2 segundos antes de redirecionar
     setTimeout(() => {
       window.location.href = "../home/home.html";
@@ -183,33 +188,37 @@ function handleCredentialResponse(response) {
   const picture = data.picture || "";
 
   let users = JSON.parse(localStorage.getItem("users")) || [];
-  let userIndex = users.findIndex(u => u.email === email);
+  let stations = JSON.parse(localStorage.getItem("stations")) || [];
 
-  if (userIndex !== -1) {
-    let userFound = users[userIndex];
-
-    // 🔹 Mantém a foto personalizada se já existir
-    const fotoFinal = userFound.photo || picture;
-
+  // ✅ 1️⃣ PRIORIDADE: verificar se já é estação
+  const stationFound = stations.find(s => (s.email || "").toLowerCase() === email.toLowerCase());
+  if (stationFound) {
     localStorage.setItem("logado", "true");
+    localStorage.setItem("logado_como", "estacao");
+    localStorage.setItem("usuario", stationFound.nome || stationFound.email);
+    localStorage.setItem("usuarioEmail", stationFound.email);
+    localStorage.setItem("estacaoSelecionada", JSON.stringify(stationFound));
+    window.location.href = "../station/home.html";
+    return;
+  }
+
+  // ✅ 2️⃣ SENÃO, verificar se já é usuário
+  const userFound = users.find(u => (u.email || "").toLowerCase() === email.toLowerCase());
+  if (userFound) {
+    localStorage.setItem("logado", "true");
+    localStorage.setItem("logado_como", "usuario");
     localStorage.setItem("usuario", userFound.fullName || userFound.email);
     localStorage.setItem("usuarioEmail", userFound.email);
-    localStorage.setItem("usuarioFoto", fotoFinal);
-
-    // 🔹 Atualiza o objeto users para garantir que a foto fique salva
-    if (!userFound.photo && picture) {
-      userFound.photo = picture;
-      users[userIndex] = userFound;
-      localStorage.setItem("users", JSON.stringify(users));
-    }
-
+    localStorage.setItem("usuarioFoto", userFound.photo || picture);
     window.location.href = "../home/home.html";
-  } else {
-    // Primeira vez → redireciona para registro
-    localStorage.setItem("googleCadastro", JSON.stringify({ email, name, picture }));
-    window.location.href = "../login/login.html?registerGoogle=true";
+    return;
   }
+
+  // ✅ 3️⃣ SENÃO, é primeira vez → vai para registro
+  localStorage.setItem("googleCadastro", JSON.stringify({ email, name, picture }));
+  window.location.href = "../login/login.html?registerGoogle=true";
 }
+
 
 function parseJwt(token) {
   try {
@@ -261,6 +270,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 });
+
+// 🔹 Se trocar para "Registrar Estação" após login do Google
+document.getElementById("goToRegisterStation")?.addEventListener("click", () => {
+  const googleData = JSON.parse(localStorage.getItem("googleCadastro") || "{}");
+
+  // Se o usuário veio do Google
+  if (googleData.email) {
+    // Troca a aba
+    document.getElementById("registerForm").classList.remove("active");
+    document.getElementById("registerStationForm").classList.add("active");
+
+    // Preenche o email da estação e trava
+    document.getElementById("stationEmail").value = googleData.email;
+    document.getElementById("stationEmail").setAttribute("readonly", "true");
+
+    // Limpa o nome da estação para ele digitar novo
+    document.getElementById("stationName").value = "";
+  }
+});
+
 
 // ===============================
 // Regras de formatação para os inputs do veículo (Registro)
@@ -377,7 +406,7 @@ if (registerStationForm) {
   registerStationForm.addEventListener("submit", function (event) {
     event.preventDefault();
 
-    const stationFullName = registerStationForm.querySelector("#fullName")?.value.trim() || "";
+    const stationFullName = registerStationForm.querySelector("#stationFullName")?.value.trim() || "";
 
     const name = document.getElementById("stationName").value.trim();
     const email = document.getElementById("stationEmail").value.trim();
@@ -413,11 +442,18 @@ if (registerStationForm) {
       return;
     }
 
-    if (stations.some(s => (s.email || "").toLowerCase() === email.toLowerCase())) {
-      document.getElementById("stationMsg").innerText = "Já existe uma estação registrada com esse email!";
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+
+    // Bloqueia e-mail já usado em estações OU usuários
+    if (
+      stations.some(s => (s.email || "").toLowerCase() === email.toLowerCase()) ||
+      users.some(u => (u.email || "").toLowerCase() === email.toLowerCase())
+    ) {
+      document.getElementById("stationMsg").innerText = "Este email já está em uso!";
       document.getElementById("stationMsg").style.color = "red";
       return;
     }
+
 
     // 🔹 Remove os sufixos antes de salvar
     const power = powerRaw.replace(/[^\d.,]/g, "");
@@ -454,15 +490,20 @@ if (registerStationForm) {
 
     // login automático
     localStorage.setItem("logado", "true");
+    localStorage.setItem("logado_como", "estacao"); 
     localStorage.setItem("usuario", novaEstacao.fullName || novaEstacao.nome || novaEstacao.email);
     localStorage.setItem("usuarioEmail", novaEstacao.email);
     localStorage.setItem("estacaoSelecionada", JSON.stringify(novaEstacao));
 
     registerStationForm.reset();
+    localStorage.removeItem("googleCadastro");
 
+    // Repete antes do redirecionamento só para garantir que nada trocou depois
     setTimeout(() => {
+      localStorage.seztItem("logado_como", "estacao"); 
       window.location.href = "../station/home.html";
     }, 1200);
+
   });
 
   // 🔹 Preenchimento automático do endereço com CEP

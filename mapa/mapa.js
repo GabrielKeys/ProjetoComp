@@ -11,13 +11,16 @@ let infowindowAtual = null;
    =============================== */
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: -23.5505, lng: -46.6333 },
     zoom: 13,
     minZoom: 12, // NÃO DEIXA AFASTAR MAIS QUE ISSO
     maxZoom: 25, // NÃO DEIXA APROXIMAR MAIS QUE ISSO
     mapTypeControl: false,
-    streetViewControl: true,
-    fullscreenControl: true,
+    streetViewControl: false,
+    fullscreenControl: false,
+    zoomControl: false,
+    rotateControl: false,
+    scaleControl: false,
+
     gestureHandling: "greedy",
     styles: [
       { featureType: "poi", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -288,7 +291,7 @@ function adicionarEstacaoNoMapa(estacao) {
     map,
     title: estacao.nome,
     icon: {
-      url: "../assets/bateria-verde.png",
+      url: "../assets/bateria-azul.png",
       scaledSize: new google.maps.Size(28, 28),
     },
   });

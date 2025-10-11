@@ -72,15 +72,38 @@ function atualizarSidebar() {
 // ====================================
 document.addEventListener("DOMContentLoaded", () => {
   const logado = localStorage.getItem("logado");
-  const usuarioEmail = localStorage.getItem("usuarioEmail");
+  const tipo = localStorage.getItem("logado_como"); // "usuario" ou "estacao"
+  const path = window.location.pathname; // Caminho atual
 
-  if (!logado || !usuarioEmail) {
+  // SE NÃO ESTÁ LOGADO → REDIRECIONA
+  if (!logado || !tipo) {
     window.location.href = "../login/login.html";
     return;
   }
 
-  atualizarSidebar();
+  // ===== BLOQUEAR ESTAÇÃO EM PÁGINAS DE USUÁRIO =====
+  if (tipo === "estacao" && (
+      path.includes("/home/") || 
+      path.includes("/mapa/") || 
+      path.includes("/perfil/") || 
+      path.includes("/assinatura/")
+  )) {
+    window.location.href = "../station/home.html";
+    return;
+  }
+
+  // ===== BLOQUEAR USUÁRIO EM PÁGINAS DE ESTAÇÃO =====
+  if (tipo === "usuario" && (
+      path.includes("/station/home") || 
+      path.includes("/station/perfil")
+  )) {
+    window.location.href = "../home/home.html";
+    return;
+  }
+
+  atualizarSidebar && atualizarSidebar();
 });
+
 
 // =====================================================
 // Ação do botão da engrenagem (gearBtn)
