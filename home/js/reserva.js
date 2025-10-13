@@ -739,46 +739,71 @@ document.addEventListener("DOMContentLoaded", () => {
         carga: localStorage.getItem(`veiculoCarregamento_${usuarioIdParaVeiculo}`) || ""
       };
 
-      // 📌 Salva reserva normalmente
+      // Garantir que as variáveis existam
+      const durH = parseInt(document.getElementById("duracaoHoras")?.value || 1);
+      const durM = parseInt(document.getElementById("duracaoMinutos")?.value || 0);
+
+      function addMinutesToHora(hora, minutes) {
+        const [h, m] = hora.split(":").map(Number);
+        const total = h * 60 + m + minutes;
+        const hh = Math.floor((total / 60) % 24);
+        const mm = total % 60;
+        return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+      }
+
+      const inicio = hora;
+      const fim = addMinutesToHora(hora, durH * 60 + durM);
+
+      let reservasEstacao = JSON.parse(localStorage.getItem(`reservasEstacao_${estacao.email}`)) || [];
+
+      // 📌 Salvar reserva com duração
       reservas.push({
         estacao: estacao.nome,
         estacaoEmail: estacao.email,
         usuario: usuarioAtual,
         usuarioEmail: localStorage.getItem("usuarioEmail") || usuarioAtual,
         data,
-        hora,
-        status: "pendente",
-        veiculo: {
-          modelo: localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "",
-          ano: localStorage.getItem(`veiculoAno_${usuarioAtual}`) || "",
-          placa: localStorage.getItem(`veiculoPlaca_${usuarioAtual}`) || "",
-          bateria: localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "",
-          carga: localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || ""
-        }
-      });
-      salvarReservas(reservas);
-
-      // 🔹 Salva também na estação
-      let reservasEstacao = JSON.parse(localStorage.getItem(`reservasEstacao_${estacao.email}`)) || [];
-      reservasEstacao.push({
-        usuarioEmail: usuarioIdParaVeiculo || usuarioAtual,
-        data,
-        hora,
+        hora,              // legado
+        inicio,
+        fim,
+        duracaoHoras: durH,
+        duracaoMinutos: durM,
         status: "pendente",
         veiculo
       });
+
+      salvarReservas(reservas);
+
+      // 🔹 Salva também na estação
+      reservasEstacao.push({
+        usuarioEmail: usuarioIdParaVeiculo || usuarioAtual,
+        data,
+        hora, // legado
+        inicio,
+        fim,
+        duracaoHoras: durH,
+        duracaoMinutos: durM,
+        status: "pendente",
+        veiculo
+      });
+
       localStorage.setItem(`reservasEstacao_${estacao.email}`, JSON.stringify(reservasEstacao));
       // ✅ Salva também como RESERVA GLOBAL (visível para todos os usuários)
       const keyGlobais = `reservasGlobais_${getEstacaoKey(estacao)}`;
       let reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
       reservasGlobais.push({
-        data,
-        hora,
-        usuario: usuarioAtual,
-        usuarioEmail: localStorage.getItem("usuarioEmail") || usuarioAtual,
-        status: "pendente"
-      });
-      localStorage.setItem(keyGlobais, JSON.stringify(reservasGlobais));
+  data,
+  hora, // legado (mantido para compatibilidade)
+  inicio, // "HH:MM"
+  fim,    // "HH:MM"
+  duracaoHoras: durH,
+  duracaoMinutos: durM,
+  duracaoMin: durH * 60 + durM, // campo simples em minutos (útil)
+  usuario: usuarioAtual,
+  usuarioEmail: localStorage.getItem("usuarioEmail") || usuarioAtual,
+  status: "pendente"
+});
+localStorage.setItem(keyGlobais, JSON.stringify(reservasGlobais));
 
 
       renderizarReservas();

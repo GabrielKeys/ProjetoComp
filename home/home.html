@@ -93,6 +93,7 @@
           <div class="modal-content">
             <span class="close">&times;</span>
             <h3>Agendar Reserva</h3>
+
             <form id="formAgendamento">
               <label for="dataReserva">Data:</label>
               <input type="date" id="dataReserva" required>
@@ -103,7 +104,20 @@
                 <select id="horaReserva" required></select>
               </div>
 
-              <button type="submit">Confirmar</button>
+              <!-- NOVO BLOCO DE DURAÇÃO  -->
+              <label style="margin-top:10px; display:block;">Tempo de Reserva:</label>
+              <div style="display:flex; gap:8px;">
+                <select id="duracaoHoras" required style="flex:1;">
+                  <!-- Populado via JS -->
+                </select>
+
+                <select id="duracaoMinutos" required style="flex:1;">
+                  <option value="0">00</option>
+                  <option value="30">30</option>
+                </select>
+              </div>
+
+              <button type="submit" style="margin-top:15px;">Confirmar</button>
             </form>
           </div>
         </div>
@@ -222,7 +236,7 @@
   <script src="js/carteira.js"></script>
   <script src="js/main.js"></script>
   <script src="../global/global.js"></script>
-  
+
 </body>
 
 </html>
