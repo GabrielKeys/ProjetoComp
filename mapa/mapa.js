@@ -63,7 +63,7 @@ function initMap() {
     // Desliga os controles que aparecem na imagem
     zoomControl: false,        // Botão de + e -
     streetViewControl: false,  // Bonequinho amarelo (pegman)
-    fullscreenControl: false,  // Botão de tela cheia
+    fullscreenControl: true,  // Botão de tela cheia
     mapTypeControl: false,     // Botão de tipo de mapa (satélite / padrão)
     rotateControl: false,      // Controle de rotação
     scaleControl: false,       // Régua
