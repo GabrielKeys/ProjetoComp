@@ -486,18 +486,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const detalhes = document.createElement("div");
         detalhes.className = "detalhes-reserva";
+
+        // Detecta a duração e monta o intervalo de horário
+        let horarioFormatado = r.hora; // padrão, caso nada mais exista
+
+        if (r.inicio && r.fim) {
+          // Se já tiver início e fim na reserva
+          const dur = horaParaMinutos(r.fim) - horaParaMinutos(r.inicio);
+          const horas = Math.floor(dur / 60);
+          const minutos = dur % 60;
+          horarioFormatado = `${r.inicio} - ${r.fim} (${horas}h${minutos > 0 ? " " + minutos + "min" : ""})`;
+        } else if (r.hora && r.duracaoMin) {
+          // Se tiver apenas hora inicial + duração
+          const inicioMin = horaParaMinutos(r.hora);
+          const fimMin = inicioMin + r.duracaoMin;
+          const fimHora = minutosParaHora(fimMin);
+          const horas = Math.floor(r.duracaoMin / 60);
+          const minutos = r.duracaoMin % 60;
+          horarioFormatado = `${r.hora} - ${fimHora} (${horas}h${minutos > 0 ? " " + minutos + "min" : ""})`;
+        }
+
         detalhes.innerHTML = `
-          <p><strong>Data:</strong> ${r.data}</p>
-          <p><strong>Horário:</strong> ${r.hora}</p>
-          <p><strong>Status:</strong> ${r.status || "pendente"}</p>
-          <p><strong>Endereço:</strong> ${estacaoDados?.rua || "N/D"} ${estacaoDados?.numero || ""}</p>
-          <p><strong>Cidade:</strong> ${estacaoDados?.cidade || "N/D"} - ${estacaoDados?.estado || ""}</p>
-          <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia ? (estacaoDados.potencia + " kW") : "N/D"}</p>
-          <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || "?"} - ${estacaoDados?.fechamento || "?"}</p>
-          <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ? (estacaoDados.tempoEspera + " min") : "--"}</p>
-          <p><strong>Preço:</strong> ${estacaoDados?.preco ? (estacaoDados.preco + " R$/kWh") : "--"}</p>
-          ${veiculoHtml}
-        `;
+  <p><strong>Data:</strong> ${r.data}</p>
+  <p><strong>Horário:</strong> ${horarioFormatado}</p>
+  <p><strong>Status:</strong> ${r.status || "pendente"}</p>
+  <p><strong>Endereço:</strong> ${estacaoDados?.rua || "N/D"} ${estacaoDados?.numero || ""}</p>
+  <p><strong>Cidade:</strong> ${estacaoDados?.cidade || "N/D"} - ${estacaoDados?.estado || ""}</p>
+  <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia ? (estacaoDados.potencia + " kW") : "N/D"}</p>
+  <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || "?"} - ${estacaoDados?.fechamento || "?"}</p>
+  <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ? (estacaoDados.tempoEspera + " min") : "--"}</p>
+  <p><strong>Preço:</strong> ${estacaoDados?.preco ? (estacaoDados.preco + " R$/kWh") : "--"}</p>
+  ${veiculoHtml}
+`;
 
         li.appendChild(linha);
         li.appendChild(detalhes);
@@ -792,18 +812,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const keyGlobais = `reservasGlobais_${getEstacaoKey(estacao)}`;
       let reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
       reservasGlobais.push({
-  data,
-  hora, // legado (mantido para compatibilidade)
-  inicio, // "HH:MM"
-  fim,    // "HH:MM"
-  duracaoHoras: durH,
-  duracaoMinutos: durM,
-  duracaoMin: durH * 60 + durM, // campo simples em minutos (útil)
-  usuario: usuarioAtual,
-  usuarioEmail: localStorage.getItem("usuarioEmail") || usuarioAtual,
-  status: "pendente"
-});
-localStorage.setItem(keyGlobais, JSON.stringify(reservasGlobais));
+        data,
+        hora, // legado (mantido para compatibilidade)
+        inicio, // "HH:MM"
+        fim,    // "HH:MM"
+        duracaoHoras: durH,
+        duracaoMinutos: durM,
+        duracaoMin: durH * 60 + durM, // campo simples em minutos (útil)
+        usuario: usuarioAtual,
+        usuarioEmail: localStorage.getItem("usuarioEmail") || usuarioAtual,
+        status: "pendente"
+      });
+      localStorage.setItem(keyGlobais, JSON.stringify(reservasGlobais));
 
 
       renderizarReservas();

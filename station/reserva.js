@@ -274,19 +274,67 @@ document.addEventListener("DOMContentLoaded", () => {
       linha.appendChild(btnConfirma);
       linha.appendChild(btnCancelar);
 
+      // Calcular tempo de reserva
       const detalhes = document.createElement("div");
       detalhes.className = "detalhes-reserva";
+
+      const _horaParaMinutos = (typeof horaParaMinutos === "function")
+        ? horaParaMinutos
+        : (hora => {
+          const [h, m] = (hora || "00:00").split(":").map(Number);
+          return h * 60 + m;
+        });
+
+      const _minutosParaHora = (typeof minutosParaHora === "function")
+        ? minutosParaHora
+        : (min => {
+          const hh = Math.floor(min / 60) % 24;
+          const mm = min % 60;
+          return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
+        });
+
+      function formatDuracao(totalMin) {
+        if (typeof totalMin !== "number" || isNaN(totalMin)) return "--";
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        if (h === 0 && m === 0) return "0min";
+        return `${h > 0 ? h + "h" : ""}${h > 0 && m > 0 ? " " : ""}${m > 0 ? m + "min" : ""}`;
+      }
+
+      let horarioFormatado = "--";
+      try {
+        if (r.inicio && r.fim) {
+          const dur = _horaParaMinutos(r.fim) - _horaParaMinutos(r.inicio);
+          horarioFormatado = `${r.inicio} - ${r.fim} (${formatDuracao(dur)})`;
+        } else if (typeof r.duracaoMin === "number") {
+          const inicio = r.hora || "00:00";
+          const inicioMin = _horaParaMinutos(inicio);
+          const fimMin = inicioMin + Number(r.duracaoMin);
+          horarioFormatado = `${inicio} - ${_minutosParaHora(fimMin)} (${formatDuracao(Number(r.duracaoMin))})`;
+        } else if (r.hora) {
+          const inicio = r.hora;
+          const inicioMin = _horaParaMinutos(inicio);
+          const fimMin = inicioMin + 60;
+          horarioFormatado = `${inicio} - ${_minutosParaHora(fimMin)} (${formatDuracao(60)})`;
+        }
+      } catch (err) {
+        horarioFormatado = r.hora || "--";
+        console.warn("Erro ao formatar horário:", err);
+      }
+
+      // Detalhes de cada reserva
       detalhes.innerHTML = `
-        <p><strong>Data:</strong> ${r.data}</p>
-        <p><strong>Horário:</strong> ${r.hora}</p>
-        <p><strong>Status:</strong> ${r.status || "pendente"}</p>
-        ${r.veiculo ? `
-          <p><strong>Veículo:</strong> ${r.veiculo.modelo || "----"} (${r.veiculo.ano || "----"})</p>
-          <p><strong>Placa:</strong> ${r.veiculo.placa || "----"}</p>
-          <p><strong>Bateria:</strong> ${r.veiculo.bateria || "----"}</p>
-          <p><strong>Carga:</strong> ${r.veiculo.carga || "----"}</p>
-        ` : ""}
-      `;
+  <p><strong>Data:</strong> ${r.data || "--"}</p>
+  <p><strong>Horário:</strong> ${horarioFormatado}</p>
+  <p><strong>Status:</strong> ${r.status || "pendente"}</p>
+  ${r.veiculo ? `
+    <p><strong>Veículo:</strong> ${r.veiculo.modelo || "----"} (${r.veiculo.ano || "----"})</p>
+    <p><strong>Placa:</strong> ${r.veiculo.placa || "----"}</p>
+    <p><strong>Bateria:</strong> ${r.veiculo.bateria || "----"}</p>
+    <p><strong>Carga:</strong> ${r.veiculo.carga || "----"}</p>
+  ` : ""}
+`;
+
 
       li.appendChild(linha);
       li.appendChild(detalhes);
