@@ -500,7 +500,7 @@ if (registerStationForm) {
 
     // Repete antes do redirecionamento só para garantir que nada trocou depois
     setTimeout(() => {
-      localStorage.seztItem("logado_como", "estacao"); 
+      localStorage.setItem("logado_como", "estacao"); 
       window.location.href = "../station/home.html";
     }, 1200);
 

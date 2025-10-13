@@ -423,4 +423,45 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === confirmarModal) confirmarModal.style.display = "none";
   });
 
-}); // DOMContentLoaded fim
+}); 
+
+
+// ===============================
+// Informações da estação na pagina inicial
+// ===============================
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const estacao = JSON.parse(localStorage.getItem("estacaoSelecionada")) || null;
+    if (!estacao) return;
+
+    // Título e descrição
+    document.getElementById("stationTitle").innerText = estacao.nome || "Minha Estação";
+    document.getElementById("stationMsg").innerText = (estacao.cidade && estacao.estado)
+      ? `${estacao.cidade} - ${estacao.estado}`
+      : "Estação de Carregamento";
+
+    // Função para formatar o telefone
+    function formatarTelefone(numero) {
+      if (!numero) return "--";
+      numero = numero.replace(/\D/g, ""); // remove tudo que não for número
+
+      if (numero.length === 11) {
+        // celular
+        return `(${numero.substring(0, 2)}) ${numero.substring(2, 7)}-${numero.substring(7)}`;
+      }
+      if (numero.length === 10) {
+        // fixo
+        return `(${numero.substring(0, 2)}) ${numero.substring(2, 6)}-${numero.substring(6)}`;
+      }
+      return numero; // fallback
+    }
+
+    // Estatísticas
+    const abertura = estacao.abertura || "00:00";
+    const fechamento = estacao.fechamento || "23:59";
+
+    document.getElementById("statPotencia").innerText = estacao.potencia ? estacao.potencia + " kW" : "--";
+    document.getElementById("statDisponibilidade").innerText = `${abertura} - ${fechamento}`;
+    document.getElementById("statPreco").innerText = estacao.preco ? `R$ ${estacao.preco}` : "--";
+    document.getElementById("statTelefone").innerText = formatarTelefone(estacao.telefone);
+  });
