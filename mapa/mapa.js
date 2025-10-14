@@ -106,9 +106,6 @@ function initMap() {
 
 
 
-
-
-
   // Carrega as estações (fixas + registradas)
   carregarEstacoesFicticias()
     .then(() => console.log("✅ carregarEstacoesFicticias finalizado."))

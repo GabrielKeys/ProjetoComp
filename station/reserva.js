@@ -230,136 +230,126 @@ document.addEventListener("DOMContentLoaded", () => {
   let reservaIndexParaCancelar = null;
 
   function renderizarDetalhes() {
-    const reservas = carregarReservasEstacao();
-    if (!listaDetalhes) return;
-    listaDetalhes.innerHTML = "";
+  const reservas = carregarReservasEstacao();
+  if (!listaDetalhes) return;
+  listaDetalhes.innerHTML = "";
 
-    if (reservas.length === 0) {
-      listaDetalhes.innerHTML = "<li>Nenhuma reserva encontrada.</li>";
-      return;
+  if (reservas.length === 0) {
+    listaDetalhes.innerHTML = "<li>Nenhuma reserva encontrada.</li>";
+    return;
+  }
+
+  reservas.forEach((r, idx) => {
+    const li = document.createElement("li");
+    li.className = "reserva-item-li";
+
+    // Linha 1: Nome do usuário (em bloco separado)
+    const linhaNome = document.createElement("div");
+    linhaNome.className = "reserva-linha-nome";
+    linhaNome.innerHTML = `<strong>Usuário:</strong> ${resolveNomeUsuario(r)}`;
+    li.appendChild(linhaNome);
+
+    // Linha 2: Botões + Status (em fila)
+    const linhaAcoes = document.createElement("div");
+    linhaAcoes.className = "reserva-linha-acoes";
+    // estilo básico inline para garantir alinhamento (você pode mover para CSS)
+    linhaAcoes.style.display = "flex";
+    linhaAcoes.style.alignItems = "center";
+    linhaAcoes.style.gap = "8px";
+    linhaAcoes.style.marginTop = "6px";
+
+    // Botão Confirmar (criado por item)
+    const btnConfirma = document.createElement("button");
+    btnConfirma.className = "btn-confirmar-reserva";
+    btnConfirma.textContent = "Confirmar";
+
+    if (r.status === "cancelada" || r.status === "confirmada") {
+      btnConfirma.disabled = true;
+      btnConfirma.style.opacity = "0.5";
+    } else {
+      btnConfirma.addEventListener("click", () => {
+        const usuarioEmail = r.usuarioEmail || r.usuario || "";
+        const estacaoKey = localStorage.getItem("usuarioEmail") || "";
+        atualizarStatusReservaEstacao(estacaoKey, usuarioEmail, r.data, r.hora, "confirmada");
+        renderizarReservasEstacao();
+        renderizarDetalhes();
+      });
     }
 
-    reservas.forEach((r, idx) => {
-      const li = document.createElement("li");
-      const linha = document.createElement("div");
-      linha.className = "reserva-linha";
+    // Botão Cancelar (criado por item)
+    const btnCancelar = document.createElement("button");
+    btnCancelar.className = "btn-cancelar-reserva";
+    btnCancelar.textContent = "Cancelar";
 
-      const nomeSpan = document.createElement("span");
-      nomeSpan.className = "reserva-nome";
-      nomeSpan.textContent = `Usuário: ${resolveNomeUsuario(r)}`;
+    if (r.status === "cancelada") {
+      btnCancelar.disabled = true;
+      btnCancelar.style.opacity = "0.5";
+    } else {
+      btnCancelar.addEventListener("click", () => {
+        reservaIndexParaCancelar = idx; // guarda índice
+        if (confirmarModal) confirmarModal.style.display = "flex";
+      });
+    }
 
-      const statusSpan = document.createElement("span");
-      statusSpan.className = "reserva-status";
-      statusSpan.textContent = r.status || "pendente";
+    // Span de status — empurrado para a direita
+    const statusSpan = document.createElement("span");
+    statusSpan.className = "reserva-status";
+    statusSpan.textContent = r.status || "pendente";
+    statusSpan.style.marginLeft = "auto";
 
-      // Botão Confirmar
-      const btnConfirma = document.createElement("button");
-      btnConfirma.className = "btn-confirmar-reserva";
-      btnConfirma.textContent = "Confirmar";
+    // append em ordem: confirmar, cancelar, status (status no final com margin-left:auto)
+    linhaAcoes.appendChild(btnConfirma);
+    linhaAcoes.appendChild(btnCancelar);
+    linhaAcoes.appendChild(statusSpan);
 
-      // Desativa se já estiver cancelada ou confirmada
-      if (r.status === "cancelada" || r.status === "confirmada") {
-        btnConfirma.disabled = true;
-        btnConfirma.style.opacity = "0.5";
-      } else {
-        btnConfirma.addEventListener("click", () => {
-          const usuarioEmail = r.usuarioEmail || r.usuario || "";
-          const estacaoKey = localStorage.getItem("usuarioEmail") || "";
-          atualizarStatusReservaEstacao(estacaoKey, usuarioEmail, r.data, r.hora, "confirmada");
-          // atualizar UI local
-          renderizarReservasEstacao();
-          renderizarDetalhes();
-        });
+    li.appendChild(linhaAcoes);
+
+    // Agora os detalhes (data, horário, etc.) — mantém seu HTML atual
+    const detalhes = document.createElement("div");
+    detalhes.className = "detalhes-reserva";
+
+    // Reutiliza sua lógica de cálculo de horário/duração — mas aqui apenas cria o HTML final
+    let horarioFormatado = "--";
+    try {
+      if (r.inicio && r.fim) {
+        const dur = (typeof horaParaMinutos === "function" ? horaParaMinutos(r.fim) : (() => { const [h,m] = (r.fim||"00:00").split(":").map(Number); return h*60+m; })()) - (typeof horaParaMinutos === "function" ? horaParaMinutos(r.inicio) : (() => { const [h,m] = (r.inicio||"00:00").split(":").map(Number); return h*60+m; })());
+        horarioFormatado = `${r.inicio} - ${r.fim} (${typeof formatDuracao === "function" ? formatDuracao(dur) : (() => { const h = Math.floor(dur/60); const m = dur%60; return `${h>0?h+"h":""}${h>0&&m>0?" ":""}${m>0?m+"min":""}`})()})`;
+      } else if (typeof r.duracaoMin === "number") {
+        const inicio = r.hora || "00:00";
+        const inicioMin = (typeof horaParaMinutos === "function" ? horaParaMinutos(inicio) : (() => { const [h,m] = inicio.split(":").map(Number); return h*60+m; })());
+        const fimMin = inicioMin + Number(r.duracaoMin);
+        const fimHora = (typeof minutosParaHora === "function" ? minutosParaHora(fimMin) : (() => { const hh = Math.floor(fimMin/60)%24; const mm = fimMin%60; return String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"); })());
+        horarioFormatado = `${inicio} - ${fimHora} (${Math.floor(r.duracaoMin/60)}h${r.duracaoMin%60>0? " "+(r.duracaoMin%60)+"min":""})`;
+      } else if (r.hora) {
+        const inicio = r.hora;
+        const inicioMin = (typeof horaParaMinutos === "function" ? horaParaMinutos(inicio) : (() => { const [h,m] = inicio.split(":").map(Number); return h*60+m; })());
+        const fimMin = inicioMin + 60;
+        const fimHora = (typeof minutosParaHora === "function" ? minutosParaHora(fimMin) : (() => { const hh = Math.floor(fimMin/60)%24; const mm = fimMin%60; return String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0"); })());
+        horarioFormatado = `${inicio} - ${fimHora} (1h)`;
       }
+    } catch (err) {
+      horarioFormatado = r.hora || "--";
+      console.warn("Erro ao formatar horário:", err);
+    }
 
-      // Botão Cancelar
-      const btnCancelar = document.createElement("button");
-      btnCancelar.className = "btn-cancelar-reserva";
-      btnCancelar.textContent = "Cancelar";
+    detalhes.innerHTML = `
+      <p><strong>Data:</strong> ${r.data || "--"}</p>
+      <p><strong>Horário:</strong> ${horarioFormatado}</p>
+      <p><strong>Status:</strong> ${r.status || "pendente"}</p>
+      ${r.veiculo ? `
+        <p><strong>Veículo:</strong> ${r.veiculo.modelo || "----"} (${r.veiculo.ano || "----"})</p>
+        <p><strong>Placa:</strong> ${r.veiculo.placa || "----"}</p>
+        <p><strong>Bateria:</strong> ${r.veiculo.bateria || "----"}</p>
+        <p><strong>Carga:</strong> ${r.veiculo.carga || "----"}</p>
+        <p><strong>Telefone:</strong> ${r.veiculo.telefone ? formatarTelefone(r.veiculo.telefone) : "(sem telefone cadastrado)"}</p>
+      ` : ""}
+    `;
 
-      // Só permite cancelar se ainda não estiver cancelada
-      if (r.status === "cancelada") {
-        btnCancelar.disabled = true;
-        btnCancelar.style.opacity = "0.5";
-      } else {
-        btnCancelar.addEventListener("click", () => {
-          reservaIndexParaCancelar = idx;
-          if (confirmarModal) confirmarModal.style.display = "flex";
-        });
-      }
+    li.appendChild(detalhes);
+    listaDetalhes.appendChild(li);
+  });
+}
 
-      linha.appendChild(nomeSpan);
-      linha.appendChild(statusSpan);
-      linha.appendChild(btnConfirma);
-      linha.appendChild(btnCancelar);
-
-      // Calcular tempo de reserva
-      const detalhes = document.createElement("div");
-      detalhes.className = "detalhes-reserva";
-
-      const _horaParaMinutos = (typeof horaParaMinutos === "function")
-        ? horaParaMinutos
-        : (hora => {
-          const [h, m] = (hora || "00:00").split(":").map(Number);
-          return h * 60 + m;
-        });
-
-      const _minutosParaHora = (typeof minutosParaHora === "function")
-        ? minutosParaHora
-        : (min => {
-          const hh = Math.floor(min / 60) % 24;
-          const mm = min % 60;
-          return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
-        });
-
-      function formatDuracao(totalMin) {
-        if (typeof totalMin !== "number" || isNaN(totalMin)) return "--";
-        const h = Math.floor(totalMin / 60);
-        const m = totalMin % 60;
-        if (h === 0 && m === 0) return "0min";
-        return `${h > 0 ? h + "h" : ""}${h > 0 && m > 0 ? " " : ""}${m > 0 ? m + "min" : ""}`;
-      }
-
-      let horarioFormatado = "--";
-      try {
-        if (r.inicio && r.fim) {
-          const dur = _horaParaMinutos(r.fim) - _horaParaMinutos(r.inicio);
-          horarioFormatado = `${r.inicio} - ${r.fim} (${formatDuracao(dur)})`;
-        } else if (typeof r.duracaoMin === "number") {
-          const inicio = r.hora || "00:00";
-          const inicioMin = _horaParaMinutos(inicio);
-          const fimMin = inicioMin + Number(r.duracaoMin);
-          horarioFormatado = `${inicio} - ${_minutosParaHora(fimMin)} (${formatDuracao(Number(r.duracaoMin))})`;
-        } else if (r.hora) {
-          const inicio = r.hora;
-          const inicioMin = _horaParaMinutos(inicio);
-          const fimMin = inicioMin + 60;
-          horarioFormatado = `${inicio} - ${_minutosParaHora(fimMin)} (${formatDuracao(60)})`;
-        }
-      } catch (err) {
-        horarioFormatado = r.hora || "--";
-        console.warn("Erro ao formatar horário:", err);
-      }
-
-      // Detalhes de cada reserva
-      detalhes.innerHTML = `
-    <p><strong>Data:</strong> ${r.data || "--"}</p>
-    <p><strong>Horário:</strong> ${horarioFormatado}</p>
-    <p><strong>Status:</strong> ${r.status || "pendente"}</p> ${r.veiculo ? `
-    <p><strong>Veículo:</strong> ${r.veiculo.modelo || "----"} (${r.veiculo.ano || "----"})</p>
-    <p><strong>Placa:</strong> ${r.veiculo.placa || "----"}</p>
-    <p><strong>Bateria:</strong> ${r.veiculo.bateria || "----"}</p>
-    <p><strong>Carga:</strong> ${r.veiculo.carga || "----"}</p>
-    <p><strong>Telefone:</strong> ${r.veiculo.telefone ? formatarTelefone(r.veiculo.telefone) : "(sem telefone cadastrado)"}</p>
-  ` : ""}
-`;
-
-
-      li.appendChild(linha);
-      li.appendChild(detalhes);
-      listaDetalhes.appendChild(li);
-    });
-  }
 
   // Confirmar cancelamento (botão do modal)
   if (btnConfirmar) {

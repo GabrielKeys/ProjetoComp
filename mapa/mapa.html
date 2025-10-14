@@ -89,21 +89,38 @@
             <button class="btn" id="btnDetalhesReservaMapa" style="display:none;">Ver Detalhes</button>
 
             <!-- ✅ Modal de agendamento (mesmo do Home) -->
-            <div id="agendamentoModal" class="modal">
-                <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <h3>Agendar Reserva</h3>
-                    <form id="formAgendamento">
-                        <label for="dataReserva">Data:</label>
-                        <input type="date" id="dataReserva" required>
+            <       <div id="agendamentoModal" class="modal">
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Agendar Reserva</h3>
 
-                        <label for="horaReserva">Hora:</label>
-                        <input type="time" id="horaReserva" required>
+            <form id="formAgendamento">
+              <label for="dataReserva">Data:</label>
+              <input type="date" id="dataReserva" required>
 
-                        <button type="submit">Confirmar</button>
-                    </form>
-                </div>
-            </div>
+              <label for="horaReserva">Hora:</label>
+              <div class="select-wrapper">
+                <div class="click-overlay"></div>
+                <select id="horaReserva" required></select>
+              </div>
+
+              <!-- NOVO BLOCO DE DURAÇÃO  -->
+              <label style="margin-top:10px; display:block;">Tempo de Reserva:</label>
+              <div style="display:flex; gap:8px;">
+                <select id="duracaoHoras" required style="flex:1;">
+                  <!-- Populado via JS -->
+                </select>
+
+                <select id="duracaoMinutos" required style="flex:1;">
+                  <option value="0">00</option>
+                  <option value="30">30</option>
+                </select>
+              </div>
+
+              <button type="submit" style="margin-top:15px;">Confirmar</button>
+            </form>
+          </div>
+        </div>
 
         </main>
     </div>
