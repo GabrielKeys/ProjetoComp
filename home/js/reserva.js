@@ -1,5 +1,5 @@
 // ====================================
-// reserva.js (usuário) - versão robusta e defensiva
+// reserva.js (usuário)
 // ====================================
 
 // ====================================
@@ -187,15 +187,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const detalhes = document.createElement("div");
       detalhes.className = "detalhes-estacao ativo";
       detalhes.innerHTML = `
-        <p><strong>Endereço:</strong> ${estacaoCompleta.rua || "N/D"} ${estacaoCompleta.numero || ""}</p>
-        <p><strong>Cidade:</strong> ${estacaoCompleta.cidade || "N/D"} - ${estacaoCompleta.estado || ""}</p>
-        <p><strong>Potência Máx:</strong> ${estacaoCompleta.potencia ? (estacaoCompleta.potencia + " kW") : "N/D"}</p>
-        <p><strong>Disponibilidade:</strong> ${estacaoCompleta.abertura || "?"} - ${estacaoCompleta.fechamento || "?"}</p>
-
-      <!-- Extras -->
-        <p><strong>Tempo de Espera:</strong> ${estacaoCompleta.tempoEspera ? (estacaoCompleta.tempoEspera + " min") : "--"}</p>
-        <p><strong>Preço:</strong> ${estacaoCompleta.preco ? (estacaoCompleta.preco + " R$/kWh") : "--"}</p>
-      `;
+  <p><strong>Endereço:</strong> ${estacaoCompleta.rua || "N/D"} ${estacaoCompleta.numero || ""} </p> ${estacaoCompleta.bairro || "N/D"} - ${estacaoCompleta.cidade || "N/D"} / ${estacaoCompleta.estado || ""}</p>
+  <p><strong>Potência Máx:</strong> ${estacaoCompleta.potencia ? (estacaoCompleta.potencia + " kW") : "N/D"}</p>
+  <p><strong>Disponibilidade:</strong> ${estacaoCompleta.abertura || "?"} - ${estacaoCompleta.fechamento || "?"}</p>
+  <p><strong>Tempo de Espera:</strong> ${estacaoCompleta.tempoEspera ? (estacaoCompleta.tempoEspera + " min") : "--"}</p>
+  <p><strong>Preço:</strong> ${estacaoCompleta.preco ? (estacaoCompleta.preco + " R$/kWh") : "--"}</p>
+  <p><strong>Telefone:</strong> ${formatarTelefone(estacaoCompleta.telefone)}</p>
+`;
 
       li.appendChild(linha);
       li.appendChild(detalhes);
@@ -510,14 +508,14 @@ document.addEventListener("DOMContentLoaded", () => {
   <p><strong>Data:</strong> ${r.data}</p>
   <p><strong>Horário:</strong> ${horarioFormatado}</p>
   <p><strong>Status:</strong> ${r.status || "pendente"}</p>
-  <p><strong>Endereço:</strong> ${estacaoDados?.rua || "N/D"} ${estacaoDados?.numero || ""}</p>
-  <p><strong>Cidade:</strong> ${estacaoDados?.cidade || "N/D"} - ${estacaoDados?.estado || ""}</p>
+  <p><strong>Endereço:</strong> ${estacaoDados?.rua || "N/D"} ${estacaoDados?.numero || ""} </p> ${estacaoDados?.bairro || "N/D"} - ${estacaoDados?.cidade || "N/D"} / ${estacaoDados?.estado || ""}</p>
   <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia ? (estacaoDados.potencia + " kW") : "N/D"}</p>
   <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || "?"} - ${estacaoDados?.fechamento || "?"}</p>
   <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ? (estacaoDados.tempoEspera + " min") : "--"}</p>
   <p><strong>Preço:</strong> ${estacaoDados?.preco ? (estacaoDados.preco + " R$/kWh") : "--"}</p>
   ${veiculoHtml}
 `;
+
 
         li.appendChild(linha);
         li.appendChild(detalhes);
@@ -750,14 +748,26 @@ document.addEventListener("DOMContentLoaded", () => {
         mostrarMensagem(`R$${custoReserva.toFixed(2)} debitados da carteira (Reserva).`, "aviso");
       }
 
-      // 🔹 Pega o veículo do usuário atual
+      // Capturar telefone do usuário 
+      let telefoneUsuario = "";
+      try {
+        const users = JSON.parse(localStorage.getItem("users")) || [];
+        const emailUser = (localStorage.getItem("usuarioEmail") || "").toLowerCase();
+        const dadosUser = users.find(u => (u.email || "").toLowerCase() === emailUser);
+        telefoneUsuario = dadosUser?.phone || localStorage.getItem("usuarioTelefone") || "";
+      } catch (e) {
+        console.warn("Telefone não encontrado, seguindo sem telefone.");
+      }
+
       const veiculo = {
         modelo: localStorage.getItem(`veiculoModelo_${usuarioIdParaVeiculo}`) || "",
         ano: localStorage.getItem(`veiculoAno_${usuarioIdParaVeiculo}`) || "",
         placa: localStorage.getItem(`veiculoPlaca_${usuarioIdParaVeiculo}`) || "",
         bateria: localStorage.getItem(`veiculoBateria_${usuarioIdParaVeiculo}`) || "",
-        carga: localStorage.getItem(`veiculoCarregamento_${usuarioIdParaVeiculo}`) || ""
+        carga: localStorage.getItem(`veiculoCarregamento_${usuarioIdParaVeiculo}`) || "",
+        telefone: telefoneUsuario // 👉 agora sempre vem preenchido ou vazio, sem quebrar
       };
+
 
       // Garantir que as variáveis existam
       const durH = parseInt(document.getElementById("duracaoHoras")?.value || 1);
@@ -775,6 +785,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const fim = addMinutesToHora(hora, durH * 60 + durM);
 
       let reservasEstacao = JSON.parse(localStorage.getItem(`reservasEstacao_${estacao.email}`)) || [];
+
+
+
+      //TESTE
+      console.log("DEBUG - TELEFONE DO USUÁRIO NA RESERVA:", {
+        usuarioAtual,
+        usuarioEmail: localStorage.getItem("usuarioEmail"),
+        veiculo,
+        telefoneVeiculo: veiculo.telefone || "(não veio)"
+      });
 
       // 📌 Salvar reserva com duração
       reservas.push({

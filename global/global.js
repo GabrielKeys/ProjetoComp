@@ -229,10 +229,13 @@ document.addEventListener("DOMContentLoaded", verificarCancelamentosPendentes);
 setInterval(verificarCancelamentosPendentes, 3000);
 
 
-
-
-
-
-
-
-
+//formatar numero de telefone
+function formatarTelefone(telefone) {
+  if (!telefone) return "--";
+  let valor = telefone.replace(/\D/g, "");
+  if (valor.length <= 10) {
+    return `(${valor.slice(0, 2)}) ${valor.slice(2, 6)}-${valor.slice(6)}`;
+  } else {
+    return `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7)}`;
+  }
+}

@@ -173,20 +173,39 @@ document.addEventListener("DOMContentLoaded", () => {
       const usuario = localStorage.getItem("usuarioNome") || localStorage.getItem("usuario") || "Usuário Desconhecido";
       if (!data || !hora) { alert("Preencha todos os campos!"); return; }
 
+      function getUsuarioAtualEmail() {
+  return (
+    localStorage.getItem("usuarioEmail") ||
+    localStorage.getItem("usuario") ||
+    localStorage.getItem("usuarioNome") ||
+    ""
+  ).toLowerCase();
+}
       // pega veículo do usuário atual (robusto)
-      const usuarioAtual = localStorage.getItem("usuario");
+      const usuarioAtual = getUsuarioAtualEmail();
+      const users = JSON.parse(localStorage.getItem("users")) || [];
+      const usuarioDados = users.find(u => u.email === usuarioAtual);
+      const telefoneUsuario =
+        usuarioDados?.phone ||
+        localStorage.getItem("usuarioTelefone") ||
+        "";
+
+
       const veiculo = {
         modelo: (localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "").trim(),
         ano: (localStorage.getItem(`veiculoAno_${usuarioAtual}`) || "").trim(),
         placa: (localStorage.getItem(`veiculoPlaca_${usuarioAtual}`) || "").trim(),
         bateria: (localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "").trim(),
-        carga: (localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "").trim()
+        carga: (localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "").trim(),
+        telefone: telefoneUsuario
       };
+
+
 
       const reservas = carregarReservasEstacao();
       reservas.push({
         usuario,
-        usuarioEmail: localStorage.getItem("usuarioEmail") || "",
+        uusuarioEmail: getUsuarioAtualEmail(),
         data,
         hora,
         status: "pendente",
@@ -324,14 +343,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Detalhes de cada reserva
       detalhes.innerHTML = `
-  <p><strong>Data:</strong> ${r.data || "--"}</p>
-  <p><strong>Horário:</strong> ${horarioFormatado}</p>
-  <p><strong>Status:</strong> ${r.status || "pendente"}</p>
-  ${r.veiculo ? `
+    <p><strong>Data:</strong> ${r.data || "--"}</p>
+    <p><strong>Horário:</strong> ${horarioFormatado}</p>
+    <p><strong>Status:</strong> ${r.status || "pendente"}</p> ${r.veiculo ? `
     <p><strong>Veículo:</strong> ${r.veiculo.modelo || "----"} (${r.veiculo.ano || "----"})</p>
     <p><strong>Placa:</strong> ${r.veiculo.placa || "----"}</p>
     <p><strong>Bateria:</strong> ${r.veiculo.bateria || "----"}</p>
     <p><strong>Carga:</strong> ${r.veiculo.carga || "----"}</p>
+    <p><strong>Telefone:</strong> ${r.veiculo.telefone ? formatarTelefone(r.veiculo.telefone) : "(sem telefone cadastrado)"}</p>
   ` : ""}
 `;
 
@@ -423,45 +442,29 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === confirmarModal) confirmarModal.style.display = "none";
   });
 
-}); 
+});
 
 
 // ===============================
 // Informações da estação na pagina inicial
 // ===============================
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const estacao = JSON.parse(localStorage.getItem("estacaoSelecionada")) || null;
-    if (!estacao) return;
+document.addEventListener("DOMContentLoaded", () => {
+  const estacao = JSON.parse(localStorage.getItem("estacaoSelecionada")) || null;
+  if (!estacao) return;
 
-    // Título e descrição
-    document.getElementById("stationTitle").innerText = estacao.nome || "Minha Estação";
-    document.getElementById("stationMsg").innerText = (estacao.cidade && estacao.estado)
-      ? `${estacao.cidade} - ${estacao.estado}`
-      : "Estação de Carregamento";
+  // Título e descrição
+  document.getElementById("stationTitle").innerText = estacao.nome || "Minha Estação";
+  document.getElementById("stationMsg").innerText = (estacao.cidade && estacao.estado)
+    ? `${estacao.cidade} - ${estacao.estado}`
+    : "Estação de Carregamento";
 
-    // Função para formatar o telefone
-    function formatarTelefone(numero) {
-      if (!numero) return "--";
-      numero = numero.replace(/\D/g, ""); // remove tudo que não for número
+  // Estatísticas
+  const abertura = estacao.abertura || "00:00";
+  const fechamento = estacao.fechamento || "23:59";
 
-      if (numero.length === 11) {
-        // celular
-        return `(${numero.substring(0, 2)}) ${numero.substring(2, 7)}-${numero.substring(7)}`;
-      }
-      if (numero.length === 10) {
-        // fixo
-        return `(${numero.substring(0, 2)}) ${numero.substring(2, 6)}-${numero.substring(6)}`;
-      }
-      return numero; // fallback
-    }
-
-    // Estatísticas
-    const abertura = estacao.abertura || "00:00";
-    const fechamento = estacao.fechamento || "23:59";
-
-    document.getElementById("statPotencia").innerText = estacao.potencia ? estacao.potencia + " kW" : "--";
-    document.getElementById("statDisponibilidade").innerText = `${abertura} - ${fechamento}`;
-    document.getElementById("statPreco").innerText = estacao.preco ? `R$ ${estacao.preco}` : "--";
-    document.getElementById("statTelefone").innerText = formatarTelefone(estacao.telefone);
-  });
+  document.getElementById("statPotencia").innerText = estacao.potencia ? estacao.potencia + " kW" : "--";
+  document.getElementById("statDisponibilidade").innerText = `${abertura} - ${fechamento}`;
+  document.getElementById("statPreco").innerText = estacao.preco ? `R$ ${estacao.preco}` : "--";
+  document.getElementById("statTelefone").innerText = formatarTelefone(estacao.telefone);
+});

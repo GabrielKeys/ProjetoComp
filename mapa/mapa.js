@@ -210,8 +210,7 @@ async function carregarEstacoesFicticias() {
         potencia: st.potencia ? (st.potencia + " kW") : "N/D",
         abertura: st.open || st.abertura || "",
         fechamento: st.close || st.fechamento || "",
-
-        //Extras
+        telefone: st.telefone || "",
         preco: st.preco ? (st.preco + " R$/kWh") : "N/D",
         tempoEspera: st.tempoEspera ? (st.tempoEspera + " min") : "N/D",
       });
@@ -305,16 +304,11 @@ function adicionarEstacaoNoMapa(estacao) {
   <div class="popup-estacao">
     <div class="popup-conteudo">
       <b>${estacao.nome}</b><br>
-      ${estacao.rua || ""} ${estacao.numero || ""}<br>
-      ${estacao.cidade || ""} ${estacao.estado || ""} ${estacao.cep || ""}<br>
-      Potência: ${estacao.potencia || "N/D"}<br>
+      ${estacao.rua || ""} ${estacao.numero || ""} <br> ${estacao.bairro || "N/D"} - ${estacao.cidade || ""} / ${estacao.estado || ""}<br>
       Horário: ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}<br>
-
-      <!-- Extras -->
       Preço: ${estacao.preco || "N/D"}<br> 
       Tempo de espera: ${estacao.tempoEspera || "N/D"}<br> 
-
-
+      Telefone: ${formatarTelefone(estacao.telefone)}
     </div>
     <div class="popup-footer">
       <button class="btn-reservar">Reservar</button>
