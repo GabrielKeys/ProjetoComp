@@ -86,43 +86,44 @@
                 </div>
                 <div id="listaReservasMapa"></div>
             </section>
-            <button class="btn" id="btnDetalhesReservaMapa" style="display:none;">Ver Detalhes</button>
+            <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
+
 
             <!-- ✅ Modal de agendamento (mesmo do Home) -->
-            <       <div id="agendamentoModal" class="modal">
-          <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Agendar Reserva</h3>
+            <div id="agendamentoModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3>Agendar Reserva</h3>
 
-            <form id="formAgendamento">
-              <label for="dataReserva">Data:</label>
-              <input type="date" id="dataReserva" required>
+                    <form id="formAgendamento">
+                        <label for="dataReserva">Data:</label>
+                        <input type="date" id="dataReserva" required>
 
-              <label for="horaReserva">Hora:</label>
-              <div class="select-wrapper">
-                <div class="click-overlay"></div>
-                <select id="horaReserva" required></select>
-              </div>
+                        <label for="horaReserva">Hora:</label>
+                        <div class="select-wrapper">
+                            <div class="click-overlay"></div>
+                            <select id="horaReserva" required></select>
+                        </div>
 
-              <!-- NOVO BLOCO DE DURAÇÃO  -->
-              <label style="margin-top:10px; display:block;">Tempo de Reserva:</label>
-              <div style="display:flex; gap:8px;">
-                <select id="duracaoHoras" required style="flex:1;">
-                  <!-- Populado via JS -->
-                </select>
+                        <!-- NOVO BLOCO DE DURAÇÃO  -->
+                        <label style="margin-top:10px; display:block;">Tempo de Reserva:</label>
+                        <div style="display:flex; gap:8px;">
+                            <select id="duracaoHoras" required style="flex:1;">
+                                <!-- Populado via JS -->
+                            </select>
 
-                <select id="duracaoMinutos" required style="flex:1;">
-                  <option value="0">00</option>
-                  <option value="30">30</option>
-                </select>
-              </div>
+                            <select id="duracaoMinutos" required style="flex:1;">
+                                <option value="0">00</option>
+                                <option value="30">30</option>
+                            </select>
+                        </div>
 
-              <button type="submit" style="margin-top:15px;">Confirmar</button>
-            </form>
-          </div>
-        </div>
+                        <button type="submit" style="margin-top:15px;">Confirmar</button>
+                    </form>
+                </div>
+    </div>
 
-        </main>
+    </main>
     </div>
 
     <!-- Modal de Detalhes da Reserva (mesmo do Home) -->
@@ -145,7 +146,7 @@
             </div>
         </div>
     </div>
-    
+
 
     <!-- scripts -->
     <script src="../home/js/main.js"></script>
@@ -163,7 +164,8 @@
     </script>
 
     <!-- Google Maps API (adicione sua chave aqui) -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY&callback=initMap&v=beta"></script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY&callback=initMap&v=beta"></script>
 
 
 </body>
