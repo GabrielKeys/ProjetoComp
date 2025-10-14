@@ -15,94 +15,98 @@
 
 <body>
   <div class="container">
-         
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <h2>VoltWay</h2>
-      </div>
-      <nav>
-        <a href="../home/home.html"><span>Início</span></a>
-        <a href="../mapa/mapa.html"><span>Mapa</span></a>
-        <a href="../perfil/perfil.html"><span>Perfil</span></a>
-        <a href="../assinatura/assinatura.html" class="active"><span>Assinatura</span></a>
-      </nav>
-      <div class="user-box">
-        <p id="nomeUsuario"></p>
-        <button class="logout-btn" onclick="logout()">Sair</button>
-      </div>
-    </aside>
 
-    <!-- Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <body data-theme="dark">
 
-    <!-- Botão fixo -->
-    <button id="toggleSidebar">☰</button>
+      <!-- Sidebar -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <h2>VoltWay</h2>
+        </div>
+        <nav>
+          <a href="../home/home.html"><span>Início</span></a>
+          <a href="../mapa/mapa.html"><span>Mapa</span></a>
+          <a href="../perfil/perfil.html"><span>Perfil</span></a>
+          <a href="../assinatura/assinatura.html" class="active"><span>Assinatura</span></a>
+        </nav>
+        <div class="user-box">
+          <p id="nomeUsuario"></p>
+          <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+      </aside>
 
-    <!-- Conteúdo principal -->
-    <main class="main">
-      <!-- Cabeçalho -->
-      <section class="header">
-        <div class="header-top">
-          <img src="../assets/logo.png" alt="Logo" class="header-logo" />
-          <div class="header-text">
-            <h1>Assinaturas em Desenvolvimento</h1>
-            <p>Nosso sistema de planos ainda está sendo preparado. Em breve você poderá escolher benefícios exclusivos!</p>
+      <!-- Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- Botão fixo -->
+      <button id="toggleSidebar">☰</button>
+
+      <!-- Conteúdo principal -->
+      <main class="main">
+        <!-- Cabeçalho -->
+        <section class="header">
+          <div class="header-top">
+            <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+            <div class="header-text">
+              <h1>Assinaturas em Desenvolvimento</h1>
+              <p>Nosso sistema de planos ainda está sendo preparado. Em breve você poderá escolher benefícios
+                exclusivos!</p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Plano Atual -->
-      <section class="card assinatura-container">
-        <h2>Área em Construção</h2>
-        <p>No momento você ainda não possui um plano.</p>
-        <ul>
-          <li>🔧 Implementando sistema de pagamento</li>
-          <li>🔧 Criando benefícios personalizados</li>
-          <li>🔧 Em breve disponível</li>
-        </ul>
-        <button class="btn" disabled>Em breve</button>
-      </section>
-
-      <!-- Planos disponíveis -->
-      <section class="plans">
-        <div class="card plano">
-          <h2>Plano Free</h2>
-          <p><strong>Gratuito</strong></p>
-          <p>Disponível futuramente.</p>
+        <!-- Plano Atual -->
+        <section class="card assinatura-container">
+          <h2>Área em Construção</h2>
+          <p>No momento você ainda não possui um plano.</p>
           <ul>
-            <li>⏳ Acesso parcial</li>
+            <li>🔧 Implementando sistema de pagamento</li>
+            <li>🔧 Criando benefícios personalizados</li>
+            <li>🔧 Em breve disponível</li>
           </ul>
           <button class="btn" disabled>Em breve</button>
-        </div>
+        </section>
 
-        <div class="card plano">
-          <h2>Plano Gold</h2>
-          <p><strong>Em breve</strong></p>
-          <p>Reservas ilimitadas e vantagens exclusivas serão liberadas.</p>
-          <ul>
-            <li>⏳ Benefícios em desenvolvimento</li>
-          </ul>
-          <button class="btn" disabled>Em breve</button>
-        </div>
+        <!-- Planos disponíveis -->
+        <section class="plans">
+          <div class="card plano">
+            <h2>Plano Free</h2>
+            <p><strong>Gratuito</strong></p>
+            <p>Disponível futuramente.</p>
+            <ul>
+              <li>⏳ Acesso parcial</li>
+            </ul>
+            <button class="btn" disabled>Em breve</button>
+          </div>
 
-        <div class="card plano">
-          <h2>Plano Platinum</h2>
-          <p><strong>Em breve</strong></p>
-          <p>Recursos premium e descontos especiais serão adicionados.</p>
-          <ul>
-            <li>⏳ Recursos especiais em progresso</li>
-          </ul>
-          <button class="btn" disabled>Em breve</button>
-        </div>
-      </section>
-    </main>
+          <div class="card plano">
+            <h2>Plano Gold</h2>
+            <p><strong>Em breve</strong></p>
+            <p>Reservas ilimitadas e vantagens exclusivas serão liberadas.</p>
+            <ul>
+              <li>⏳ Benefícios em desenvolvimento</li>
+            </ul>
+            <button class="btn" disabled>Em breve</button>
+          </div>
+
+          <div class="card plano">
+            <h2>Plano Platinum</h2>
+            <p><strong>Em breve</strong></p>
+            <p>Recursos premium e descontos especiais serão adicionados.</p>
+            <ul>
+              <li>⏳ Recursos especiais em progresso</li>
+            </ul>
+            <button class="btn" disabled>Em breve</button>
+          </div>
+        </section>
+      </main>
   </div>
 
   <!-- scripts -->
   <script src="../home/js/main.js"></script>
   <script src="../global/Global.js"></script>
-  
+
 
 </body>
+
 </html>

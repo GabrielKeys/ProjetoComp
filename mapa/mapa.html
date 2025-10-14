@@ -28,102 +28,104 @@
 <body>
     <div class="container">
 
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2>VoltWay</h2>
-            </div>
-            <nav>
-                <a href="../home/home.html"><span>Início</span></a>
-                <a href="../mapa/mapa.html" class="active"><span>Mapa</span></a>
-                <a href="../perfil/perfil.html"><span>Perfil</span></a>
-                <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
-            </nav>
-            <div class="user-box">
-                <p id="nomeUsuario"></p>
-                <button class="logout-btn" onclick="logout()">Sair</button>
-            </div>
-        </aside>
+        <body data-theme="dark">
 
-        <!-- Overlay -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h2>VoltWay</h2>
+                </div>
+                <nav>
+                    <a href="../home/home.html"><span>Início</span></a>
+                    <a href="../mapa/mapa.html" class="active"><span>Mapa</span></a>
+                    <a href="../perfil/perfil.html"><span>Perfil</span></a>
+                    <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
+                </nav>
+                <div class="user-box">
+                    <p id="nomeUsuario"></p>
+                    <button class="logout-btn" onclick="logout()">Sair</button>
+                </div>
+            </aside>
 
-        <!-- Botão fixo -->
-        <button id="toggleSidebar">☰</button>
+            <!-- Overlay -->
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-        <!-- Conteúdo principal -->
-        <main class="main">
+            <!-- Botão fixo -->
+            <button id="toggleSidebar">☰</button>
 
-            <!-- Cabeçalho do mapa  -->
-            <section class="header">
-                <div class="header-top">
-                    <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+            <!-- Conteúdo principal -->
+            <main class="main">
 
-                    <div class="header-text">
-                        <h1 id="stationTitle">Mapa das Estações</h1>
-                        <p>
-                            Veja as estações de recarga próximas.<br>
-                            Reserve ou adicione-as aos favoritos clicando na estrela ao lado.
-                        </p>
+                <!-- Cabeçalho do mapa  -->
+                <section class="header">
+                    <div class="header-top">
+                        <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+
+                        <div class="header-text">
+                            <h1 id="stationTitle">Mapa das Estações</h1>
+                            <p>
+                                Veja as estações de recarga próximas.<br>
+                                Reserve ou adicione-as aos favoritos clicando na estrela ao lado.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Filtro -->
+                    <label>
+                        <input type="checkbox" id="filtroRecarga" checked>
+                        Mostrar apenas estações de carregamento registradas
+                    </label>
+                </section>
+
+                <!-- Mapa Google Maps -->
+                <div id="map"></div>
+
+                <!-- Próxima Reserva (Mapa) -->
+                <section class="card next-reservation" id="proximaReservaCardMapa">
+                    <div>
+                        <h2>Próxima Reserva</h2>
+                        <p id="textoReservaMapa">Nenhuma reserva agendada.</p>
+                    </div>
+                    <div id="listaReservasMapa"></div>
+                </section>
+                <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
+
+
+                <!-- ✅ Modal de agendamento (mesmo do Home) -->
+                <div id="agendamentoModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Agendar Reserva</h3>
+
+                        <form id="formAgendamento">
+                            <label for="dataReserva">Data:</label>
+                            <input type="date" id="dataReserva" required>
+
+                            <label for="horaReserva">Hora:</label>
+                            <div class="select-wrapper">
+                                <div class="click-overlay"></div>
+                                <select id="horaReserva" required></select>
+                            </div>
+
+                            <!-- NOVO BLOCO DE DURAÇÃO  -->
+                            <label style="margin-top:10px; display:block;">Tempo de Reserva:</label>
+                            <div style="display:flex; gap:8px;">
+                                <select id="duracaoHoras" required style="flex:1;">
+                                    <!-- Populado via JS -->
+                                </select>
+
+                                <select id="duracaoMinutos" required style="flex:1;">
+                                    <option value="0">00</option>
+                                    <option value="30">30</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" style="margin-top:15px;">Confirmar</button>
+                        </form>
                     </div>
                 </div>
 
-                <!-- Filtro -->
-                <label>
-                    <input type="checkbox" id="filtroRecarga" checked>
-                    Mostrar apenas estações de carregamento registradas
-                </label>
-            </section>
-
-            <!-- Mapa Google Maps -->
-            <div id="map"></div>
-
-            <!-- Próxima Reserva (Mapa) -->
-            <section class="card next-reservation" id="proximaReservaCardMapa">
-                <div>
-                    <h2>Próxima Reserva</h2>
-                    <p id="textoReservaMapa">Nenhuma reserva agendada.</p>
-                </div>
-                <div id="listaReservasMapa"></div>
-            </section>
-            <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
-
-
-            <!-- ✅ Modal de agendamento (mesmo do Home) -->
-            <div id="agendamentoModal" class="modal">
-                <div class="modal-content">
-                    <span class="close">&times;</span>
-                    <h3>Agendar Reserva</h3>
-
-                    <form id="formAgendamento">
-                        <label for="dataReserva">Data:</label>
-                        <input type="date" id="dataReserva" required>
-
-                        <label for="horaReserva">Hora:</label>
-                        <div class="select-wrapper">
-                            <div class="click-overlay"></div>
-                            <select id="horaReserva" required></select>
-                        </div>
-
-                        <!-- NOVO BLOCO DE DURAÇÃO  -->
-                        <label style="margin-top:10px; display:block;">Tempo de Reserva:</label>
-                        <div style="display:flex; gap:8px;">
-                            <select id="duracaoHoras" required style="flex:1;">
-                                <!-- Populado via JS -->
-                            </select>
-
-                            <select id="duracaoMinutos" required style="flex:1;">
-                                <option value="0">00</option>
-                                <option value="30">30</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" style="margin-top:15px;">Confirmar</button>
-                    </form>
-                </div>
-    </div>
-
-    </main>
+            </main>
     </div>
 
     <!-- Modal de Detalhes da Reserva (mesmo do Home) -->

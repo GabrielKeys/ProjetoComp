@@ -15,14 +15,16 @@
 <body>
   <div class="container">
 
-   <!-- Sidebar -->
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <h2>VoltWay</h2>
       </div>
       <nav>
-        <a href="home.html"><span>Início</span></a>
-        <a href="#"class="active"><span>Perfil</span></a>
+        <a href="../home/home.html"><span>Início</span></a>
+        <a href="../mapa/mapa.html"><span>Mapa</span></a>
+        <a href="../perfil/perfil.html" class="active"><span>Perfil</span></a>
+        <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
       </nav>
 
       <div class="user-box">
@@ -39,13 +41,11 @@
       </div>
     </aside>
 
-
     <!-- Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Botão fixo -->
     <button id="toggleSidebar">☰</button>
-
 
     <!-- Conteúdo principal -->
     <main class="main">
@@ -54,8 +54,8 @@
         <div class="header-top">
           <img src="../assets/logo.png" alt="Logo" class="header-logo" />
           <div class="header-text">
-            <h1>Perfil do Local</h1>
-            <p>Gerencie suas informações do local e preferências.</p>
+            <h1>Perfil do Usuário</h1>
+            <p>Gerencie suas informações pessoais, veículo e preferências.</p>
           </div>
         </div>
       </section>
@@ -75,7 +75,7 @@
 
       <!-- Informações do Usuário -->
       <section class="card perfil-container">
-        <h2>Informações do Perfil do Local</h2>
+        <h2>Informações do Usuário</h2>
         <div id="userDetalhes" class="vehicle-fields"></div>
         <div id="perfilActions" class="form-actions hidden">
           <button id="btnSalvarPerfil">Salvar</button>
@@ -83,14 +83,57 @@
         </div>
       </section>
 
+      <!-- Veículo do Usuário -->
+      <section class="card vehicle">
+        <h2>Meu Veículo</h2>
+        <div class="vehicle-info">
+          <img src="../assets/carro.png" alt="Carro Elétrico Genérico">
+          <div id="veiculoDetalhes">
+            <div class="vehicle-fields">
+              <div class="field-row"><label>Modelo:</label><span id="veiculoModelo">----</span></div>
+              <div class="field-row"><label>Ano:</label><span id="veiculoAno">----</span></div>
+              <div class="field-row"><label>Placa:</label><span id="veiculoPlaca">----</span></div>
+              <div class="field-row"><label>Bateria:</label><span id="veiculoBateria">---- kWh</span></div>
+              <div class="field-row"><label>Potência de Carga:</label><span id="veiculoCarregamento">---- kW</span>
+              </div>
+            </div>
+          </div>
+          <!-- Botão de edição -->
+          <div class="editar-wrapper">
+            <button id="btnEditarVeiculo" class="btn-editar">Editar Veículo</button>
+          </div>
+        </div>
+      </section>
+
       <!-- Preferências -->
       <section class="card perfil-container">
         <h2>Preferências</h2>
         <p>Notificações: Ativadas</p>
-        <p>Tema: Claro</p>
+
+        <div class="theme-toggle">
+          <span>Tema Escuro</span>
+          <label class="switch">
+            <!-- added data-theme-toggle attribute for robust selector -->
+            <input type="checkbox" id="darkModeSwitch" data-theme-toggle>
+            <span class="slider"></span>
+          </label>
+        </div>
+
         <p>Localização Automática: Ativada</p>
-        <button class="btn">Alterar Preferências</button>
       </section>
+
+      <!-- Histórico de Reservas -->
+      <section id="historicoReservas" class="card perfil-container">
+        <h2>Histórico de Reservas</h2>
+        <ul>
+          <li>📍 Estação Av. Paulista - 02/09/2025 - 15:00</li>
+          <li>📍 Estação Shopping Morumbi - 28/08/2025 - 19:30</li>
+          <li>📍 Estação Aeroporto GRU - 20/08/2025 - 10:00</li>
+        </ul>
+        <button class="btn">Ver Mais</button>
+      </section>
+    </main>
+  </div>
 
   <!-- Ação do botão da engrenagem (gearBtn) -->
   <script>

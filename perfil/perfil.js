@@ -422,3 +422,5 @@ document.addEventListener("DOMContentLoaded", () => {
   renderVeiculo();
   atualizarSidebar();
 });
+
+
