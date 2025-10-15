@@ -853,14 +853,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (err) {
       console.error("Erro no submit de agendamento:", err);
-      if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Erro ao processar a reserva. Veja console.", "erro");
+      if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Erro ao processar a reserva.", "erro");
     }
   });
 });
 
 
 
-// ====================================
+// ===================================
 // Inicialização Automática
 // ====================================
 document.addEventListener("DOMContentLoaded", () => {

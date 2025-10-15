@@ -5,6 +5,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VW Carregamento - Início</title>
+
+  <!-- Aplica imediatamente o tema salvo (dark ou light) ANTES de carregar o CSS-->
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+
   <link rel="stylesheet" href="../home/css/home.css">
 </head>
 

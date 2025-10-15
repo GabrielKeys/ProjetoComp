@@ -85,32 +85,7 @@ body::before {
   letter-spacing: 0.2px;
 }
 
-/* ===============================
-   Separador "OU"
-=============================== */
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 12px 0;
-  font-size: 13px;
-  font-weight: 500;
-}
 
-.divider::before,
-.divider::after {
-  content: "";
-  flex: 1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.divider:not(:empty)::before {
-  margin-right: .75em;
-}
-.divider:not(:empty)::after {
-  margin-left: .75em;
-}
 
 /* ===============================
    Forms
@@ -171,7 +146,7 @@ body::before {
 =============================== */
 /* botão primário com brilho e destaque */
 .btn {
-  background: linear-gradient(90deg, #00A6FF, #0088d3);
+  background: linear-gradient(90deg, #2d76ff, #5004ff) !important;
   color: white;
   padding: 10px;
   border: none;
@@ -222,13 +197,13 @@ body::before {
 
 .extra-actions a {
   font-size: 13px;
-  color: #00A6FF;
+  color: #7439ff;
   text-decoration: none;
   transition: color 0.18s;
 }
 
 .extra-actions a:hover {
-  color: #66cfff;
+  color: #a681ff;
 }
 
 /* ===============================
@@ -306,7 +281,7 @@ body::before {
 =============================== */
 .add-vehicle-btn {
   background: transparent;
-  color: #00A6FF;
+  color: #7439ff;
   border: none;
   cursor: pointer;
   font-size: 14px;
@@ -317,7 +292,7 @@ body::before {
 }
 
 .add-vehicle-btn:hover {
-  color: #66cfff;
+  color: #9569fb;
 }
 
 /* Container do veículo (compatibilidade com versão antiga) */

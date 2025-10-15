@@ -6,7 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VW Carregamento - Perfil</title>
 
-  <!-- Estilos do projeto -->
+  <!-- Aplica imediatamente o tema salvo (dark ou light) ANTES de carregar o CSS-->
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+
+  <!-- Estilos -->
   <link rel="stylesheet" href="../global/Sidebar.css">
   <link rel="stylesheet" href="../global/Header.css">
   <link rel="stylesheet" href="../global/Layout.css">
@@ -86,7 +94,7 @@
       <!-- Preferências -->
       <section class="card perfil-container">
         <h2>Preferências</h2>
-        <p>Notificações: Ativadas</p>
+        <!--        <p>Notificações: Ativadas</p> -->
 
         <div class="theme-toggle">
           <span>Tema Escuro</span>
@@ -96,16 +104,13 @@
           </label>
         </div>
 
-        <p>Localização Automática: Ativada</p>
+        <!--        <p>Localização Automática: Ativada</p> -->
       </section>
 
       <!-- Histórico de Reservas -->
       <section id="historicoReservas" class="card perfil-container">
         <h2>Histórico de Reservas</h2>
         <ul>
-          <li>📍 Estação Av. Paulista - 02/09/2025 - 15:00</li>
-          <li>📍 Estação Shopping Morumbi - 28/08/2025 - 19:30</li>
-          <li>📍 Estação Aeroporto GRU - 20/08/2025 - 10:00</li>
         </ul>
         <button class="btn">Ver Mais</button>
       </section>

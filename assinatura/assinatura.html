@@ -6,7 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VW Carregamento - Assinatura</title>
 
-  <!-- Estilos do projeto -->
+  <!-- Aplica imediatamente o tema salvo (dark ou light) ANTES de carregar o CSS-->
+  <script>
+  (function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  })();
+</script>
+
+  <!-- Estilos -->
   <link rel="stylesheet" href="../global/Sidebar.css">
   <link rel="stylesheet" href="../global/Layout.css">
   <link rel="stylesheet" href="../global/Header.css">
