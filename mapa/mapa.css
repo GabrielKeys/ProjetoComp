@@ -54,7 +54,7 @@
 }
 .popup-estacao .btn-reservar {
   flex: 1;
-  background: linear-gradient(90deg, #123b8b, #007bff);
+  background: #007bff;
   color: #fff;
   border: none;
   padding: 8px 0;
@@ -153,37 +153,8 @@
   align-items: center; 
   background: #e6f0ff; 
 }
-.btn { 
-  background: #0a2a66; 
-  color: white; 
-  border: none; 
-  padding: 12px 18px;
-  border-radius: 8px; 
-  cursor: pointer; 
-  font-size: 15px;
-}
-.btn:hover { 
-  background: #123b8b; 
-}
 
-/* ============================
-   Botão de reservar
-============================ */
-.btn-reservar {
-  background: linear-gradient(90deg, #123b8b, #007bff);
-  color: #fff;
-  border: none;
-  padding: 8px 22px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  text-align: center;
-  flex: 1;
-  max-width: 140px;
-}
-.btn-reservar:hover {
-  background: #123b8b;
-}
+
 
 /* ============================
    🔹 Mobile (app-like)
@@ -261,40 +232,39 @@ img[alt="Google"] {
   visibility: hidden !important;
 }
 
-/* ============================
-   🌙 Modo Escuro - Estrela Favoritos
-============================ */
-html[data-theme="dark"] .estrela {
-  filter: grayscale(100%) brightness(150%) !important;
-}
-html[data-theme="dark"] .estrela:hover {
-  filter: brightness(200%) !important;
-}
-html[data-theme="dark"] .estrela.favorita {
-  filter: none !important;
-}
 
 /* ============================
-   🌙 Modo Escuro - Popup do Mapa
+   Modo Escuro - Popup do Mapa
 ============================ */
 html[data-theme="dark"] .popup-estacao {
   background: rgba(20,30,50,0.95) !important;
   color: #fff !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
 }
-html[data-theme="dark"] .popup-estacao b {
+
+/* Fundo e bordas do container principal */
+html[data-theme="dark"] .gm-style .gm-style-iw-c {
+  background: rgba(20,30,50,0.95) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6) !important;
+  overflow: hidden !important; 
+
+}
+
+/* Título */
+html[data-theme="dark"] .gm-style .gm-style-iw-d b {
   color: #00A6FF !important;
 }
-html[data-theme="dark"] .popup-estacao .popup-conteudo {
-  border-bottom: 1px solid rgba(255,255,255,0.12) !important;
-  color: #ddd !important;
-}
-html[data-theme="dark"] .popup-estacao .btn-reservar {
-  background: linear-gradient(90deg, #00A6FF, #0088d3) !important;
+
+
+/* Linha separadora (se existir) */
+html[data-theme="dark"] .gm-style .gm-style-iw-d hr {
+  border-color: rgba(255,255,255,0.12) !important;
 }
 
 /* ============================
-   🌙 Modo Escuro - Página do Mapa
+   Modo Escuro - Página do Mapa
 ============================ */
 html[data-theme="dark"] .mapa-container {
   background: #0A1428 !important;
@@ -319,7 +289,7 @@ html[data-theme="dark"] .btn:hover {
 }
 
 /* ============================
-   🌙 Modo Escuro - Botão Reservar
+   Modo Escuro - Botão Reservar
 ============================ */
 html[data-theme="dark"] .btn-reservar {
   background: linear-gradient(90deg, #00A6FF, #0088d3) !important;
@@ -327,13 +297,14 @@ html[data-theme="dark"] .btn-reservar {
 html[data-theme="dark"] .btn-reservar:hover {
   filter: brightness(1.1);
 }
-/* 🌙 Modo Escuro - Switch filtro do mapa */
+/* Modo Escuro - Switch filtro do mapa */
 html[data-theme="dark"] .header input[type="checkbox"] {
   background: #444 !important;
 }
 
 html[data-theme="dark"] .header input[type="checkbox"]:checked {
-  background: #00A6FF !important; /* mesmo azul do tema escuro */
+  background: #5004ff !important;     
+
 }
 
 html[data-theme="dark"] .header input[type="checkbox"]::after {

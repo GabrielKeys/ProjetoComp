@@ -136,11 +136,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (sel && (sel.email || sel.nome)) {
         // se os emails/nome baterem atualiza estacaoSelecionada
         if ((sel.email && stationData.email && sel.email.toLowerCase() === stationData.email.toLowerCase()) ||
-            (sel.nome && namesEqual(sel.nome, stationData.nome))) {
+          (sel.nome && namesEqual(sel.nome, stationData.nome))) {
           localStorage.setItem("estacaoSelecionada", JSON.stringify(stationData));
         }
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function updateSidebarNameAndPhoto() {
@@ -174,6 +174,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     containerDetalhes.innerHTML = `
       <div class="vehicle-fields">
+      <div class="field-row">
+          <label>Email:</label>
+          <span style="color:gray;">${stationData.email || "----"}</span>
+        </div>
+
         <div class="field-row">
           <label>Nome:</label>
           <span id="nomeSpan">${stationData.nome || "---"}</span>
@@ -181,13 +186,8 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div class="field-row">
-          <label>Email:</label>
-          <span style="color:gray;">${stationData.email || "----"}</span>
-        </div>
-
-        <div class="field-row">
           <label>Telefone:</label>
-          <span id="telefoneSpan">${stationData.telefone || "(--) ---------"}</span>
+          <span id="telefoneSpan">${stationData.telefone ? formatarTelefone(stationData.telefone) : "(--) ---------"}</span>
           <button class="icon-edit" id="editTelefoneBtn"><img src="../assets/icone-editar.png" alt="editar" width="18"></button>
         </div>
 
@@ -209,24 +209,43 @@ document.addEventListener("DOMContentLoaded", () => {
           <button class="icon-edit" id="editHorarioBtn"><img src="../assets/icone-editar.png" alt="editar" width="18"></button>
         </div>
       </div>
+
+      <div class="field-row">
+          <label>Senha:</label>
+          <span id="senhaSpan">********</span>
+          <button class="icon-edit" id="editSenhaBtn">
+            <img src="../assets/icone-editar.png" alt="editar" width="18">
+          </button>
+        </div>
     `;
 
     // ---------- listeners inline ----------
+    function toggleEditButtons(hide = true) {
+      document.querySelectorAll(".btn-editar-inline").forEach(btn => {
+        btn.style.display = hide ? "none" : "";
+      });
+    }
+
     // Nome
     const editNomeBtn = document.getElementById("editNomeBtn");
     if (editNomeBtn) {
       editNomeBtn.addEventListener("click", () => {
+
+        document.querySelectorAll(".icon-edit").forEach(btn => btn.style.display = "none");
+
         const span = document.getElementById("nomeSpan");
         span.outerHTML = `
-          <input type="text" id="editNome" value="${stationData.nome || ""}">
-          <button id="salvarNome" class="btn-salvar-inline">Salvar</button>
-          <button id="cancelarNome" class="btn-cancelar-inline">Cancelar</button>
-        `;
+      <input type="text" id="editNome" value="${stationData.nome || ""}">
+      <button id="salvarNome" class="btn-salvar-inline">Salvar</button>
+      <button id="cancelarNome" class="btn-cancelar-inline">Cancelar</button>
+    `;
+
         document.getElementById("salvarNome").onclick = () => {
           stationData.nome = document.getElementById("editNome").value.trim();
           persistirStations(); renderPerfilEstacao(); updateSidebarNameAndPhoto();
           showMessage("✅ Nome atualizado!", "sucesso");
         };
+
         document.getElementById("cancelarNome").onclick = () => {
           renderPerfilEstacao();
           showMessage("Edição de nome cancelada.", "aviso");
@@ -235,130 +254,245 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Telefone
-    const editTelefoneBtn = document.getElementById("editTelefoneBtn");
-    if (editTelefoneBtn) {
-      editTelefoneBtn.addEventListener("click", () => {
-        const span = document.getElementById("telefoneSpan");
-        span.outerHTML = `
-          <input type="text" id="editTelefone" value="${stationData.telefone || ""}">
-          <button id="salvarTel" class="btn-salvar-inline">Salvar</button>
-          <button id="cancelarTel" class="btn-cancelar-inline">Cancelar</button>
-        `;
-        applyPhoneMask(document.getElementById("editTelefone"));
-        document.getElementById("salvarTel").onclick = () => {
-          stationData.telefone = document.getElementById("editTelefone").value.trim();
-          persistirStations(); renderPerfilEstacao();
-          showMessage("✅ Telefone atualizado!", "sucesso");
-        };
-        document.getElementById("cancelarTel").onclick = () => {
-          renderPerfilEstacao();
-          showMessage("Edição de telefone cancelada.", "aviso");
-        };
-      });
+const editTelefoneBtn = document.getElementById("editTelefoneBtn");
+if (editTelefoneBtn) {
+  editTelefoneBtn.addEventListener("click", () => {
+
+    editTelefoneBtn.style.display = "none";
+
+    const span = document.getElementById("telefoneSpan");
+    span.outerHTML = `
+      <input type="text" id="editTelefone" value="${stationData.telefone ? formatarTelefone(stationData.telefone) : ""}" maxlength="15" autocomplete="tel">
+      <button id="salvarTel" class="btn-salvar-inline">Salvar</button>
+      <button id="cancelarTel" class="btn-cancelar-inline">Cancelar</button>
+    `;
+
+    const editTelefone = document.getElementById("editTelefone");
+
+    function rawDigitsFrom(str) {
+      return (str || "").replace(/\D/g, "");
     }
+
+    function formatarTelefoneLive(valor) {
+      if (valor.length < 3) return valor; // Sem formatação até 2 dígitos
+      if (valor.length < 7) return `(${valor.slice(0, 2)}) ${valor.slice(2)}`;
+      return `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7, 11)}`;
+    }
+
+    editTelefone.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace") {
+        const pos = editTelefone.selectionStart;
+        const val = editTelefone.value;
+
+        if (pos > 0 && /[\s\-\(\)]/.test(val[pos - 1])) {
+          e.preventDefault();
+          let raw = rawDigitsFrom(val);
+          if (raw.length > 0) raw = raw.slice(0, -1);
+          editTelefone.value = formatarTelefoneLive(raw);
+          editTelefone.setSelectionRange(pos - 1, pos - 1);
+        }
+      }
+    });
+
+    editTelefone.addEventListener("input", () => {
+      let raw = rawDigitsFrom(editTelefone.value);
+      if (raw.length > 11) raw = raw.slice(0, 11);
+      editTelefone.value = formatarTelefoneLive(raw);
+    });
+
+    document.getElementById("salvarTel").onclick = () => {
+      const valor = rawDigitsFrom(editTelefone.value);
+      if (valor.length !== 11) {
+        showMessage("❌ Formato do telefone inválido. Deve ter DDD + 9 dígitos.", "erro");
+        return;
+      }
+      stationData.telefone = valor;
+      persistirStations();
+      renderPerfilEstacao();
+      showMessage("✅ Telefone atualizado!", "sucesso");
+      editTelefoneBtn.style.display = "";
+    };
+
+    document.getElementById("cancelarTel").onclick = () => {
+      renderPerfilEstacao();
+      showMessage("Edição de telefone cancelada.", "aviso");
+      editTelefoneBtn.style.display = "";
+    };
+  });
+}
+
 
     // Potência (kW)
     const editPotenciaBtn = document.getElementById("editPotenciaBtn");
     if (editPotenciaBtn) {
       editPotenciaBtn.addEventListener("click", () => {
+
+        editPotenciaBtn.style.display = "none";
+
         const span = document.getElementById("potenciaSpan");
-        // pré-popula sem sufixo
         const initial = (stationData.potencia || "").toString().replace(/\s?kW$/i, "");
+
         span.outerHTML = `
-          <input type="text" id="editPotencia" value="${initial}">
-          <button id="salvarPotencia" class="btn-salvar-inline">Salvar</button>
-          <button id="cancelarPotencia" class="btn-cancelar-inline">Cancelar</button>
-        `;
+      <input type="text" id="editPotencia" value="${initial}">
+      <button id="salvarPotencia" class="btn-salvar-inline">Salvar</button>
+      <button id="cancelarPotencia" class="btn-cancelar-inline">Cancelar</button>
+    `;
+
         const editPot = document.getElementById("editPotencia");
-        // permite só dígitos e vírgula/ponto
         editPot.addEventListener("input", () => {
           editPot.value = editPot.value.replace(/[^0-9,\.]/g, "");
         });
-        document.getElementById("salvarPotencia").onclick = () => {
-          let val = document.getElementById("editPotencia").value.trim();
-          if (val) {
-            // troca vírgula por ponto e remove múltiplos pontos
-            val = val.replace(",", ".").replace(/\.{2,}/g, ".");
-            // se for número, mantém com sufixo kW
-            const n = parseFloat(val);
-            if (!isNaN(n) && n >= 0) {
-              // remove trailing zeros inúteis e exibe com até 2 decimais se necessário
-              stationData.potencia = (Number.isInteger(n) ? n.toString() : n.toString()) + " kW";
+
+        const finalizarEdicao = (cancelado = false) => {
+          if (!cancelado) {
+            let val = editPot.value.trim();
+            if (val) {
+              val = val.replace(",", ".").replace(/\.{2,}/g, ".");
+              const n = parseFloat(val);
+              stationData.potencia = (!isNaN(n) && n >= 0 ? n : val) + " kW";
             } else {
-              stationData.potencia = val + " kW"; // mesmo assim salva o texto digitado + kW
+              stationData.potencia = "";
             }
-          } else {
-            stationData.potencia = "";
+            persistirStations();
           }
-          persistirStations(); renderPerfilEstacao();
-          showMessage("✅ Potência atualizada!", "sucesso");
-        };
-        document.getElementById("cancelarPotencia").onclick = () => {
+
           renderPerfilEstacao();
-          showMessage("Edição de potência cancelada.", "aviso");
+          showMessage(cancelado ? "Edição de potência cancelada." : "✅ Potência atualizada!", cancelado ? "aviso" : "sucesso");
+          editPotenciaBtn.style.display = "";
         };
+
+        document.getElementById("salvarPotencia").onclick = () => finalizarEdicao(false);
+        document.getElementById("cancelarPotencia").onclick = () => finalizarEdicao(true);
       });
     }
+
 
     // Preço (R$)
     const editPrecoBtn = document.getElementById("editPrecoBtn");
     if (editPrecoBtn) {
       editPrecoBtn.addEventListener("click", () => {
+
+        editPrecoBtn.style.display = "none";
+
         const span = document.getElementById("precoSpan");
-        // extrai dígitos para prefilling (centavos)
-        const initialDigits = extractDigitsFromBRL(stationData.preco);
+        const initialDigits = extractDigitsFromBRL(stationData.preco || "");
+
         span.outerHTML = `
-          <input type="text" id="editPreco" value="${formatBRLFromDigits(initialDigits)}">
-          <button id="salvarPreco" class="btn-salvar-inline">Salvar</button>
-          <button id="cancelarPreco" class="btn-cancelar-inline">Cancelar</button>
-        `;
+      <input type="text" id="editPreco" value="${formatBRLFromDigits(initialDigits)}">
+      <button id="salvarPreco" class="btn-salvar-inline">Salvar</button>
+      <button id="cancelarPreco" class="btn-cancelar-inline">Cancelar</button>
+    `;
+
         const editPreco = document.getElementById("editPreco");
-        // mantém formato tipo máscara (só números lógicos)
+
         editPreco.addEventListener("input", () => {
-          let digits = (editPreco.value || "").replace(/\D/g, "");
-          if (!digits) digits = "0";
-          // limita tamanho razoável
-          if (digits.length > 12) digits = digits.slice(-12);
+          let digits = (editPreco.value || "").replace(/\D/g, "") || "0";
+          digits = digits.slice(0, 12); // Limita a 12 dígitos
           editPreco.value = formatBRLFromDigits(digits);
         });
-        document.getElementById("salvarPreco").onclick = () => {
-          const digits = (document.getElementById("editPreco").value || "").replace(/\D/g, "") || "0";
-          const formatted = formatBRLFromDigits(digits);
-          stationData.preco = formatted;
-          persistirStations(); renderPerfilEstacao();
-          showMessage("✅ Preço atualizado!", "sucesso");
-        };
-        document.getElementById("cancelarPreco").onclick = () => {
+
+        const finalizarEdicao = (cancelado = false) => {
+          if (!cancelado) {
+            const digits = (editPreco.value || "").replace(/\D/g, "") || "0";
+            stationData.preco = formatBRLFromDigits(digits);
+            persistirStations();
+          }
+
           renderPerfilEstacao();
-          showMessage("Edição de preço cancelada.", "aviso");
+          showMessage(cancelado ? "Edição de preço cancelada." : "✅ Preço atualizado!", cancelado ? "aviso" : "sucesso");
+          editPrecoBtn.style.display = ""; // 🔹 Reexibe SEMPRE
         };
+
+        document.getElementById("salvarPreco").onclick = () => finalizarEdicao(false);
+        document.getElementById("cancelarPreco").onclick = () => finalizarEdicao(true);
+
       });
     }
+
+
 
     // Horário (abertura/fechamento)
     const editHorarioBtn = document.getElementById("editHorarioBtn");
     if (editHorarioBtn) {
       editHorarioBtn.addEventListener("click", () => {
+
+        editHorarioBtn.style.display = "none";
+
         const span = document.getElementById("horarioSpan");
         span.outerHTML = `
-          <input type="time" id="editAbertura" value="${stationData.abertura || ""}">
-          <input type="time" id="editFechamento" value="${stationData.fechamento || ""}">
-          <button id="salvarHorario" class="btn-salvar-inline">Salvar</button>
-          <button id="cancelarHorario" class="btn-cancelar-inline">Cancelar</button>
-        `;
-        document.getElementById("salvarHorario").onclick = () => {
-          stationData.abertura = document.getElementById("editAbertura").value || "";
-          stationData.fechamento = document.getElementById("editFechamento").value || "";
-          persistirStations(); renderPerfilEstacao();
-          showMessage("✅ Horário atualizado!", "sucesso");
-        };
-        document.getElementById("cancelarHorario").onclick = () => {
+      <input type="time" id="editAbertura" value="${stationData.abertura || ""}">
+      <input type="time" id="editFechamento" value="${stationData.fechamento || ""}">
+      <button id="salvarHorario" class="btn-salvar-inline">Salvar</button>
+      <button id="cancelarHorario" class="btn-cancelar-inline">Cancelar</button>
+    `;
+
+        const finalizarEdicao = (cancelado = false) => {
+          if (!cancelado) {
+            stationData.abertura = document.getElementById("editAbertura").value || "";
+            stationData.fechamento = document.getElementById("editFechamento").value || "";
+            persistirStations();
+          }
+
           renderPerfilEstacao();
-          showMessage("Edição de horário cancelada.", "aviso");
+          showMessage(cancelado ? "Edição de horário cancelada." : "✅ Horário atualizado!", cancelado ? "aviso" : "sucesso");
+          editHorarioBtn.style.display = "";
+        };
+
+        document.getElementById("salvarHorario").onclick = () => finalizarEdicao(false);
+        document.getElementById("cancelarHorario").onclick = () => finalizarEdicao(true);
+
+      });
+    }
+
+    // Editar Senha
+    const editSenhaBtn = document.getElementById("editSenhaBtn");
+    if (editSenhaBtn) {
+      editSenhaBtn.addEventListener("click", () => {
+
+        document.querySelectorAll(".icon-edit").forEach(btn => btn.style.display = "none");
+
+        const span = document.getElementById("senhaSpan");
+        span.outerHTML = `
+      <input type="password" id="senhaAtual" placeholder="Senha Atual">
+      <input type="password" id="novaSenha" placeholder="Nova Senha">
+      <button id="salvarSenha" class="btn-salvar-inline">Salvar</button>
+      <button id="cancelarSenha" class="btn-cancelar-inline">Cancelar</button>
+      <p id="perfilMsg" style="margin-left:10px;"></p>
+    `;
+
+        document.getElementById("salvarSenha").onclick = () => {
+          const atual = document.getElementById("senhaAtual").value;
+          const nova = document.getElementById("novaSenha").value;
+          const msg = document.getElementById("perfilMsg");
+
+          const senhaAtualEstacao = stationData.password || "";
+
+          if (senhaAtualEstacao && atual !== senhaAtualEstacao) {
+            msg.innerText = "❌ Senha atual incorreta.";
+            msg.style.color = "red";
+            return;
+          }
+          if (nova.length < 8) {
+            msg.innerText = "❌ A nova senha deve ter pelo menos 8 caracteres.";
+            msg.style.color = "red";
+            return;
+          }
+
+          // Atualiza e salva
+          stationData.password = nova;
+          persistirStations();
+          showMessage("✅ Senha atualizada!", "sucesso");
+          setTimeout(renderPerfilEstacao, 1000);
+        };
+
+        document.getElementById("cancelarSenha").onclick = () => {
+          renderPerfilEstacao();
+          showMessage("Edição de senha cancelada.", "aviso");
         };
       });
     }
-  } // end renderPerfilEstacao
+
+  }
 
   // ---------- Foto (upload / remover) ----------
   if (btnUploadFoto && inputFoto) {

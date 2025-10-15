@@ -539,7 +539,7 @@ document.addEventListener("DOMContentLoaded", () => {
           r.status = "cancelada";
           salvarReservas(reservas);
 
-          // ✅ Atualiza também nas reservas globais para liberar o horário
+          // Atualiza também nas reservas globais para liberar o horário
           try {
             const keyGlobais = `reservasGlobais_${r.estacaoEmail || r.estacao}`;
             let reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
@@ -554,7 +554,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.warn("Falha ao atualizar reservas globais", e);
           }
 
-          // ✅ Atualiza também na estação para liberar o horário
+          // Atualiza também na estação para liberar o horário
           try {
             const keyEstacao = `reservasEstacao_${r.estacaoEmail || r.estacao}`;
             let reservasEstacao = JSON.parse(localStorage.getItem(keyEstacao) || "[]");
@@ -570,7 +570,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
 
-          // ✅ REEMBOLSO FIXO DE R$10
+          // REEMBOLSO FIXO DE R$10
           try {
             const usuarioAtual = localStorage.getItem("usuarioEmail") || "default";
             const carteiraKey = `saldoCarteira_${usuarioAtual}`;
@@ -698,7 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // ===========================
       const custoReserva = 10.00;
 
-      // ✅ Sempre usar email como chave fixa
+      // Sempre usar email como chave fixa
       const usuarioEmail = localStorage.getItem("usuarioEmail");
       const carteiraKey = `saldoCarteira_${usuarioEmail}`;
       let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
@@ -814,7 +814,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       salvarReservas(reservas);
 
-      // 🔹 Salva também na estação
+      // Salva também na estação
       reservasEstacao.push({
         usuarioEmail: usuarioIdParaVeiculo || usuarioAtual,
         data,
@@ -828,7 +828,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       localStorage.setItem(`reservasEstacao_${estacao.email}`, JSON.stringify(reservasEstacao));
-      // ✅ Salva também como RESERVA GLOBAL (visível para todos os usuários)
+      // Salva também como RESERVA GLOBAL (visível para todos os usuários)
       const keyGlobais = `reservasGlobais_${getEstacaoKey(estacao)}`;
       let reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
       reservasGlobais.push({

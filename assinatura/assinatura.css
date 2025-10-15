@@ -128,3 +128,26 @@
 body {
   overflow-x: hidden; /* 🔹 evita deslizar lateral */
 }
+
+/* =========================================
+   Modo Escuro - Planos de Assinatura
+========================================= */
+
+/* Cartões dos planos */
+html[data-theme="dark"] .plano {
+  background: rgba(255,255,255,0.06) !important;
+  border-left: 3px solid #6a03df !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important;
+}
+
+html[data-theme="dark"] .plano:hover {
+  background: rgba(255,255,255,0.12) !important;
+  border-left: 3px solid #6a03df !important;
+}
+
+html[data-theme="dark"] .assinatura-container {
+  background: transparent !important; /* Remove o card de trás */
+  box-shadow: none !important;       /* Remove sombra extra */
+  border: none !important;
+}

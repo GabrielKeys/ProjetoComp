@@ -243,14 +243,7 @@ function formatarTelefone(telefone) {
 
 
 
-  /*
-      Global theme toggle logic (default = light)
-      - Uses data-theme="dark" on <html> to match your CSS variables ([data-theme="dark"] {...})
-      - Also keeps a .dark-mode class on <body> for compatibility if used elsewhere
-      - Saves preference in localStorage key: "siteTheme" with values "light" or "dark"
-      - Works with checkbox inputs having id="darkModeSwitch" OR attribute data-theme-toggle
-      - Ensures pages start in LIGHT mode unless user previously chose dark
-    */
+  /* Global theme toggle logic (default = light)*/
     (function () {
       const LS_KEY = "siteTheme";
 

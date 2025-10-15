@@ -11,175 +11,176 @@
 <body>
   <div class="container">
 
-      <!-- Sidebar -->
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-          <h2>VoltWay</h2>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>VoltWay <label class="switch"> <input type="checkbox" id="darkModeSwitch" data-theme-toggle> <span
+              class="slider"></span> </label></h2>
+      </div>
+      <nav>
+        <a href="#" class="active"><span>Início</span></a>
+        <a href="../mapa/mapa.html"><span>Mapa</span></a>
+        <a href="../perfil/perfil.html"><span>Perfil</span></a>
+        <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
+      </nav>
+      <div class="user-box">
+        <p id="nomeUsuario"></p>
+        <button class="logout-btn" onclick="logout()">Sair</button>
+      </div>
+    </aside>
+
+    <!-- Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Botão fixo -->
+    <button id="toggleSidebar">☰</button>
+
+
+    <!-- Conteúdo principal -->
+    <main class="main" id="main">
+      <!-- Cabeçalho -->
+      <section class="header">
+        <div class="header-top">
+          <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+
+          <div class="header-text">
+            <h1 id="stationTitle">Bem-vindo</h1>
+            <p id="stationMsg">
+              Experimente o futuro da mobilidade com nossa rede de carregamento.
+              Selecione uma estação para ver os detalhes.
+            </p>
+          </div>
         </div>
-        <nav>
-          <a href="#" class="active"><span>Início</span></a>
-          <a href="../mapa/mapa.html"><span>Mapa</span></a>
-          <a href="../perfil/perfil.html"><span>Perfil</span></a>
-          <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
-        </nav>
-        <div class="user-box">
-          <p id="nomeUsuario"></p>
-          <button class="logout-btn" onclick="logout()">Sair</button>
-        </div>
-      </aside>
 
-      <!-- Overlay -->
-      <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-      <!-- Botão fixo -->
-      <button id="toggleSidebar">☰</button>
-
-
-      <!-- Conteúdo principal -->
-      <main class="main" id="main">
-        <!-- Cabeçalho -->
-        <section class="header">
-          <div class="header-top">
-            <img src="../assets/logo.png" alt="Logo" class="header-logo" />
-
-            <div class="header-text">
-              <h1 id="stationTitle">Bem-vindo</h1>
-              <p id="stationMsg">
-                Experimente o futuro da mobilidade com nossa rede de carregamento.
-                Selecione uma estação para ver os detalhes.
-              </p>
-            </div>
+        <!-- Estatísticas da estação -->
+        <div class="stats">
+          <div class="stat">
+            <strong id="statPotencia">--</strong>
+            <span>Potência Máxima</span>
           </div>
 
-          <!-- Estatísticas da estação -->
-          <div class="stats">
-            <div class="stat">
-              <strong id="statPotencia">--</strong>
-              <span>Potência Máxima</span>
-            </div>
-
-            <!--
+          <!--
           <div class="stat">
             <strong id="statEspera">--</strong>
             <span>Tempo Médio de Espera</span>
           </div>                                    -->
 
-            <div class="stat">
-              <strong id="statDisponibilidade">--</strong>
-              <span>Disponibilidade</span>
-            </div>
-            <div class="stat">
-              <strong id="statPreco">--</strong>
-              <span>Preço (R$/kWh)</span>
-            </div>
-
+          <div class="stat">
+            <strong id="statDisponibilidade">--</strong>
+            <span>Disponibilidade</span>
+          </div>
+          <div class="stat">
+            <strong id="statPreco">--</strong>
+            <span>Preço (R$/kWh)</span>
           </div>
 
-          <!-- Botões -->
-          <button id="btnSelecionarEstacao">Selecionar Estação</button>
-          <button id="btnAgendar" disabled>Agendar Reserva</button>
+        </div>
 
-          <!-- Modal de seleção -->
-          <div id="stationModal" class="modal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-              <h3>Selecione uma Estação</h3>
-              <ul id="listaEstacoes"></ul>
-            </div>
+        <!-- Botões -->
+        <button id="btnSelecionarEstacao">Selecionar Estação</button>
+        <button id="btnAgendar" disabled>Agendar Reserva</button>
+
+        <!-- Modal de seleção -->
+        <div id="stationModal" class="modal">
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Selecione uma Estação</h3>
+            <ul id="listaEstacoes"></ul>
           </div>
+        </div>
 
-          <!-- Modal de agendamento -->
-          <div id="agendamentoModal" class="modal">
-            <div class="modal-content">
-              <span class="close">&times;</span>
-              <h3>Agendar Reserva</h3>
+        <!-- Modal de agendamento -->
+        <div id="agendamentoModal" class="modal">
+          <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Agendar Reserva</h3>
 
-              <form id="formAgendamento">
-                <label for="dataReserva">Data:</label>
-                <input type="date" id="dataReserva" required>
+            <form id="formAgendamento">
+              <label for="dataReserva">Data:</label>
+              <input type="date" id="dataReserva" required>
 
-                <label for="horaReserva">Hora:</label>
-                <div class="select-wrapper">
-                  <div class="click-overlay"></div>
-                  <select id="horaReserva" required></select>
-                </div>
+              <label for="horaReserva">Hora:</label>
+              <div class="select-wrapper">
+                <div class="click-overlay"></div>
+                <select id="horaReserva" required></select>
+              </div>
 
-                <!-- NOVO BLOCO DE DURAÇÃO  -->
-                <label style="margin-top:10px; display:block;">Tempo de Reserva:</label>
-                <div style="display:flex; gap:8px;">
-                  <select id="duracaoHoras" required style="flex:1;">
-                    <!-- Populado via JS -->
-                  </select>
+              <!-- NOVO BLOCO DE DURAÇÃO  -->
+              <label style="margin-top:10px; display:block;">Tempo de Reserva:</label>
+              <div style="display:flex; gap:8px;">
+                <select id="duracaoHoras" required style="flex:1;">
+                  <!-- Populado via JS -->
+                </select>
 
-                  <select id="duracaoMinutos" required style="flex:1;">
-                    <option value="0">00</option>
-                    <option value="30">30</option>
-                  </select>
-                </div>
+                <select id="duracaoMinutos" required style="flex:1;">
+                  <option value="0">00</option>
+                  <option value="30">30</option>
+                </select>
+              </div>
 
-                <button type="submit" style="margin-top:15px;">Confirmar</button>
-              </form>
-            </div>
+              <button type="submit" style="margin-top:15px;">Confirmar</button>
+            </form>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <!-- Veículo -->
-        <section class="card vehicle">
-          <h2>Meu Veículo</h2>
-          <div class="vehicle-info">
-            <img src="../assets/carro.png" alt="Carro Elétrico Genérico">
-            <div id="veiculoDetalhes">
-              <div class="vehicle-fields">
-                <div class="field-row"><label>Modelo:</label><span id="veiculoModelo">----</span></div>
-                <div class="field-row"><label>Ano:</label><span id="veiculoAno">----</span></div>
-                <div class="field-row"><label>Placa:</label><span id="veiculoPlaca">----</span></div>
-                <div class="field-row"><label>Bateria:</label><span id="veiculoBateria">---- kWh</span></div>
-                <div class="field-row"><label>Potência de Carga:</label><span id="veiculoCarregamento">---- kW</span>
-                </div>
+      <!-- Veículo -->
+      <section class="card vehicle">
+        <h2>Meu Veículo</h2>
+        <div class="vehicle-info">
+          <img src="../assets/carro.png" alt="Carro Elétrico Genérico">
+          <div id="veiculoDetalhes">
+            <div class="vehicle-fields">
+              <div class="field-row"><label>Modelo:</label><span id="veiculoModelo">----</span></div>
+              <div class="field-row"><label>Ano:</label><span id="veiculoAno">----</span></div>
+              <div class="field-row"><label>Placa:</label><span id="veiculoPlaca">----</span></div>
+              <div class="field-row"><label>Bateria:</label><span id="veiculoBateria">---- kWh</span></div>
+              <div class="field-row"><label>Potência de Carga:</label><span id="veiculoCarregamento">---- kW</span>
               </div>
             </div>
-            <!-- Botão de edição -->
-            <div class="editar-wrapper">
-              <button id="btnEditarVeiculo" class="btn-editar">Editar Veículo</button>
-            </div>
-        </section>
+          </div>
+          <!-- Botão de edição -->
+          <div class="editar-wrapper">
+            <button id="btnEditarVeiculo" class="btn-editar">Editar Veículo</button>
+          </div>
+      </section>
 
-        <!-- Carteira & Status -->
-        <section class="grid">
-          <div class="card">
-            <h2>Minha Carteira</h2>
-            <p class="balance" id="saldoCarteira">R$0,00</p>
+      <!-- Carteira & Status -->
+      <section class="grid">
+        <div class="card">
+          <h2>Minha Carteira</h2>
+          <p class="balance" id="saldoCarteira">R$0,00</p>
 
-            <div class="transactions" id="listaTransacoes">
-              <p>Nenhuma transação ainda.</p>
-            </div>
-
-            <!-- Recarga com máscara de moeda -->
-            <div class="wallet-recharge">
-              <input type="text" id="valorRecarga" placeholder="R$ 0,00">
-              <button id="btnRecarregar">Recarregar</button>
-            </div>
+          <div class="transactions" id="listaTransacoes">
+            <p>Nenhuma transação ainda.</p>
           </div>
 
-          <div class="card">
-            <h2>Seu Status</h2>
-            <p>Pontos: <strong>0 pts</strong></p>
-            <p>Reservas Semanais: 0/999 (Ilimitadas)</p>
-            <span class="badge gold">Plano Gold</span>
+          <!-- Recarga com máscara de moeda -->
+          <div class="wallet-recharge">
+            <input type="text" id="valorRecarga" placeholder="R$ 0,00">
+            <button id="btnRecarregar">Recarregar</button>
           </div>
-        </section>
+        </div>
+
+        <div class="card">
+          <h2>Seu Status</h2>
+          <p>Pontos: <strong>0 pts</strong></p>
+          <p>Reservas Semanais: 0/999 (Ilimitadas)</p>
+          <span class="badge gold">Plano Gold</span>
+        </div>
+      </section>
 
 
-        <!-- Próxima Reserva -->
-        <section class="card next-reservation" id="proximaReservaCard">
-          <div>
-            <h2>Próxima Reserva</h2>
-            <p id="textoReserva">Nenhuma reserva agendada.</p>
-          </div>
-          <div id="listaReservas"></div>
-        </section>
-        <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
-      </main>
+      <!-- Próxima Reserva -->
+      <section class="card next-reservation" id="proximaReservaCard">
+        <div>
+          <h2>Próxima Reserva</h2>
+          <p id="textoReserva">Nenhuma reserva agendada.</p>
+        </div>
+        <div id="listaReservas"></div>
+      </section>
+      <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
+    </main>
   </div>
 
   <!-- Modal de Detalhes de Reservas -->

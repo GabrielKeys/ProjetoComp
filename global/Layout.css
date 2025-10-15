@@ -41,7 +41,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* 🔹 impede scroll lateral */
+  overflow-x: hidden; /* impede scroll lateral */
 }
 
 .container { 
@@ -189,14 +189,14 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: nowrap; /* 🔹 evita quebrar linha */
+  flex-wrap: nowrap; 
 }
 
 .vehicle-fields label {
   font-weight: bold;
   width: 120px;
   text-align: right;
-  white-space: nowrap; /* 🔹 mantém label numa linha */
+  white-space: nowrap; /
 }
 
 .vehicle-fields input {
@@ -206,7 +206,7 @@ html, body {
   font-size: 14px;
   flex: 1;
   max-width: 400px;
-  min-width: 0; /* 🔹 permite encolher sem quebrar */
+  min-width: 0; 
   transition: all 0.2s ease-in-out;
 }
 
@@ -279,7 +279,7 @@ html, body {
 #btnSalvarSenha,
 #btnSalvarVeiculo,
 .btn-salvar-inline {
-  background: #27ae60;
+  background: #27ae60; 
   color: #fff;
 }
 
@@ -335,7 +335,7 @@ html, body {
 
 /* Botão Confirmar (verde, estilo de salvar) */
 .btn-confirmar-reserva {
-  background: #27ae60;   /* verde */
+  background: #27ae60;   
   color: #fff;
   padding: 6px 11px;
   border: none;
@@ -353,7 +353,7 @@ html, body {
 
 /* Botão Cancelar Reserva (vermelho, já tinha mas reforçando) */
 .btn-cancelar-reserva {
-  background: #e74c3c;   /* vermelho */
+  background: #e74c3c;   
   color: #fff;
   padding: 8px 14px;
   border: none;
@@ -371,7 +371,7 @@ html, body {
 
 /* Botão Remover Canceladas (cinza neutro, discreto mas com destaque ao hover) */
 #btnRemoverCanceladas {
-  background: #6c757d;   /* cinza */
+  background: #6c757d;   
   color: #fff;
   padding: 8px 14px;
   border: none;
@@ -430,13 +430,13 @@ html, body {
 
   .vehicle-fields .field-row {
     display: flex;
-    flex-direction: row; /* 🔹 força label e input lado a lado */
+    flex-direction: row; 
     align-items: center;
     gap: 6px;
   }
 
   .vehicle-fields label {
-    width: 100px;   /* 🔹 menor largura no mobile */
+    width: 100px;   
     text-align: left;
     font-size: 13px;
     white-space: nowrap;
@@ -539,3 +539,21 @@ html, body {
   background: #666;
 }
 
+@media (max-width: 768px) {
+  .field-row {
+    flex-direction: column !important; /* Deixa cada item empilhado */
+    align-items: stretch !important;   /* Garante 100% da largura */
+    gap: 6px;                          /* Espaçamento entre eles */
+  }
+
+  .field-row input,
+  .field-row button {
+    width: 100% !important;           /* Ocupa toda a largura */
+    max-width: none !important;       /* Remove limites */
+  }
+
+  .field-row label {
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+}

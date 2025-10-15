@@ -335,8 +335,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (conflita) {
             option.disabled = true;
-            option.style.background = "#f8d7da";
-            option.style.color = "#721c24";
+            option.style.setProperty("background", "#f8d7da", "important");
+            option.style.setProperty("color", "#721c24", "important");
           }
         }
 
@@ -402,13 +402,13 @@ function verificarConflito() {
   });
 
   if (bateComOutroHorario) {
-  botaoConfirmar.disabled = true;
-  selectHora.setCustomValidity("Horário em conflito com outra reserva.");
-  mostrarMensagem(`❌ A reserva não cabe nesse horário — ajuste o horário ou a duração.`, "erro");
-} else {
-  botaoConfirmar.disabled = false;
-  selectHora.setCustomValidity("");
-}
+    botaoConfirmar.disabled = true;
+    selectHora.setCustomValidity("Horário em conflito com outra reserva.");
+    mostrarMensagem(`❌ A reserva não cabe nesse horário — ajuste o horário ou a duração.`, "erro");
+  } else {
+    botaoConfirmar.disabled = false;
+    selectHora.setCustomValidity("");
+  }
 }
 
 // 🧲 Adicionar listeners reativos

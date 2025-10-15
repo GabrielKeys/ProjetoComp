@@ -453,8 +453,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const abertura = estacao.abertura || "00:00";
   const fechamento = estacao.fechamento || "23:59";
 
-  document.getElementById("statPotencia").innerText = estacao.potencia ? estacao.potencia + " kW" : "--";
+  document.getElementById("statPotencia").innerText = estacao.potencia ? estacao.potencia + "" : "--";
   document.getElementById("statDisponibilidade").innerText = `${abertura} - ${fechamento}`;
-  document.getElementById("statPreco").innerText = estacao.preco ? `R$ ${estacao.preco}` : "--";
+  document.getElementById("statPreco").innerText = estacao.preco ? ` ${estacao.preco}` : "--";
   document.getElementById("statTelefone").innerText = formatarTelefone(estacao.telefone);
 });

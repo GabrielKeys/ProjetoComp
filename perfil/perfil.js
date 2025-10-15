@@ -120,16 +120,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderPerfil() {
     userDetalhes.innerHTML = `
       <div class="vehicle-fields">
+      <div class="field-row">
+          <label>Email:</label>
+          <span style="color:gray;">${userData.email}</span>
+        </div>
         <div class="field-row">
           <label>Nome:</label>
           <span id="nomeSpan">${userData.fullName || "---"}</span>
           <button class="icon-edit" id="editNomeBtn">
             <img src="../assets/icone-editar.png" alt="editar" width="18">
           </button>
-        </div>
-        <div class="field-row">
-          <label>Email:</label>
-          <span style="color:gray;">${userData.email}</span>
         </div>
         <div class="field-row">
           <label>Número:</label>
@@ -148,13 +148,17 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+
     // Editar Nome
     document.getElementById("editNomeBtn").addEventListener("click", () => {
+      document.querySelectorAll(".icon-edit").forEach(btn => btn.style.display = "none");
+
       const span = document.getElementById("nomeSpan");
       span.outerHTML = `
-        <input type="text" id="editNome" value="${userData.fullName || ""}">
-        <button id="salvarNome" class="btn-salvar-inline">Salvar</button>
-        <button id="cancelarNome" class="btn-cancelar-inline">Cancelar</button>`;
+    <input type="text" id="editNome" value="${userData.fullName || ""}">
+    <button id="salvarNome" class="btn-salvar-inline">Salvar</button>
+    <button id="cancelarNome" class="btn-cancelar-inline">Cancelar</button>`;
+
       document.getElementById("salvarNome").onclick = () => {
         userData.fullName = document.getElementById("editNome").value.trim();
         persistirUsers(); atualizarSidebar(); renderPerfil();
@@ -167,58 +171,71 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Editar Telefone
-    document.getElementById("editTelefoneBtn").addEventListener("click", () => {
-      const span = document.getElementById("telefoneSpan");
-      span.outerHTML = `
-        <input type="text" id="editTelefone" value="${userData.phone || ""}">
-        <button id="salvarTel" class="btn-salvar-inline">Salvar</button>
-        <button id="cancelarTel" class="btn-cancelar-inline">Cancelar</button>`;
-      aplicarMascaraTelefone(document.getElementById("editTelefone"));
-      document.getElementById("salvarTel").onclick = () => {
-        userData.phone = document.getElementById("editTelefone").value.trim();
-        persistirUsers(); atualizarSidebar(); renderPerfil();
-        mostrarMensagem("✅ Telefone atualizado!", "sucesso");
-      };
-      document.getElementById("cancelarTel").onclick = () => {
-        renderPerfil();
-        mostrarMensagem("Edição de telefone cancelada.", "aviso");
-      };
-    });
+document.getElementById("editTelefoneBtn").addEventListener("click", () => {
+  // Esconde todos os ícones de edição
+  document.querySelectorAll(".icon-edit").forEach(btn => btn.style.display = "none");
 
-    // Editar Senha
-    document.getElementById("editSenhaBtn").addEventListener("click", () => {
-      const span = document.getElementById("senhaSpan");
-      span.outerHTML = `
-        <input type="password" id="senhaAtual" placeholder="Senha Atual">
-        <input type="password" id="novaSenha" placeholder="Nova Senha">
-        <button id="salvarSenha" class="btn-salvar-inline">Salvar</button>
-        <button id="cancelarSenha" class="btn-cancelar-inline">Cancelar</button>
-        <p id="perfilMsg" style="margin-left:10px;"></p>`;
-      document.getElementById("salvarSenha").onclick = () => {
-        const atual = document.getElementById("senhaAtual").value;
-        const nova = document.getElementById("novaSenha").value;
-        const msg = document.getElementById("perfilMsg");
+  const span = document.getElementById("telefoneSpan");
+  span.outerHTML = `
+    <input type="text" id="editTelefone" value="${userData.phone || ""}">
+    <button id="salvarTel" class="btn-salvar-inline">Salvar</button>
+    <button id="cancelarTel" class="btn-cancelar-inline">Cancelar</button>`;
 
-        if (userData.password && atual !== userData.password) {
-          msg.innerText = "❌ Senha atual incorreta.";
-          msg.style.color = "red";
-          return;
-        }
-        if (nova.length < 8) {
-          msg.innerText = "❌ A nova senha deve ter pelo menos 8 caracteres.";
-          msg.style.color = "red";
-          return;
-        }
-        userData.password = nova;
-        persistirUsers();
-        mostrarMensagem("✅ Senha atualizada!", "sucesso");
-        setTimeout(renderPerfil, 1000);
-      };
-      document.getElementById("cancelarSenha").onclick = () => {
-        renderPerfil();
-        mostrarMensagem("Edição de senha cancelada.", "aviso");
-      };
-    });
+  aplicarMascaraTelefone(document.getElementById("editTelefone"));
+
+  document.getElementById("salvarTel").onclick = () => {
+    userData.phone = document.getElementById("editTelefone").value.trim();
+    persistirUsers(); atualizarSidebar(); renderPerfil();
+    mostrarMensagem("✅ Telefone atualizado!", "sucesso");
+  };
+
+  document.getElementById("cancelarTel").onclick = () => {
+    renderPerfil();
+    mostrarMensagem("Edição de telefone cancelada.", "aviso");
+  };
+});
+
+// Editar Senha
+document.getElementById("editSenhaBtn").addEventListener("click", () => {
+  // Esconde todos os ícones de edição
+  document.querySelectorAll(".icon-edit").forEach(btn => btn.style.display = "none");
+
+  const span = document.getElementById("senhaSpan");
+  span.outerHTML = `
+    <input type="password" id="senhaAtual" placeholder="Senha Atual">
+    <input type="password" id="novaSenha" placeholder="Nova Senha">
+    <button id="salvarSenha" class="btn-salvar-inline">Salvar</button>
+    <button id="cancelarSenha" class="btn-cancelar-inline">Cancelar</button>
+    <p id="perfilMsg" style="margin-left:10px;"></p>`;
+
+  document.getElementById("salvarSenha").onclick = () => {
+    const atual = document.getElementById("senhaAtual").value;
+    const nova = document.getElementById("novaSenha").value;
+    const msg = document.getElementById("perfilMsg");
+
+    if (userData.password && atual !== userData.password) {
+      msg.innerText = "❌ Senha atual incorreta.";
+      msg.style.color = "red";
+      return;
+    }
+    if (nova.length < 8) {
+      msg.innerText = "❌ A nova senha deve ter pelo menos 8 caracteres.";
+      msg.style.color = "red";
+      return;
+    }
+    userData.password = nova;
+    persistirUsers();
+    mostrarMensagem("✅ Senha atualizada!", "sucesso");
+    setTimeout(renderPerfil, 1000);
+  };
+
+  document.getElementById("cancelarSenha").onclick = () => {
+    renderPerfil();
+    mostrarMensagem("Edição de senha cancelada.", "aviso");
+  };
+});
+
+
   }
 
   // ================================

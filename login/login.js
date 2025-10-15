@@ -346,25 +346,49 @@ function aplicarRegrasInputs() {
 aplicarRegrasInputs();
 
 // ===============================
-// Máscara de telefone
+// MÁSCARA DE TELEFONE (USUÁRIO E ESTAÇÃO)
 // ===============================
-const phoneInput = document.getElementById("phone");
+document.addEventListener("DOMContentLoaded", function () {
 
-if (phoneInput) {
-  phoneInput.addEventListener("input", () => {
-    let valor = phoneInput.value.replace(/\D/g, "");
-    valor = valor.slice(0, 11);
+  function aplicarMascaraTelefone(input) {
+    if (!input) return;
 
-    if (valor.length > 2) {
-      valor = `(${valor.slice(0, 2)}) ${valor.slice(2)}`;
-    }
-    if (valor.length > 9) {
-      valor = `${valor.slice(0, 9)}-${valor.slice(9)}`;
+    function rawDigitsFrom(str) {
+      return (str || "").replace(/\D/g, "");
     }
 
-    phoneInput.value = valor;
-  });
-}
+    function formatarTelefoneLive(valor) {
+      if (valor.length < 3) return valor; // Não mostra "(" antes de 3 dígitos
+      if (valor.length < 7) return `(${valor.slice(0, 2)}) ${valor.slice(2)}`;
+      return `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7, 11)}`;
+    }
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace") {
+        const pos = input.selectionStart;
+        const val = input.value;
+
+        if (pos > 0 && /[\s\-\(\)]/.test(val[pos - 1])) {
+          e.preventDefault();
+          let raw = rawDigitsFrom(val);
+          if (raw.length > 0) raw = raw.slice(0, -1);
+          input.value = formatarTelefoneLive(raw);
+          input.setSelectionRange(pos - 1, pos - 1);
+        }
+      }
+    });
+
+    input.addEventListener("input", () => {
+      let raw = rawDigitsFrom(input.value);
+      if (raw.length > 11) raw = raw.slice(0, 11);
+      input.value = formatarTelefoneLive(raw);
+    });
+  }
+
+  aplicarMascaraTelefone(document.getElementById("phone"));
+  aplicarMascaraTelefone(document.getElementById("stationPhone"));
+
+});
 
 // ===============================
 // Toggle exibição da seção de veículo

@@ -2,122 +2,121 @@
    Interruptor de tema 
 ============================== */
 .theme-toggle {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 12px 0;
-    font-size: 15px;
-    font-weight: 500;
-  }
-  
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 46px;
-    height: 24px;
-  }
-  
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .3s;
-    border-radius: 24px;
-  }
-  
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .3s;
-    border-radius: 50%;
-  }
-  
-  input:checked + .slider {
-    background-color: #00A6FF;
-  }
-  
-  input:checked + .slider:before {
-    transform: translateX(22px);
-  }
-  
-  
-  /* ============================================
-     MODO ESCURO GLOBAL — BASE LOGIN (COMPLETO)
-     * ESTILO B (AÇÕES VERMELHO NEON)
-  ============================================ */
-  
-  /* ============================================
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 12px 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked+.slider {
+  background-color: #5004ff;
+
+}
+
+input:checked+.slider:before {
+  transform: translateX(22px);
+}
+
+
+/* ============================================
      1. BACKGROUND & CONTAINERS
   ============================================ */
-  html[data-theme="dark"], body.dark-mode {
-    background: #0A1428 !important;
-    color: #ffffff !important;
-  }
-  
-  html[data-theme="dark"] .card,
-  html[data-theme="dark"] section,
-  html[data-theme="dark"] .perfil-container,
-  html[data-theme="dark"] .vehicle,
-  html[data-theme="dark"] .assinatura-container,
-  html[data-theme="dark"] .plano {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
-    color: #ffffff !important;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
-  }
-  
-  /* ============================================
+html[data-theme="dark"],
+body.dark-mode {
+  background: #0A1428 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .card,
+html[data-theme="dark"] section,
+html[data-theme="dark"] .perfil-container,
+html[data-theme="dark"] .vehicle,
+html[data-theme="dark"] .assinatura-container,
+html[data-theme="dark"] .plano {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* ============================================
      2. TEXTOS / HEADERS
   ============================================ */
-  html[data-theme="dark"] h1,
-  html[data-theme="dark"] h2,
-  html[data-theme="dark"] h3,
-  html[data-theme="dark"] h4,
-  html[data-theme="dark"] p,
-  html[data-theme="dark"] span,
-  html[data-theme="dark"] label,
-  html[data-theme="dark"] li { 
-    color: #ffffff !important;
-  }
-  
-  html[data-theme="dark"] .badge.gold {
-    background: #FFD700 !important;
-    color: #000 !important;
-  }
-  
-  /* ============================================
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span,
+html[data-theme="dark"] label,
+html[data-theme="dark"] li {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .badge.gold {
+  background: #FFD700 !important;
+  color: #000 !important;
+}
+
+/* ============================================
      3. BOTÕES PADRÃO 
   ============================================ */
-  html[data-theme="dark"] .btn,
-  html[data-theme="dark"] button:not(.btn-cancelar):not(.btn-cancelar-reserva) {
-    background: linear-gradient(90deg, #2d76ff, #5004ff) !important;
-    color: #ffffff !important;
-    border: none !important;
-    box-shadow: 0 6px 18px rgba(0, 166, 255, 0.25) !important;
-    transition: 0.2s ease-in-out;
-  }
-  
-  html[data-theme="dark"] .btn:hover,
-  html[data-theme="dark"] button:hover {
-    filter: brightness(1.1);
-    box-shadow: 0 10px 28px rgba(0, 166, 255, 0.35) !important;
-  }
-  /* Impede que o botão de engrenagem receba o gradiente do modo escuro */
+html[data-theme="dark"] .btn,
+html[data-theme="dark"] button:not(.btn-cancelar):not(.btn-cancelar-reserva):not(.wallet-recharge button):not(#gearBtn):not(.icon-edit):not(.logout-btn) {
+  background: linear-gradient(90deg, #2d76ff, #5004ff) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 6px 18px rgba(0, 166, 255, 0.25) !important;
+  transition: 0.2s ease-in-out;
+}
+
+
+html[data-theme="dark"] .btn:hover,
+html[data-theme="dark"] button:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 10px 28px rgba(0, 166, 255, 0.35) !important;
+}
+
+/* Impede que o botão de engrenagem receba o gradiente do modo escuro */
 html[data-theme="dark"] #gearBtn,
 html[data-theme="dark"] #gearBtn img,
 html[data-theme="dark"] button#gearBtn {
@@ -129,7 +128,7 @@ html[data-theme="dark"] button#gearBtn {
 
 /* Botão de Editar*/
 html[data-theme="dark"] .icon-edit img {
-  filter: brightness(2) hue-rotate(180deg); 
+  filter: brightness(2) hue-rotate(180deg);
   opacity: 0.9;
 }
 
@@ -139,10 +138,13 @@ html[data-theme="dark"] .icon-edit:hover img {
 }
 
 html[data-theme="dark"] .icon-edit {
-  background: rgba(255, 255, 255, 0.06); /* Fundo escuro translúcido */
-  border: 1px solid rgba(255, 255, 255, 0.15); /* Borda clara suave */
+  background: rgba(255, 255, 255, 0.06);
+  /* Fundo escuro translúcido */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  /* Borda clara suave */
   border-radius: 6px;
-  padding: 4px; /* Dá espaço para o ícone respirar */
+  padding: 4px;
+  /* Dá espaço para o ícone respirar */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -151,155 +153,224 @@ html[data-theme="dark"] .icon-edit {
 
 html[data-theme="dark"] .icon-edit:hover {
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(0, 166, 255, 0.4); /* Azul neon nas bordas ao hover */
+  border-color: rgba(0, 166, 255, 0.4);
+}
+
+/* Botões Verdes Neon — Dark Mode */
+html[data-theme="dark"] .btn-verde,
+html[data-theme="dark"] .wallet-recharge button,
+html[data-theme="dark"] #btnRecarregar,
+html[data-theme="dark"] #btnSalvarPerfil,
+html[data-theme="dark"] button.btn {
+  background: linear-gradient(90deg, #00d84a, #00b63a) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 6px 18px rgba(0, 216, 74, 0.32) !important;
+  font-weight: bold;
+}
+
+html[data-theme="dark"] .btn-verde:hover,
+html[data-theme="dark"] .wallet-recharge button:hover,
+html[data-theme="dark"] #btnRecarregar:hover,
+html[data-theme="dark"] #btnSalvarPerfil:hover,
+html[data-theme="dark"] button.btn:hover {
+  filter: brightness(1.15) !important;
+  box-shadow: 0 10px 28px rgba(0, 216, 74, 0.48) !important;
+  transform: none !important;
 }
 
 
-  /* ============================================
+/* ============================================
      4. BOTÕES DE PERIGO — ESTILO VERMELHO NEON (B)
-  ============================================ */
-  html[data-theme="dark"] .btn-cancelar,
-  html[data-theme="dark"] .btn-cancelar-inline,
-  html[data-theme="dark"] .btn-cancelar-reserva,
-  html[data-theme="dark"] #btnFecharCancelamentoAviso {
-    background: linear-gradient(90deg, #FF0033, #CC0027) !important;
-    color: #fff !important;
-    box-shadow: 0 6px 18px rgba(255, 0, 50, 0.32) !important;
-  }
-  
-  html[data-theme="dark"] .btn-cancelar:hover,
-  html[data-theme="dark"] .btn-cancelar-reserva:hover {
-    filter: brightness(1.15);
-    box-shadow: 0 10px 28px rgba(255, 0, 50, 0.48) !important;
-  }
-  
-  /* ============================================
+============================================ */
+html[data-theme="dark"] .btn-cancelar,
+html[data-theme="dark"] .btn-cancelar-inline,
+html[data-theme="dark"] .btn-cancelar-reserva,
+html[data-theme="dark"] #btnFecharCancelamentoAviso,
+html[data-theme="dark"] .logout-btn,
+html[data-theme="dark"] .sidebar .logout-btn,
+html[data-theme="dark"] button.logout-btn {
+  background: linear-gradient(90deg, #FF0033, #CC0027) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 18px rgba(255, 0, 50, 0.32) !important;
+  border: none !important;
+}
+
+html[data-theme="dark"] .btn-cancelar:hover,
+html[data-theme="dark"] .btn-cancelar-reserva:hover,
+html[data-theme="dark"] .logout-btn:hover,
+html[data-theme="dark"] .sidebar .logout-btn:hover,
+html[data-theme="dark"] button.logout-btn:hover {
+  filter: brightness(1.15) !important;
+  box-shadow: 0 10px 28px rgba(255, 0, 50, 0.48) !important;
+  transform: none !important;
+}
+
+/* ============================================
      5. INPUTS / FORMS
   ============================================ */
-  html[data-theme="dark"] input,
-  html[data-theme="dark"] select,
-  html[data-theme="dark"] textarea {
-    background: rgba(255, 255, 255, 0.06) !important;
-    color: #fff !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  }
-  
-  html[data-theme="dark"] input::placeholder {
-    color: rgba(255, 255, 255, 0.5) !important;
-  }
-  
-  /* ============================================
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+html[data-theme="dark"] input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* ============================================
      6. SIDEBAR / NAVEGAÇÃO
   ============================================ */
-  html[data-theme="dark"] .sidebar {
-    background: rgba(10, 20, 40, 0.92) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
-  }
-  
-  html[data-theme="dark"] .sidebar a {
-    color: #ffffff !important;
-  }
-  
-  html[data-theme="dark"] .sidebar a:hover,
-  html[data-theme="dark"] .sidebar .active {
-    background: rgba(255, 255, 255, 0.12) !important;
-  }
-  
-  /* ============================================
+html[data-theme="dark"] .sidebar {
+  background: linear-gradient(to bottom, #000000b3, #110039) !important;
+  border-right: 1px solid #4d00a4
+}
+
+html[data-theme="dark"] .sidebar a {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .sidebar a:hover,
+html[data-theme="dark"] .sidebar .active {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ============================================
      7. SCROLLBARS
   ============================================ */
-  html[data-theme="dark"] ::-webkit-scrollbar {
-    width: 8px;
-  }
-  html[data-theme="dark"] ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-  }
-  html[data-theme="dark"] ::-webkit-scrollbar-thumb {
-    background: rgba(0, 166, 255, 0.7);
-    border-radius: 10px;
-  }
-  
-  /* ============================================
+html[data-theme="dark"] ::-webkit-scrollbar {
+  width: 8px;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 166, 255, 0.7);
+  border-radius: 10px;
+}
+
+/* ============================================
      8. HOVERS / DETALHES
   ============================================ */
-  html[data-theme="dark"] .vehicle-info img {
-    filter: drop-shadow(0 0 10px rgba(0,166,255,0.35));
-  }
-  
-  /* ==============================
+html[data-theme="dark"] .vehicle-info img {
+  filter: drop-shadow(0 0 10px rgba(0, 166, 255, 0.35));
+}
+
+/* ==============================
      Modo Escuro - Header
   ============================== */
-  html[data-theme="dark"] .header {
-    background: linear-gradient(90deg, #000000b3, #240078) !important;
-    color: #ffffff !important;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.45) !important;
-    border: 1px solid rgba(255,255,255,0.06) !important;
-  }
-  
-  /* ==============================
+html[data-theme="dark"] .header {
+  background: linear-gradient(90deg, #24007866, #000000b3) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-right: 3px solid #6a03df !important;
+}
+
+/* ==============================
      Modo Escuro - Títulos e Textos do Header
   ============================== */
-  html[data-theme="dark"] .header-text h1,
-  html[data-theme="dark"] .header-text p {
-    color: #ffffff !important;
-  }
-  
-  /* ==============================
+html[data-theme="dark"] .header-text h1,
+html[data-theme="dark"] .header-text p {
+  color: #ffffff !important;
+}
+
+/* ==============================
      Modo Escuro - Cards de Estatísticas
   ============================== */
-  html[data-theme="dark"] .stats .stat {
-    background: rgba(255, 255, 255, 0.06) !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255,255,255,0.05) !important;
-  }
-  
-  /* ==============================
-     Modo Escuro - Sidebar
-  ============================== */
-  html[data-theme="dark"] .sidebar {
-    background: rgba(10, 20, 40, 0.95) !important;
-    color: #ffffff !important;
-    border-right: 1px solid rgba(255,255,255,0.06);
-    box-shadow: 4px 0 20px rgba(0,0,0,0.4) !important;
-  }
-  
-  /* ==============================
+html[data-theme="dark"] .stats .stat {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+
+/* ==============================
      Modo Escuro - Links
   ============================== */
-  html[data-theme="dark"] .sidebar nav a {
-    color: #ffffff !important;
-  }
-  
-  html[data-theme="dark"] .sidebar nav a:hover,
-  html[data-theme="dark"] .sidebar nav .active {
-    background: rgba(255,255,255,0.08) !important;
-  }
-  
-  /* ==============================
+html[data-theme="dark"] .sidebar nav a {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .sidebar nav a:hover,
+html[data-theme="dark"] .sidebar nav .active {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ==============================
      Modo Escuro - User Box
   ============================== */
-  html[data-theme="dark"] .user-box {
-    background: rgba(255,255,255,0.08) !important;
-    color: #ffffff !important;
-  }
-  
-  /* ==============================
+html[data-theme="dark"] .user-box {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+/* ==============================
      Modo Escuro - Botão Logout
   ============================== */
-  html[data-theme="dark"] .logout-btn {
-    background: #ff4d4d !important;
-    color: #fff !important;
-  }
-  
-  html[data-theme="dark"] .logout-btn:hover {
-    background: #cc0000 !important;
-  }
-  
-  /* ==============================
+html[data-theme="dark"] .logout-btn {
+  background: #ff4d4d !important;
+  color: #fff !important;
+}
+
+html[data-theme="dark"] .logout-btn:hover {
+  background: #cc0000 !important;
+}
+
+/* ==============================
      Modo Escuro - Botão Abrir Sidebar no Mobile
   ============================== */
-  html[data-theme="dark"] #toggleSidebar {
-    background: rgba(10, 20, 40, 0.95) !important;
-    color: #ffffff !important;
-  }
-  
+html[data-theme="dark"] #toggleSidebar {
+  background: rgba(10, 20, 40, 0.95) !important;
+  color: #ffffff !important;
+}
+
+/* ================================
+     Modo Escuro - Modal Detalhes de Reserva
+  ================================ */
+html[data-theme="dark"] #detalhesReservaModal .modal-content {
+  background: rgba(15, 25, 45, 0.95) !important;
+  color: #fff !important;
+}
+
+html[data-theme="dark"] #detalhesReservaModal li {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+html[data-theme="dark"] #detalhesReservaModal .reserva-nome {
+  color: #fff !important;
+}
+
+html[data-theme="dark"] #detalhesReservaModal .detalhes-reserva {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-left: 3px solid #7700ff !important;
+  color: #fff !important;
+}
+
+/* ================================
+   Modo Escuro - Modais Gerais
+================================ */
+html[data-theme="dark"] .modal {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+html[data-theme="dark"] .modal-content {
+  background: rgba(20, 30, 50, 0.95) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+html[data-theme="dark"] .close {
+  color: #bbb !important;
+}
+
+html[data-theme="dark"] .close:hover {
+  color: #fff !important;
+}

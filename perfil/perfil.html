@@ -19,7 +19,8 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <h2>VoltWay</h2>
+        <h2>VoltWay <label class="switch"> <input type="checkbox" id="darkModeSwitch" data-theme-toggle> <span
+              class="slider"></span> </label></h2>
       </div>
       <nav>
         <a href="../home/home.html"><span>Início</span></a>
@@ -114,7 +115,6 @@
         <div class="theme-toggle">
           <span>Tema Escuro</span>
           <label class="switch">
-            <!-- added data-theme-toggle attribute for robust selector -->
             <input type="checkbox" id="darkModeSwitch" data-theme-toggle>
             <span class="slider"></span>
           </label>
@@ -158,96 +158,6 @@
   <script src="perfil.js"></script>
   <script src="../global/Global.js"></script>
 
-  <script>
-    /*
-      Global theme toggle logic (default = light)
-      - Uses data-theme="dark" on <html> to match your CSS variables ([data-theme="dark"] {...})
-      - Also keeps a .dark-mode class on <body> for compatibility if used elsewhere
-      - Saves preference in localStorage key: "siteTheme" with values "light" or "dark"
-      - Works with checkbox inputs having id="darkModeSwitch" OR attribute data-theme-toggle
-      - Ensures pages start in LIGHT mode unless user previously chose dark
-    */
-    (function () {
-      const LS_KEY = "siteTheme";
-
-      // Apply theme consistently
-      function applyTheme(theme) {
-        if (theme === "dark") {
-          document.documentElement.setAttribute("data-theme", "dark");
-          document.body.classList.add("dark-mode");
-        } else {
-          document.documentElement.removeAttribute("data-theme");
-          document.body.classList.remove("dark-mode");
-        }
-        // keep all toggles in sync (checked when dark)
-        const toggles = document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch');
-        toggles.forEach(t => {
-          t.checked = (theme === "dark");
-        });
-      }
-
-      // Read saved preference (only "dark" triggers dark mode); default = light
-      function getSavedTheme() {
-        try {
-          const v = localStorage.getItem(LS_KEY);
-          if (v === "dark") return "dark";
-        } catch (e) {
-          // ignore storage errors (e.g. private mode)
-        }
-        return "light";
-      }
-
-      // Save preference
-      function saveTheme(theme) {
-        try {
-          localStorage.setItem(LS_KEY, theme);
-        } catch (e) { /* ignore */ }
-      }
-
-      // Toggle handler
-      function onToggleChange(e) {
-        const theme = e.target.checked ? "dark" : "light";
-        applyTheme(theme);
-        saveTheme(theme);
-      }
-
-      // Init after DOM ready
-      function initThemeToggle() {
-        const initial = getSavedTheme(); // default will be 'light' if nothing saved
-        applyTheme(initial);
-
-        // Find toggles (both id and data attribute)
-        const toggles = Array.from(document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch'));
-
-        // Attach listeners if found, else observe for future additions
-        if (toggles.length === 0) {
-          const mo = new MutationObserver((mutations, obs) => {
-            const found = Array.from(document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch'));
-            if (found.length > 0) {
-              found.forEach(el => {
-                el.checked = (initial === "dark");
-                el.addEventListener("change", onToggleChange);
-              });
-              obs.disconnect();
-            }
-          });
-          mo.observe(document.documentElement, { childList: true, subtree: true });
-        } else {
-          toggles.forEach(el => {
-            el.checked = (initial === "dark");
-            el.addEventListener("change", onToggleChange);
-          });
-        }
-      }
-
-      // Wait DOMContentLoaded to ensure inputs exist
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initThemeToggle);
-      } else {
-        initThemeToggle();
-      }
-    })();
-  </script>
 
 </body>
 
