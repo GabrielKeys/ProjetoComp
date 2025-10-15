@@ -63,7 +63,7 @@ function initMap() {
     // Desliga os controles que aparecem na imagem
     zoomControl: false,        // Botão de + e -
     streetViewControl: false,  // Bonequinho amarelo (pegman)
-    fullscreenControl: true,  // Botão de tela cheia
+    fullscreenControl: false,  // Botão de tela cheia
     mapTypeControl: false,     // Botão de tipo de mapa (satélite / padrão)
     rotateControl: false,      // Controle de rotação
     scaleControl: false,       // Régua
@@ -85,7 +85,7 @@ function initMap() {
           texto === "Informar erro no mapa" ||
           texto === "Report an issue on the map"
         ) {
-          console.log("🗑️ Removendo botão de feedback:", el);
+          console.log("Removendo botão de feedback:", el);
           el.style.display = "none";
           el.remove();
         }

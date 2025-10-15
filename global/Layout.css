@@ -539,29 +539,3 @@ html, body {
   background: #666;
 }
 
-/* 🌙 Tema Escuro */
-[data-theme="dark"], body.dark-mode {
-  background-color: #121212;
-  color: #f5f5f5;
-}
-
-[data-theme="dark"] .card,
-body.dark-mode .card {
-  background-color: #1e1e1e;
-  color: #fff;
-  border-color: #333;
-}
-
-[data-theme="dark"] .sidebar {
-  background-color: #0d0d0d;
-  color: white;
-}
-
-[data-theme="dark"] a,
-body.dark-mode a {
-  color: #4ba3ff;
-}
-
-[data-theme="dark"] .btn {
-  background: #0056b3;
-}
