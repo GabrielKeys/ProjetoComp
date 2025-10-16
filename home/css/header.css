@@ -41,9 +41,11 @@ button#btnAgendar:hover {
 }
 
 button#btnAgendar:disabled {
-  background: #ccc;
+  background: #ccc ;
   cursor: not-allowed;
 }
+
+
 
 /* ================================
    Ajustes Mobile (modo app)
@@ -51,15 +53,15 @@ button#btnAgendar:disabled {
 @media (max-width: 768px) {
   .stats {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 🔹 sempre 2 colunas */
+    grid-template-columns: repeat(2, 1fr); /*  sempre 2 colunas */
     gap: 10px;
-    justify-items: center;  /* 🔹 centraliza os itens */
+    justify-items: center;  
     width: 100%;
   }
 
   .stat {
     width: 100%;
-    max-width: 160px;  /* 🔹 limite pra não esticar demais */
+    max-width: 160px;  
     padding: 12px 18px;
     border-radius: 10px;
     font-size: 0.95rem;
@@ -71,10 +73,10 @@ button#btnAgendar:disabled {
     margin-bottom: 4px;
   }
 
-  /* 🔹 Se for número ímpar de cards, o último ocupa as duas colunas */
+  /* Se for número ímpar de cards, o último ocupa as duas colunas */
   .stats .stat:last-child:nth-child(odd) {
     grid-column: span 2;
-    justify-self: center; /* 🔹 centraliza na linha */
+    justify-self: center; 
   }
 
   button#btnSelecionarEstacao,

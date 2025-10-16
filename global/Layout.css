@@ -539,21 +539,3 @@ html, body {
   background: #666;
 }
 
-@media (max-width: 768px) {
-  .field-row {
-    flex-direction: column !important; /* Deixa cada item empilhado */
-    align-items: stretch !important;   /* Garante 100% da largura */
-    gap: 6px;                          /* Espaçamento entre eles */
-  }
-
-  .field-row input,
-  .field-row button {
-    width: 100% !important;           /* Ocupa toda a largura */
-    max-width: none !important;       /* Remove limites */
-  }
-
-  .field-row label {
-    margin-bottom: 4px;
-    font-size: 14px;
-  }
-}

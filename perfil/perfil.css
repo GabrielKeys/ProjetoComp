@@ -1,0 +1,18 @@
+/*Ajuste Mobile Pagina de perfil */
+@media (max-width: 768px) {
+  .field-row {
+    flex-direction: column !important; 
+    align-items: stretch !important;   
+    gap: 6px;                         
+  }
+
+  .field-row input,
+  .field-row button {
+    width: 100% !important;           
+    max-width: none !important;      
+
+  .field-row label {
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+}

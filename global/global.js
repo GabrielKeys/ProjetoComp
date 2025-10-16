@@ -83,10 +83,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== BLOQUEAR ESTAÇÃO EM PÁGINAS DE USUÁRIO =====
   if (tipo === "estacao" && (
-      path.includes("/home/") || 
-      path.includes("/mapa/") || 
-      path.includes("/perfil/") || 
-      path.includes("/assinatura/")
+    path.includes("/home/") ||
+    path.includes("/mapa/") ||
+    path.includes("/perfil/") ||
+    path.includes("/assinatura/")
   )) {
     window.location.href = "../station/home.html";
     return;
@@ -94,8 +94,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== BLOQUEAR USUÁRIO EM PÁGINAS DE ESTAÇÃO =====
   if (tipo === "usuario" && (
-      path.includes("/station/home") || 
-      path.includes("/station/perfil")
+    path.includes("/station/home") ||
+    path.includes("/station/perfil")
   )) {
     window.location.href = "../home/home.html";
     return;
@@ -243,84 +243,101 @@ function formatarTelefone(telefone) {
 
 
 
-  /* Global theme toggle logic (default = light)*/
-    (function () {
-      const LS_KEY = "siteTheme";
+/* Global theme toggle logic (default = light)*/
+(function () {
+  const LS_KEY = "siteTheme";
 
-      // Apply theme consistently
-      function applyTheme(theme) {
-        if (theme === "dark") {
-          document.documentElement.setAttribute("data-theme", "dark");
-          document.body.classList.add("dark-mode");
-        } else {
-          document.documentElement.removeAttribute("data-theme");
-          document.body.classList.remove("dark-mode");
-        }
-        // keep all toggles in sync (checked when dark)
-        const toggles = document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch');
-        toggles.forEach(t => {
-          t.checked = (theme === "dark");
-        });
-      }
+  // Apply theme consistently
+  function applyTheme(theme) {
+    if (theme === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+      document.body.classList.add("dark-mode");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      document.body.classList.remove("dark-mode");
+    }
+    // keep all toggles in sync (checked when dark)
+    const toggles = document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch');
+    toggles.forEach(t => {
+      t.checked = (theme === "dark");
+    });
+  }
 
-      // Read saved preference (only "dark" triggers dark mode); default = light
-      function getSavedTheme() {
-        try {
-          const v = localStorage.getItem(LS_KEY);
-          if (v === "dark") return "dark";
-        } catch (e) {
-          // ignore storage errors (e.g. private mode)
-        }
-        return "light";
-      }
+  // Read saved preference (only "dark" triggers dark mode); default = light
+  function getSavedTheme() {
+    try {
+      const v = localStorage.getItem(LS_KEY);
+      if (v === "dark") return "dark";
+    } catch (e) {
+      // ignore storage errors (e.g. private mode)
+    }
+    return "light";
+  }
 
-      // Save preference
-      function saveTheme(theme) {
-        try {
-          localStorage.setItem(LS_KEY, theme);
-        } catch (e) { /* ignore */ }
-      }
+  // Save preference
+  function saveTheme(theme) {
+    try {
+      localStorage.setItem(LS_KEY, theme);
+    } catch (e) { /* ignore */ }
+  }
 
-      // Toggle handler
-      function onToggleChange(e) {
-        const theme = e.target.checked ? "dark" : "light";
-        applyTheme(theme);
-        saveTheme(theme);
-      }
+  // Toggle handler
+  function onToggleChange(e) {
+    const theme = e.target.checked ? "dark" : "light";
+    applyTheme(theme);
+    saveTheme(theme);
+  }
 
-      // Init after DOM ready
-      function initThemeToggle() {
-        const initial = getSavedTheme(); // default will be 'light' if nothing saved
-        applyTheme(initial);
+  // Init after DOM ready
+  function initThemeToggle() {
+    const initial = getSavedTheme(); // default will be 'light' if nothing saved
+    applyTheme(initial);
 
-        // Find toggles (both id and data attribute)
-        const toggles = Array.from(document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch'));
+    // Find toggles (both id and data attribute)
+    const toggles = Array.from(document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch'));
 
-        // Attach listeners if found, else observe for future additions
-        if (toggles.length === 0) {
-          const mo = new MutationObserver((mutations, obs) => {
-            const found = Array.from(document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch'));
-            if (found.length > 0) {
-              found.forEach(el => {
-                el.checked = (initial === "dark");
-                el.addEventListener("change", onToggleChange);
-              });
-              obs.disconnect();
-            }
-          });
-          mo.observe(document.documentElement, { childList: true, subtree: true });
-        } else {
-          toggles.forEach(el => {
+    // Attach listeners if found, else observe for future additions
+    if (toggles.length === 0) {
+      const mo = new MutationObserver((mutations, obs) => {
+        const found = Array.from(document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch'));
+        if (found.length > 0) {
+          found.forEach(el => {
             el.checked = (initial === "dark");
             el.addEventListener("change", onToggleChange);
           });
+          obs.disconnect();
         }
-      }
+      });
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+    } else {
+      toggles.forEach(el => {
+        el.checked = (initial === "dark");
+        el.addEventListener("change", onToggleChange);
+      });
+    }
+  }
 
-      // Wait DOMContentLoaded to ensure inputs exist
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initThemeToggle);
-      } else {
-        initThemeToggle();
-      }
-    })();
+  // Wait DOMContentLoaded to ensure inputs exist
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initThemeToggle);
+  } else {
+    initThemeToggle();
+  }
+})();
+// Icone do modo escuro/claro na sidebar
+document.addEventListener("DOMContentLoaded", () => {
+  const themeLabel = document.getElementById("themeLabel");
+  const darkSwitch = document.getElementById("darkModeSwitch");
+
+  function updateButton() {
+    if (darkSwitch.checked) {
+      themeLabel.textContent = "🌙 Escuro";
+    } else {
+      themeLabel.textContent = "☀️ Claro";
+    }
+  }
+
+  updateButton(); // define o estado inicial
+  darkSwitch.addEventListener("change", updateButton);
+});
+
