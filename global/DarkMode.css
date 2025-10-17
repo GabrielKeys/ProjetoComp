@@ -55,12 +55,13 @@ input:checked+.slider {
 input:checked+.slider:before {
   transform: translateX(22px);
 }
-/* Botão de Tema na Sidebar — versão estável (sempre na mesma linha) */
+
+/* Botão de Tema na Sidebar */
 .theme-btn {
-  display: inline-flex;            /* já tinha, mantém alinhamento */
-  align-items: center;             /* centraliza verticalmente */
-  gap: 8px;                        /* espaçamento entre ícone e texto */
-  padding: 6px 12px;               /* padding consistente */
+  display: inline-flex;            
+  align-items: center;             
+  gap: 2px;                        /* espaçamento entre ícone e texto */
+  padding: 6px 12px;               
   height: 36px;                    /* força uma altura fixa */
   line-height: 1;                  /* evita crescimento por linha */
   white-space: nowrap;             /* impede quebra de linha (mantém tudo na mesma linha) */
@@ -69,11 +70,10 @@ input:checked+.slider:before {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  box-sizing: border-box;          /* padding incluído no tamanho */
+  box-sizing: border-box;          
   transition: background 0.25s ease, color 0.2s ease, border-color 0.2s ease;
   margin-left: 10px;
   vertical-align: middle;
-  /* opcional: evita que texto dentro seja invisível (acessibilidade) */
   color: inherit;
 }
 
@@ -83,13 +83,12 @@ input:checked+.slider:before {
   vertical-align: middle;
 }
 
-/* Pseudo-ícone: força dimensões fixas e usa background-image */
 .theme-btn::before {
   content: "";
   display: inline-block;
-  width: 20px;           /* tamanho do ícone - ajuste se necessário */
+  width: 20px;          
   height: 20px;
-  flex: 0 0 20px;        /* não cresce, não encolhe */
+  flex: 0 0 20px;        
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -97,7 +96,6 @@ input:checked+.slider:before {
   transform-origin: center;
 }
 
-/* imagens (caminhos) - use caminho correto */
 .theme-btn::before {
   background-image: url("../assets/sol.png");
   opacity: 1;
@@ -117,27 +115,16 @@ body.dark-mode .theme-btn {
   border-color: #1f2937;
 }
 
-/* Quando estiver em dark via data-theme no <html> (cobre ambos os mecanismos) */
 html[data-theme="dark"] .theme-btn::before {
   background-image: url("../assets/lua.png");
 }
 
-/* Garantir que o texto "Claro" / "Escuro" não quebre e o botão permaneça centralizado */
 html[data-theme="dark"] .theme-btn,
 body.dark-mode .theme-btn {
   white-space: nowrap;
 }
 
-/* Pequeno ajuste responsivo (se precisar encolher no mobile) */
-@media (max-width: 420px) {
-  .theme-btn {
-    padding: 6px 8px;
-    gap: 6px;
-    height: 34px;
-  }
-  .theme-btn::before { width: 18px; height: 18px; flex: 0 0 18px; }
-  .theme-btn { font-size: 14px; }
-}
+
 
 /* ============================================
      1. BACKGROUND & CONTAINERS
@@ -283,24 +270,6 @@ html[data-theme="dark"] button.btn:hover {
 /* ============================================
      4. BOTÕES DE PERIGO — ESTILO VERMELHO NEON (B)
 ============================================ */
-/* MODO DARK – Ajuste apenas para o logout-btn */
-html[data-theme="dark"] .logout-btn,
-html[data-theme="dark"] .sidebar .logout-btn,
-html[data-theme="dark"] button.logout-btn {
-  background-image: url('../assets/logout.png'), linear-gradient(90deg, #FF0033, #CC0027) !important;
-  background-repeat: no-repeat, no-repeat;
-  background-position: center, center;
-  background-size: contain, cover;
-  color: transparent !important; /* Garante que texto/ícone não apareça */
-}
-
-html[data-theme="dark"] .logout-btn:hover,
-html[data-theme="dark"] .sidebar .logout-btn:hover,
-html[data-theme="dark"] button.logout-btn:hover {
-  background-image: url('../assets/logout-selecionado.png'), linear-gradient(90deg, #FF0033, #CC0027) !important;
-  filter: brightness(1.15) !important;
-}
-
 html[data-theme="dark"] .btn-cancelar,
 html[data-theme="dark"] .btn-cancelar-inline,
 html[data-theme="dark"] .btn-cancelar-reserva,
