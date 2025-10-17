@@ -62,9 +62,9 @@ function initMap() {
 
     // Desliga os controles que aparecem na imagem
     zoomControl: false,        // Botão de + e -
-    streetViewControl: false,  // Bonequinho amarelo (pegman)
+    streetViewControl: false,  // Bonequinho amarelo 
     fullscreenControl: false,  // Botão de tela cheia
-    mapTypeControl: false,     // Botão de tipo de mapa (satélite / padrão)
+    mapTypeControl: false,     // Botão de tipo de mapa 
     rotateControl: false,      // Controle de rotação
     scaleControl: false,       // Régua
   });
@@ -181,7 +181,6 @@ function geocodeEnderecoPromise(endereco) {
 
 /* ===============================
    Carregar estações registradas (fixas + localStorage)
-   - Faz geocode sequencial para evitar sobrecarga
    =============================== */
 async function carregarEstacoesFicticias() {
   try {
@@ -249,8 +248,6 @@ async function carregarEstacoesFicticias() {
         estacao.lat = pos.lat();
         estacao.lng = pos.lng();
         adicionarEstacaoNoMapa(estacao);
-        // pequena pausa opcional para reduzir carga (se quiser, descomente)
-        // await new Promise(r => setTimeout(r, 200));
       }
     }
 
@@ -263,7 +260,7 @@ async function carregarEstacoesFicticias() {
 }
 
 /* ===============================
-   Adicionar estação no mapa (mantém popup/reservar/favoritar)
+   Adicionar estação no mapa 
    =============================== */
 function adicionarEstacaoNoMapa(estacao) {
   const position = { lat: Number(estacao.lat), lng: Number(estacao.lng) };
@@ -272,7 +269,7 @@ function adicionarEstacaoNoMapa(estacao) {
     return;
   }
 
-  // 🔑 Se não tiver nome definido, usar endereço como fallback
+  // Se não tiver nome definido, usar endereço como fallback
   if (!estacao.nome || estacao.nome.trim() === "") {
     estacao.nome = [
       estacao.rua,
@@ -440,7 +437,6 @@ async function carregarEstacoesReais(location) {
 }
 /* ===============================
    Filtro / Favoritos / Mensagens
-   (mantive igual à sua versão original)
    =============================== */
 function aplicarFiltro(somenteRegistradas) {
   ficticios.forEach((m) => m.setMap(map));

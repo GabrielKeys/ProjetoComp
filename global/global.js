@@ -241,8 +241,6 @@ function formatarTelefone(telefone) {
 }
 
 
-
-
 /* Global theme toggle logic (default = light)*/
 (function () {
   const LS_KEY = "siteTheme";
@@ -341,3 +339,11 @@ document.addEventListener("DOMContentLoaded", () => {
   darkSwitch.addEventListener("change", updateButton);
 });
 
+// Tela de Loading
+window.addEventListener('load', () => {
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+      preloader.classList.add('hidden');
+      setTimeout(() => preloader.remove(), 500); // Remove após o fade-out
+    }
+  });

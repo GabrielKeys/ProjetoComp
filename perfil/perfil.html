@@ -6,7 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VW Carregamento - Perfil</title>
 
-  <!-- Aplica imediatamente o tema salvo (dark ou light) ANTES de carregar o CSS-->
+  <!-- Tela de Carregamento -->
+  <div id="preloader">
+    <div class="spinner"></div>
+  </div>
+  <!-- Aplica  o tema salvo escuro/claro-->
   <script>
     (function () {
       const savedTheme = localStorage.getItem('theme') || 'light';
