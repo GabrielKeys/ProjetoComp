@@ -48,7 +48,7 @@ html[data-theme="light"] #preloader .spinner {
 
 /* Dark Mode */
 html[data-theme="dark"] #preloader {
-  --background-preloader: #000000;
+  --background-preloader: #000000d5;
 }
 html[data-theme="dark"] #preloader .spinner {
   border-top-color: #ffffff;

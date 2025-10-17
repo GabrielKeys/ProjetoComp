@@ -29,22 +29,39 @@
       <div class="sidebar-header">
         <h2>
           VoltWay
-          <label class="theme-btn" for="darkModeSwitch" id="themeLabel">☀️ Claro</label>
+          <label class="theme-btn" for="darkModeSwitch" id="themeLabel">Claro</label>
           <input type="checkbox" id="darkModeSwitch" data-theme-toggle hidden>
         </h2>
 
       </div>
       <nav>
-        <a href="#" class="active"><span>Início</span></a>
-        <a href="../mapa/mapa.html"><span>Mapa</span></a>
-        <a href="../perfil/perfil.html"><span>Perfil</span></a>
-        <a href="../assinatura/assinatura.html"><span>Assinatura</span></a>
+        <a href="#" class="active" data-page="inicio"><span class="icon"
+            aria-hidden="true"></span><span>Início</span></a>
+        <a href="../mapa/mapa.html" data-page="mapa"><span class="icon" aria-hidden="true"></span><span>Mapa</span></a>
+        <a href="../perfil/perfil.html" data-page="perfil"><span class="icon"
+            aria-hidden="true"></span><span>Perfil</span></a>
+        <a href="../assinatura/assinatura.html" data-page="assinatura"><span class="icon"
+            aria-hidden="true"></span><span>Assinatura</span></a>
       </nav>
       <div class="user-box">
-        <p id="nomeUsuario"></p>
-        <button class="logout-btn" onclick="logout()">Sair</button>
+        <p class="nomeUsuario"></p>
+        <button class="logout-btn" onclick="logout()"></button>
       </div>
     </aside>
+
+    <!-- HEADER FIXO MOBILE -->
+    <div class="mobile-header">
+      <div class="left">
+        <h2>VoltWay</h2>
+        <label class="theme-btn" for="darkModeSwitch" id="themeLabel"></label>
+        <input type="checkbox" id="darkModeSwitch" data-theme-toggle hidden>
+      </div>
+
+      <div class="right">
+        <p class="nomeUsuario"></p>
+        <button class="logout-btn" onclick="logout()"></button>
+      </div>
+    </div>
 
     <!-- Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>

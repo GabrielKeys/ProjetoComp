@@ -53,18 +53,18 @@ function atualizarSidebar() {
   const usuarioEmail = localStorage.getItem("usuarioEmail");
   const foto = localStorage.getItem("usuarioFoto") || "../assets/foto.png";
 
-  const nomeUsuario = document.getElementById("nomeUsuario");
-  if (nomeUsuario) {
-    nomeUsuario.innerHTML = `
-      <span class="user-photo">
-        <img src="${foto}" alt="Foto do usuário" />
-      </span>
-      ${usuario}
-      <button id="gearBtn" class="settings-icon" title="Configurações">
-        <img src="../assets/engrenagem.png" alt="Configurações" />
-      </button>
-    `;
-  }
+  document.querySelectorAll(".nomeUsuario").forEach((el) => {
+  el.innerHTML = `
+    <span class="user-photo">
+      <img src="${foto}" alt="Foto do usuário" />
+    </span>
+    ${usuario}
+    <button id="gearBtn" class="settings-icon" title="Configurações">
+      <img src="../assets/engrenagem.png" alt="Configurações" />
+    </button>
+  `;
+});
+
 }
 
 // ====================================
@@ -241,6 +241,8 @@ function formatarTelefone(telefone) {
 }
 
 
+
+
 /* Global theme toggle logic (default = light)*/
 (function () {
   const LS_KEY = "siteTheme";
@@ -329,15 +331,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateButton() {
     if (darkSwitch.checked) {
-      themeLabel.textContent = "🌙 Escuro";
+      themeLabel.textContent = "Escuro";
     } else {
-      themeLabel.textContent = "☀️ Claro";
+      themeLabel.textContent = "Claro";
     }
   }
 
   updateButton(); // define o estado inicial
   darkSwitch.addEventListener("change", updateButton);
 });
+
+
 
 // Tela de Loading
 window.addEventListener('load', () => {
@@ -347,3 +351,5 @@ window.addEventListener('load', () => {
       setTimeout(() => preloader.remove(), 500); // Remove após o fade-out
     }
   });
+
+  

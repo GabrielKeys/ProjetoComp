@@ -1,10 +1,10 @@
 /* -------------------------
-   Sidebar fixa no desktop, gaveta no mobile
+   Sidebar desktop
 ------------------------- */
 .sidebar {
   position: fixed;
   top: 0;
-  left: 0; /* 🔹 sempre visível no desktop */
+  left: 0; 
   height: 100vh;
   width: 250px;
   background: #0a2a66;
@@ -29,7 +29,7 @@
    Título da sidebar
 ------------------------- */
 .sidebar h2 {
-  margin: 0 0 20px 10px; /* 🔹 encostado à esquerda no desktop */
+  margin: 0 0 20px 10px; 
   font-size: 20px;
   font-weight: bold;
 }
@@ -113,6 +113,7 @@
   vertical-align: middle;
 }
 
+
 /* -------------------------
    Overlay escuro atrás da sidebar (apenas mobile)
 ------------------------- */
@@ -131,50 +132,234 @@
   display: block;
 }
 
-/* -------------------------
-   Botão fixo de abrir sidebar (só no mobile)
-------------------------- */
 #toggleSidebar {
-  display: none; /* 🔹 escondido no desktop */
+  display: none; /* escondido no desktop */
 }
 
 /* -------------------------
-   Mobile (sidebar vira gaveta)
+   Mobile (sidebar vira barra inferior fixa)
 ------------------------- */
 @media (max-width: 768px) {
+
   .sidebar {
-    width: 220px;
-    transform: translateX(-100%); /* 🔹 escondida */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    top: auto;
+    height: 60px;
+    width: 100%;
+    background: #0a2a66;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
   }
 
-  .sidebar.open {
-    transform: translateX(0); /* 🔹 abre */
+  .sidebar-header,
+  .user-box {
+    display: none;
+  }
+
+  .sidebar nav {
+    display: flex;
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .sidebar nav a {
+    flex: 1;
+    text-align: center;
+    padding: 10px 0;
+    margin: 0;
+    border-radius: 0;
   }
 
   .main {
-    margin-left: 0; /* 🔹 ocupa toda tela */
+    margin-left: 0;
     padding: 12px;
-    margin-bottom: 70px; /* espaço pra navbar inferior */
+    margin-bottom: 70px;
   }
 
-  /* 🔹 botão só aparece no mobile */
-  #toggleSidebar {
-    display: block;
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    background: #0a2a66;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 24px;
-    padding: 6px 12px;
-    cursor: pointer;
-    z-index: 1100;
-  }
-
-  /* 🔹 título ao lado do botão no mobile */
-  .sidebar h2 {
-    margin-left: 50px; /* 🔹 empurra para a direita do botão */
+  #toggleSidebar,
+  .sidebar-overlay {
+    display: none !important;
   }
 }
+
+/* SideBar inferior não sobrepõe pagina */
+@media (max-width: 768px) {
+  .main::after {
+    content: "";
+    display: block;
+    height: 100px; 
+  }
+}
+
+/* SideBar inferior não sobrepõe pagina */
+@media (max-width: 768px) {
+  main, .page-content, .content {
+    padding-top: 80px !important; 
+  }
+}
+
+/* Header fixo no topo */
+.mobile-header {
+  display: none;
+}
+
+
+@media (max-width: 768px) {
+
+  .mobile-header {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    background: #0a2a66;
+    color: white;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    z-index: 1100;
+  }}
+
+
+  .mobile-header .left,
+  .mobile-header .right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobile-header h2 {
+    margin: 0;
+    font-size: 18px;
+    max-width: 120px;
+    white-space: nowrap;
+  }
+
+  .theme-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .mobile-header .nomeUsuario {
+    max-width: 1300px; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+  .logout-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: url('../assets/logout.png') no-repeat center center;
+  background-size: contain;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  margin-top: -4px; 
+}
+
+.logout-btn:hover {
+  background-image: url('../assets/logout-selecionado.png');
+  transform: scale(1.05);
+}
+
+  .main {
+    padding-top: 75px;
+    margin-bottom: 70px;
+  }
+
+
+.mobile-header .settings-icon {
+    display: none !important;
+}
+
+
+/* Ícones apenas no mobile */
+@media (max-width: 768px) {
+  .sidebar nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px; 
+    padding: 5px 0;
+  }}
+
+ /*ícone em cima + texto embaixo */
+.sidebar nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 4px;
+  font-size: 12px;
+  color: #cfe3ff; /* cor padrão */
+  text-decoration: none;
+}
+
+/* área do ícone  */
+.sidebar nav a .icon {
+  width: 26px;
+  height: 26px;
+  display: block;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* imagens normais */
+.sidebar nav a[data-page="inicio"] .icon {
+  background-image: url('../assets/inicio.png');
+}
+.sidebar nav a[data-page="mapa"] .icon {
+  background-image: url('../assets/mapa.png');
+}
+.sidebar nav a[data-page="perfil"] .icon {
+  background-image: url('../assets/perfil.png');
+}
+.sidebar nav a[data-page="assinatura"] .icon {
+  background-image: url('../assets/assinatura.png');
+}
+
+/* estado ativo  */
+.sidebar nav a.active {
+  color: #ffffff;
+}
+.sidebar nav a.active[data-page="inicio"] .icon {
+  background-image: url('../assets/inicio-selecionado.png');
+}
+.sidebar nav a.active[data-page="mapa"] .icon {
+  background-image: url('../assets/mapa-selecionado.png');
+}
+.sidebar nav a.active[data-page="perfil"] .icon {
+  background-image: url('../assets/perfil-selecionado.png');
+}
+.sidebar nav a.active[data-page="assinatura"] .icon {
+  background-image: url('../assets/assinatura-selecionada.png');
+}
+
+/* Remover o fundo da aba ativa */
+@media (max-width: 768px) {
+  .sidebar nav a.active {
+    background: none !important;
+  }
+}
+@media (max-width: 768px) {
+  .sidebar nav a:hover {
+    background: none !important;
+  }
+}
+
+
