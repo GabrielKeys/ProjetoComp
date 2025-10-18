@@ -60,11 +60,11 @@ input:checked+.slider:before {
 .theme-btn {
   display: inline-flex;            
   align-items: center;             
-  gap: 2px;                        /* espaçamento entre ícone e texto */
+  gap: 2px;                        
   padding: 6px 12px;               
-  height: 36px;                    /* força uma altura fixa */
-  line-height: 1;                  /* evita crescimento por linha */
-  white-space: nowrap;             /* impede quebra de linha (mantém tudo na mesma linha) */
+  height: 36px;                    
+  line-height: 1;                  
+  white-space: nowrap;             
   border-radius: 20px;
   border: 1.5px solid #cbd5e1;
   font-size: 15px;
@@ -213,28 +213,9 @@ html[data-theme="dark"] button#gearBtn {
 
 
 /* Botão de Editar*/
-html[data-theme="dark"] .icon-edit img {
-  filter: brightness(2) hue-rotate(180deg);
-  opacity: 0.9;
-}
-
-html[data-theme="dark"] .icon-edit:hover img {
-  filter: brightness(2.5) hue-rotate(200deg);
-  transform: scale(1.1);
-}
-
 html[data-theme="dark"] .icon-edit {
   background: rgba(255, 255, 255, 0.06);
-  /* Fundo escuro translúcido */
   border: 1px solid rgba(255, 255, 255, 0.15);
-  /* Borda clara suave */
-  border-radius: 6px;
-  padding: 4px;
-  /* Dá espaço para o ícone respirar */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 html[data-theme="dark"] .icon-edit:hover {
@@ -242,7 +223,15 @@ html[data-theme="dark"] .icon-edit:hover {
   border-color: rgba(0, 166, 255, 0.4);
 }
 
-/* Botões Verdes Neon — Dark Mode */
+html[data-theme="dark"] .icon-edit img {
+  filter: brightness(2) hue-rotate(180deg);
+}
+
+html[data-theme="dark"] .icon-edit:hover img {
+  filter: brightness(2.5) hue-rotate(200deg);
+}
+
+/* Botões Verdes*/
 html[data-theme="dark"] .btn-verde,
 html[data-theme="dark"] .wallet-recharge button,
 html[data-theme="dark"] #btnRecarregar,

@@ -4,10 +4,10 @@
 .sidebar {
   position: fixed;
   top: 0;
-  left: 0; 
+  left: 0;
   height: 100vh;
   width: 250px;
-  background: #0a2a66;
+  background: linear-gradient(to bottom, #01193e, #002f8d);
   color: white;
   padding: 20px;
   display: flex;
@@ -29,7 +29,7 @@
    Título da sidebar
 ------------------------- */
 .sidebar h2 {
-  margin: 0 0 20px 10px; 
+  margin: 0 0 20px 10px;
   font-size: 20px;
   font-weight: bold;
 }
@@ -71,14 +71,14 @@ button.logout-btn {
   background-repeat: no-repeat, no-repeat;
   background-position: center, center;
   background-size: contain, cover;
-  color: transparent !important; 
+  color: transparent !important;
   width: 32px;
   height: 32px;
   border: none;
   background-size: contain;
   cursor: pointer;
   transition: transform 0.2s ease;
-  margin-top: -4px;  
+  margin-top: -4px;
   border-radius: 6px;
 
 }
@@ -98,16 +98,16 @@ button.logout-btn:hover {
    ============================== */
 .user-box {
   display: flex;
-  align-items: center;     /* centraliza verticalmente */
-  gap: 8px;                /* espaço entre itens */
-  justify-content: flex-start; /* ou 'space-between' se quiser extremos */
-  padding: 8px 10px;       /* ajusta preenchimento */
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  padding: 8px 10px;
   border-radius: 6px;
-  text-align: left;        /* remove center que quebra layout */
+  text-align: left;
   box-sizing: border-box;
 }
 
-/* Nome do usuário: ocupa o espaço restante e não quebra linha */
+/* Nome do usuário: */
 .user-box .nomeUsuario {
   margin: 0;
   color: #fff;
@@ -115,12 +115,12 @@ button.logout-btn:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1 1 auto;          /* cresce e encolhe se necessário */
+  flex: 1 1 auto;
 }
 
-/* Theme button (se estiver dentro da user-box) */
+/* Theme button */
 .user-box .theme-btn {
-  flex: 0 0 auto;          /* não encolhe nem cresce */
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -185,13 +185,10 @@ button.logout-btn:hover {
 /* posicionamento absoluto do botão de engrenagem dentro da sidebar */
 .sidebar #gearBtn {
   position: absolute;
-  bottom: 27px;            
-  right: 228px;         
+  bottom: 27px;
+  right: 228px;
 
 }
-
-
-
 
 /* -------------------------
    Overlay escuro atrás da sidebar (apenas mobile)
@@ -203,18 +200,17 @@ button.logout-btn:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   z-index: 900;
 }
 
-.sidebar.open + .sidebar-overlay {
+.sidebar.open+.sidebar-overlay {
   display: block;
 }
 
 #toggleSidebar {
-  display: none; /* escondido no desktop */
+  display: none;
 }
-
 
 /* -------------------------
    Ícones das Páginas
@@ -227,7 +223,7 @@ button.logout-btn:hover {
   gap: 4px;
   padding: 6px 4px;
   font-size: 12px;
-  color: #cfe3ff; /* cor padrão */
+  color: #cfe3ff;
   text-decoration: none;
 }
 
@@ -284,7 +280,7 @@ button.logout-btn:hover {
     top: auto;
     height: 60px;
     width: 100%;
-    background: #0a2a66;
+    background: linear-gradient(90deg,rgba(4, 29, 76, 0.9),rgba(10, 42, 102, 0.9));
     padding: 0;
     display: flex;
     flex-direction: row;
@@ -315,10 +311,11 @@ button.logout-btn:hover {
   .sidebar nav a.active {
     background: none !important;
   }
-  
+
   .sidebar nav a:hover {
     background: none !important;
   }
+
   .main {
     margin-left: 0;
     padding: 12px;
@@ -330,16 +327,19 @@ button.logout-btn:hover {
     display: none !important;
   }
 
-/* SideBar inferior não sobrepõe pagina */
+
+  /* SideBar inferior não sobrepõe pagina */
   .main::after {
     content: "";
     display: block;
-    height: 100px; 
+    height: 100px;
   }
 
-/* SideBar superior não sobrepõe pagina */
-  main, .page-content, .content {
-    padding-top: 80px !important; 
+  /* SideBar superior não sobrepõe pagina */
+  main,
+  .page-content,
+  .content {
+    padding-top: 80px !important;
   }
 }
 
@@ -356,14 +356,13 @@ button.logout-btn:hover {
     left: 0;
     width: 100%;
     height: 65px;
-    background: #0a2a66;
+    background: linear-gradient(90deg,rgba(4, 29, 76, 0.9),rgba(10, 42, 102, 0.9));
     color: white;
     align-items: center;
     justify-content: space-between;
     padding: 0 15px;
     z-index: 1100;
   }
-
 
   .mobile-header .left,
   .mobile-header .right {
@@ -379,23 +378,23 @@ button.logout-btn:hover {
     white-space: nowrap;
   }
 
+
   .mobile-header .nomeUsuario {
-    background: #123b8b;          
-    color: #fff;                      
+    color: #fff;
     padding: 6px 10px;
     border-radius: 20px;
     text-decoration: none;
     font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    border: 1px solid #5673ac;
+
   }
 
 
   /* Hover */
   .mobile-header .nomeUsuario:hover {
-    background-color: #001b4e; 
+    background-color: rgba(0, 27, 78, 0.7);
     transform: scale(1.02);
-    border: 1px solid #123b8b;
-               
-
   }
 
   /* Clique */
@@ -414,12 +413,12 @@ button.logout-btn:hover {
   }
 
   .mobile-header .nomeUsuario {
-    max-width: 1300px; 
+    max-width: 1300px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     margin: 0;
-}
+  }
 
 
   .main {
@@ -428,7 +427,7 @@ button.logout-btn:hover {
   }
 
 
-.mobile-header .settings-icon {
+  .mobile-header .settings-icon {
     display: none !important;
-}}
-
+  }
+}

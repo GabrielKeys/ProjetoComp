@@ -2,7 +2,7 @@
    Header padrão (desktop)
 ------------------------- */
 .header {
-  background: #052c65;
+  background: linear-gradient(90deg, #002f8d, #01193e);
   color: #fff;
   padding: 20px;
   border-radius: 10px;
@@ -46,7 +46,7 @@
 }
 
 /* -------------------------
-   🔥 Versão Mobile (App-like)
+   Versão Mobile 
 ------------------------- */
 @media (max-width: 768px) {
   .header {
