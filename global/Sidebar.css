@@ -94,8 +94,7 @@ button.logout-btn:hover {
 
 
 /* ==============================
-   User box — manter tudo em linha
-   (colar depois da definição .user-box)
+   User box 
    ============================== */
 .user-box {
   display: flex;
@@ -181,67 +180,17 @@ button.logout-btn:hover {
   margin-right: 8px;
   vertical-align: middle;
 }
-/* ---------- Posicionar a engrenagem no topo da sidebar (apenas CSS) ---------- */
-/* garante que o #gearBtn seja posicionado relativo à sidebar */
-.sidebar {
-  position: fixed; /* você já tem isso */
-  /* ...restante... */
-  /* também útil: garantir stacking context */
-  z-index: 1000;
-}
+
 
 /* posicionamento absoluto do botão de engrenagem dentro da sidebar */
 .sidebar #gearBtn {
   position: absolute;
-  top: 12px;            /* distância do topo da sidebar */
-  right: 12px;          /* distância da borda direita da sidebar */
-  margin: 0;            /* remove margin-left existente */
-  width: 34px;          /* tamanho do botão */
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  z-index: 1100;        /* acima do conteúdo da sidebar */
-  transition: transform .2s ease;
-  box-sizing: border-box;
-  border-radius: 6px;
+  bottom: 27px;            
+  right: 228px;         
+
 }
 
-/* img dentro do botão: tamanho e ajuste de cor */
-.sidebar #gearBtn img {
-  width: 22px;
-  height: 22px;
-  display: block;
-  object-fit: contain;
-  transition: transform .2s ease, filter .2s ease;
-}
 
-/* hover: girar suavemente como antes */
-.sidebar #gearBtn:hover img {
-  transform: rotate(45deg);
-}
-
-/* Se quiser mudar a cor do ícone no modo escuro/claro via filter */
-body.dark-mode .sidebar #gearBtn img,
-html[data-theme="dark"] .sidebar #gearBtn img {
-  filter: invert(1) brightness(1) contrast(1); /* ícone claro no dark */
-}
-body:not(.dark-mode) .sidebar #gearBtn img,
-html:not([data-theme="dark"]) .sidebar #gearBtn img {
-  filter: none; /* ícone normal no claro */
-}
-
-/* Responsivo: esconder ou reposicionar em mobile (quando a sidebar vira barra inferior) */
-@media (max-width: 768px) {
-  /* Esconder a engrenagem na barra inferior (ajuste se preferir mostrar em outro lugar) */
-  .sidebar #gearBtn {
-    display: none !important;
-  }
-}
 
 
 /* -------------------------
@@ -323,18 +272,6 @@ html:not([data-theme="dark"]) .sidebar #gearBtn img {
   background-image: url('../assets/assinatura-selecionada.png');
 }
 
-/* Remover o fundo da aba ativa */
-@media (max-width: 768px) {
-  .sidebar nav a.active {
-    background: none !important;
-  }
-}
-@media (max-width: 768px) {
-  .sidebar nav a:hover {
-    background: none !important;
-  }
-}
-
 /* -------------------------
    Mobile (sidebar vira barra inferior fixa)
 ------------------------- */
@@ -375,6 +312,13 @@ html:not([data-theme="dark"]) .sidebar #gearBtn img {
     border-radius: 0;
   }
 
+  .sidebar nav a.active {
+    background: none !important;
+  }
+  
+  .sidebar nav a:hover {
+    background: none !important;
+  }
   .main {
     margin-left: 0;
     padding: 12px;
@@ -385,19 +329,15 @@ html:not([data-theme="dark"]) .sidebar #gearBtn img {
   .sidebar-overlay {
     display: none !important;
   }
-}
 
 /* SideBar inferior não sobrepõe pagina */
-@media (max-width: 768px) {
   .main::after {
     content: "";
     display: block;
     height: 100px; 
   }
-}
 
-/* SideBar inferior não sobrepõe pagina */
-@media (max-width: 768px) {
+/* SideBar superior não sobrepõe pagina */
   main, .page-content, .content {
     padding-top: 80px !important; 
   }
@@ -407,8 +347,6 @@ html:not([data-theme="dark"]) .sidebar #gearBtn img {
 .mobile-header {
   display: none;
 }
-
-
 @media (max-width: 768px) {
 
   .mobile-header {
@@ -440,6 +378,32 @@ html:not([data-theme="dark"]) .sidebar #gearBtn img {
     max-width: 120px;
     white-space: nowrap;
   }
+
+  .mobile-header .nomeUsuario {
+    background: #123b8b;          
+    color: #fff;                      
+    padding: 6px 10px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+
+  /* Hover */
+  .mobile-header .nomeUsuario:hover {
+    background-color: #001b4e; 
+    transform: scale(1.02);
+    border: 1px solid #123b8b;
+               
+
+  }
+
+  /* Clique */
+  .mobile-header .nomeUsuario:active {
+    opacity: 0.85;
+    transform: scale(0.97);
+  }
+
 
   .theme-btn {
     background: none;

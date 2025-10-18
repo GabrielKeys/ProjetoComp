@@ -304,7 +304,7 @@ html[data-theme="dark"] input::placeholder {
 }
 
 /* ============================================
-     6. SIDEBAR / NAVEGAÇÃO
+     6. SIDEBAR 
   ============================================ */
 html[data-theme="dark"] .sidebar {
   background: linear-gradient(to bottom, #000000b3, #110039) !important;
@@ -323,7 +323,7 @@ html[data-theme="dark"] .sidebar .active {
 /* Mobile */
 html[data-theme="dark"] .mobile-header {
   background: linear-gradient(to bottom, #000000b3, #110039) !important;
-  border-bottom: 1px solid #4d00a4 !important; /* equivalente ao border-right da sidebar */
+  border-bottom: 1px solid #4d00a4 !important; 
 }
 
 html[data-theme="dark"] .mobile-header h2,
@@ -332,6 +332,22 @@ html[data-theme="dark"] .mobile-header .theme-btn,
 html[data-theme="dark"] .mobile-header .logout-btn {
   color: #ffffff !important;
 }
+
+/* Botão do nome e foto*/
+html[data-theme="dark"] .mobile-header .nomeUsuario {
+  background: linear-gradient(to bottom, #000000b3, #110039) !important;
+  border: 1px solid #4d00a4 !important;
+  color: #ffffff !important;
+}
+
+/* Hover no modo escuro */
+html[data-theme="dark"] .mobile-header .nomeUsuario:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: #6a03df !important;
+  transform: scale(1.02);
+}
+
+
 
 /* ============================================
      7. SCROLLBARS
