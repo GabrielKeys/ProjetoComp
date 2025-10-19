@@ -8,7 +8,9 @@
     "dev": "nodemon server.js",
     "migrate": "node migrations/migrate.js",
     "seed": "node migrations/seed.js",
-    "test": "node test-deploy.js"
+    "test": "node test-deploy.js",
+    "postinstall": "npm run migrate && npm run seed",
+    "railway:deploy": "npm run migrate && npm run seed && npm start"
   },
   "keywords": ["voltway", "electric-vehicle", "charging-stations", "postgresql"],
   "author": "VoltWay Team",
