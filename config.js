@@ -46,7 +46,7 @@ const CONFIG = {
 function getApiUrl() {
   // Se estiver em produção (HTTPS), usar URL de produção
   if (window.location.protocol === 'https:') {
-    return 'https://voltway-backend-production.up.railway.app/api';
+    return 'https://projetocomp.onrender.com/api';
   }
   
   // Se estiver em localhost, usar URL local
