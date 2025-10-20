@@ -6,6 +6,7 @@
 - **[README Completo](README.md)** - Documentação detalhada do projeto
 - **[Guia de Deploy](DEPLOY_GUIDE.md)** - Instruções de deploy
 - **[Documentação da API](API_DOCS.md)** - Endpoints e exemplos
+- **[Documentação do Banco](DATABASE.md)** - Estrutura e relacionamentos
 
 ### **🔧 Configuração**
 - **[Variáveis de Ambiente](../env.example)** - Configurações disponíveis
