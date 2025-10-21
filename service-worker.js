@@ -1,0 +1,21 @@
+self.addEventListener("install", event => {
+  event.waitUntil(
+    caches.open("voltway-cache-v1").then(cache => {
+      return cache.addAll([
+        "/",
+        "/index.html",
+        "/login/login.html",
+        "/home/home.html",
+        "/global/global.js",
+        "/global/Layout.css"
+        // adicione aqui os principais arquivos CSS e JS
+      ]);
+    })
+  );
+});
+
+self.addEventListener("fetch", event => {
+  event.respondWith(
+    caches.match(event.request).then(response => response || fetch(event.request))
+  );
+});

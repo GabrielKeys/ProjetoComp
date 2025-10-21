@@ -50,7 +50,7 @@ if (loginForm) {
       (u.email || "").toLowerCase() === email && (u.password || "") === pass
     );
 
-    // procura estação (corrigido: usa 's.senha' e não 's.password')
+    // procura estação 
     const stationFound = stations.find(s =>
       (s.email || "").toLowerCase() === email && (s.senha || "") === pass
     );
@@ -58,7 +58,7 @@ if (loginForm) {
     if (userFound) {
       // login como usuário
       localStorage.setItem("logado", "true");
-      localStorage.setItem("logado_como", "usuario"); // ✅
+      localStorage.setItem("logado_como", "usuario");
       localStorage.setItem("usuario", userFound.fullName || userFound.email || email);
       localStorage.setItem("usuarioEmail", userFound.email || email);
       window.location.href = "../home/home.html";
@@ -68,7 +68,7 @@ if (loginForm) {
     if (stationFound) {
       // login como estação
       localStorage.setItem("logado", "true");
-      localStorage.setItem("logado_como", "estacao"); // ✅
+      localStorage.setItem("logado_como", "estacao");
       localStorage.setItem("usuario", stationFound.name || stationFound.nome || stationFound.email || email);
       localStorage.setItem("usuarioEmail", stationFound.email || email);
       localStorage.setItem("estacaoSelecionada", JSON.stringify(stationFound));
@@ -95,6 +95,7 @@ if (registerForm) {
     const fullName = document.getElementById("fullName").value.trim();
     const newEmail = document.getElementById("newEmail").value.trim();
     const newPass = document.getElementById("newPass").value.trim();
+    const confirmPass = document.getElementById("confirmPass").value.trim();
     const phone = document.getElementById("phone").value.trim();
     const carModel = document.getElementById("carModel").value.trim();
     const carYear = document.getElementById("carYear").value.trim();
@@ -117,6 +118,13 @@ if (registerForm) {
       return;
     }
 
+    // Confirmação de senha
+    if (newPass !== confirmPass) {
+      document.getElementById("registerMsg").innerText = "As senhas não coincidem!";
+      document.getElementById("registerMsg").style.color = "red";
+      return;
+    }
+
     let stations = JSON.parse(localStorage.getItem("stations")) || [];
 
     // Bloqueia e-mail já usado em usuários OU estações
@@ -125,7 +133,6 @@ if (registerForm) {
       document.getElementById("registerMsg").style.color = "red";
       return;
     }
-
 
     // Criar usuário
     const novoUsuario = {
@@ -138,35 +145,36 @@ if (registerForm) {
     users.push(novoUsuario);
     localStorage.setItem("users", JSON.stringify(users));
 
-    // 🔹 Salvar informações do carro nas mesmas chaves que o home usa
+    // Salvar informações do carro
     if (carModel) localStorage.setItem(`veiculoModelo_${newEmail}`, carModel);
     if (carYear) localStorage.setItem(`veiculoAno_${newEmail}`, carYear);
     if (carPlate) localStorage.setItem(`veiculoPlaca_${newEmail}`, carPlate);
     if (carBattery) localStorage.setItem(`veiculoBateria_${newEmail}`, carBattery + " kWh");
     if (carPower) localStorage.setItem(`veiculoCarregamento_${newEmail}`, carPower + " kW");
 
-    // Exibe mensagem de sucesso
+    // Mensagem de sucesso
     document.getElementById("registerMsg").innerText = "✅ Conta criada com sucesso!";
     document.getElementById("registerMsg").style.color = "green";
 
-    // 🔹 Já loga automaticamente
+    // Login automático
     localStorage.setItem("logado", "true");
     localStorage.setItem("logado_como", "usuario");
     localStorage.setItem("usuario", fullName || newEmail);
     localStorage.setItem("usuarioEmail", newEmail);
-    localStorage.removeItem("googleCadastro"); // Limpa flag do Google
-    // 🔹 Aguarda 2 segundos antes de redirecionar
+    localStorage.removeItem("googleCadastro");
+
     setTimeout(() => {
       window.location.href = "../home/home.html";
     }, 2000);
   });
 }
 
+
 // ===============================
 // LOGIN COM GOOGLE
 // ===============================
 function initGoogleLogin() {
-  const CLIENT_ID = "288143953215-o49d879dqorujtkpgfqg80gp7u9ai9ra.apps.googleusercontent.com"; // substitua pelo seu
+  const CLIENT_ID = "288143953215-o49d879dqorujtkpgfqg80gp7u9ai9ra.apps.googleusercontent.com";
 
   google.accounts.id.initialize({
     client_id: CLIENT_ID,
@@ -190,7 +198,7 @@ function handleCredentialResponse(response) {
   let users = JSON.parse(localStorage.getItem("users")) || [];
   let stations = JSON.parse(localStorage.getItem("stations")) || [];
 
-  // ✅ 1️⃣ PRIORIDADE: verificar se já é estação
+  // PRIORIDADE: verificar se já é estação
   const stationFound = stations.find(s => (s.email || "").toLowerCase() === email.toLowerCase());
   if (stationFound) {
     localStorage.setItem("logado", "true");
@@ -202,7 +210,7 @@ function handleCredentialResponse(response) {
     return;
   }
 
-  // ✅ 2️⃣ SENÃO, verificar se já é usuário
+  //SENÃO, verificar se já é usuário
   const userFound = users.find(u => (u.email || "").toLowerCase() === email.toLowerCase());
   if (userFound) {
     localStorage.setItem("logado", "true");
@@ -214,7 +222,7 @@ function handleCredentialResponse(response) {
     return;
   }
 
-  // ✅ 3️⃣ SENÃO, é primeira vez → vai para registro
+  // SENÃO, é primeira vez → vai para registro
   localStorage.setItem("googleCadastro", JSON.stringify({ email, name, picture }));
   window.location.href = "../login/login.html?registerGoogle=true";
 }
@@ -271,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// 🔹 Se trocar para "Registrar Estação" após login do Google
+// Se trocar para "Registrar Estação" após login do Google
 document.getElementById("goToRegisterStation")?.addEventListener("click", () => {
   const googleData = JSON.parse(localStorage.getItem("googleCadastro") || "{}");
 
@@ -435,6 +443,7 @@ if (registerStationForm) {
     const name = document.getElementById("stationName").value.trim();
     const email = document.getElementById("stationEmail").value.trim();
     const pass = document.getElementById("stationPass").value.trim();
+    const confirmStationPass = document.getElementById("confirmStationPass").value.trim();
     const phone = document.getElementById("stationPhone").value.trim();
     const cep = document.getElementById("stationCep").value.trim();
     const address = document.getElementById("stationAddress").value.trim();
@@ -443,7 +452,7 @@ if (registerStationForm) {
     const city = document.getElementById("stationCity").value.trim();
     const state = document.getElementById("stationState").value.trim();
 
-    // 🔹 Pega os valores brutos
+    // Pega os valores brutos
     const powerRaw = document.getElementById("stationPower").value.trim();
     const priceRaw = document.getElementById("stationPrice")?.value.trim() || "";
     const waitRaw = document.getElementById("stationWait")?.value.trim() || "";
@@ -453,15 +462,23 @@ if (registerStationForm) {
 
     let stations = JSON.parse(localStorage.getItem("stations")) || [];
 
-    // validações
+    // Verificação do email
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       document.getElementById("stationMsg").innerText = "Digite um email válido!";
       document.getElementById("stationMsg").style.color = "red";
       return;
     }
 
+    // Verificação da senha
     if (pass.length < 8) {
       document.getElementById("stationMsg").innerText = "A senha deve ter pelo menos 8 caracteres!";
+      document.getElementById("stationMsg").style.color = "red";
+      return;
+    }
+
+    // Confirmação de senha
+    if (pass !== confirmStationPass) {
+      document.getElementById("stationMsg").innerText = "As senhas não coincidem!";
       document.getElementById("stationMsg").style.color = "red";
       return;
     }
@@ -479,7 +496,7 @@ if (registerStationForm) {
     }
 
 
-    // 🔹 Remove os sufixos antes de salvar
+    // Remove os sufixos antes de salvar
     const power = powerRaw.replace(/[^\d.,]/g, "");
     const preco = priceRaw.replace(/[^\d.,]/g, "");
     const wait = waitRaw.replace(/[^\d.,]/g, "");
@@ -514,7 +531,7 @@ if (registerStationForm) {
 
     // login automático
     localStorage.setItem("logado", "true");
-    localStorage.setItem("logado_como", "estacao"); 
+    localStorage.setItem("logado_como", "estacao");
     localStorage.setItem("usuario", novaEstacao.fullName || novaEstacao.nome || novaEstacao.email);
     localStorage.setItem("usuarioEmail", novaEstacao.email);
     localStorage.setItem("estacaoSelecionada", JSON.stringify(novaEstacao));
@@ -524,13 +541,13 @@ if (registerStationForm) {
 
     // Repete antes do redirecionamento só para garantir que nada trocou depois
     setTimeout(() => {
-      localStorage.setItem("logado_como", "estacao"); 
+      localStorage.setItem("logado_como", "estacao");
       window.location.href = "../station/home.html";
     }, 1200);
 
   });
 
-  // 🔹 Preenchimento automático do endereço com CEP
+  // Preenchimento automático do endereço com CEP
   document.getElementById("stationCep")?.addEventListener("blur", function () {
     let cep = this.value.replace(/\D/g, "");
     if (cep.length === 8) {
@@ -549,7 +566,7 @@ if (registerStationForm) {
   });
 
   // ===============================
-  // 🔹 Funções para aplicar sufixo/prefixo
+  // Funções para aplicar sufixo/prefixo
   // ===============================
   function configurarCampoNumeroComSufixo(input, sufixo) {
     if (!input) return;

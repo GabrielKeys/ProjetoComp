@@ -42,7 +42,7 @@
 
     <!-- ==================== REGISTRO DE USUÁRIO ==================== -->
     <form id="registerForm" class="form" autocomplete="off">
-      <!-- 🔹 Link Registrar Estação aparece apenas aqui -->
+      <!-- Link Registrar Estação -->
       <div class="extra-actions" style="text-align: right; margin-bottom: 10px;">
         <a href="#" id="goToRegisterStation">Registrar Estação</a>
       </div>
@@ -59,10 +59,15 @@
       <input type="password" id="newPass" name="newPass" required placeholder="Mínimo 8 caracteres"
         autocomplete="new-password">
 
+      <!-- Campo de confirmação -->
+      <label for="confirmPass">Confirmar Senha</label>
+      <input type="password" id="confirmPass" name="confirmPass" required placeholder="Repita sua senha"
+        autocomplete="off">
+
       <label for="phone">Número de Telefone (opcional)</label>
       <input type="tel" id="phone" name="phone" placeholder="(99) 99999-9999" autocomplete="off">
 
-      <!-- 🔽 Botão para abrir aba -->
+      <!-- Botão para abrir aba -->
       <button type="button" class="add-vehicle-btn" id="toggleVehicle">
         + Adicionar Veículo (Opcional)
       </button>
@@ -115,6 +120,11 @@
       <div class="input-group">
         <label for="stationPass">Senha</label>
         <input type="password" id="stationPass" name="stationPass" required>
+      </div>
+
+      <div class="input-group">
+        <label for="confirmStationPass">Confirmar Senha</label>
+        <input type="password" id="confirmStationPass" name="confirmStationPass" required>
       </div>
 
       <div class="input-group">
@@ -190,7 +200,7 @@
   </div>
 
   <script src="login.js"></script>
-  
+
 </body>
 
 </html>

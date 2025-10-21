@@ -111,42 +111,61 @@ function initMap() {
     .then(() => console.log("✅ carregarEstacoesFicticias finalizado."))
     .catch(err => console.error("Erro em carregarEstacoesFicticias:", err));
 
-  // Geolocalização do usuário
+  // ===============================
+  // Geolocalização do usuário (versão corrigida e compatível com TWA)
+  // ===============================
   if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        map.setCenter(userLocation);
-        map.setZoom(15);
 
-        userMarker = new google.maps.Marker({
-          position: userLocation,
-          map,
-          title: "Você está aqui",
-          icon: {
-            url: "../assets/carro-icone.png",
-            scaledSize: new google.maps.Size(60, 60),
-            anchor: new google.maps.Point(25, 50),
-          },
-        });
+    // Verifica primeiro o estado da permissão
+    navigator.permissions.query({ name: "geolocation" }).then(result => {
+      console.log("📍 Estado da permissão de geolocalização:", result.state);
 
-        console.log("📍 Localização encontrada:", userLocation, "Precisão:", pos.coords.accuracy);
-        setTimeout(() => carregarEstacoesReais(userLocation), 1500);
-      },
-      (err) => {
-        console.warn("Não foi possível obter localização do usuário:", err);
-        const fallback = { lat: -23.5505, lng: -46.6333 };
-        map.setCenter(fallback);
-        setTimeout(() => carregarEstacoesReais(fallback), 1500);
-      },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-    );
+      if (result.state === "denied") {
+        alert("⚠️ O acesso à localização está bloqueado. Vá em Configurações → Apps → VoltWay → Permissões → e ative a Localização.");
+      } else if (result.state !== "granted") {
+        mostrarMensagem("Para mostrar sua localização, ative o GPS nas permissões do app.", "aviso", true);
+      }
+
+      // Agora solicita a localização
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          console.log("📍 Localização encontrada:", userLocation, "Precisão:", pos.coords.accuracy);
+
+          map.setCenter(userLocation);
+          map.setZoom(15);
+
+          userMarker = new google.maps.Marker({
+            position: userLocation,
+            map,
+            title: "Você está aqui",
+            icon: {
+              url: "../assets/carro-icone.png",
+              scaledSize: new google.maps.Size(60, 60),
+              anchor: new google.maps.Point(25, 50),
+            },
+          });
+
+          setTimeout(() => carregarEstacoesReais(userLocation), 1500);
+        },
+        (err) => {
+          console.warn("❌ Não foi possível obter localização:", err);
+          mostrarMensagem("Não foi possível obter sua localização. Verifique o GPS.", "erro", true);
+          const fallback = { lat: -23.5505, lng: -46.6333 };
+          map.setCenter(fallback);
+          setTimeout(() => carregarEstacoesReais(fallback), 1500);
+        },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+      );
+    });
+
   } else {
-    console.warn("Geolocalização não suportada.");
+    console.warn("Geolocalização não suportada neste dispositivo.");
     const fallback = { lat: -23.5505, lng: -46.6333 };
     map.setCenter(fallback);
     setTimeout(() => carregarEstacoesReais(fallback), 1500);
   }
+
 
   // Filtro persistente
   const filtroCheckbox = document.getElementById("filtroRecarga");
