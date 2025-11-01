@@ -1,0 +1,153 @@
+/* =============================
+   PLANOS DE ASSINATURA
+============================= */
+.assinatura-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  margin-bottom: 25px;
+  max-width: 100%;        /* 🔹 garante que nunca ultrapasse */
+  box-sizing: border-box; /* 🔹 padding não "estoura" */
+  overflow-x: hidden;     /* 🔹 evita rolagem horizontal */
+}
+
+.assinatura-container h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: #002b64;
+}
+
+.assinatura-container p {
+  font-size: 15px;
+  margin: 6px 0;
+  color: #333;
+}
+
+.assinatura-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.assinatura-container ul li {
+  padding: 6px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+/* =============================
+   Planos disponíveis
+============================= */
+.plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  max-width: 100%;        /* 🔹 garante que não quebre */
+  box-sizing: border-box;
+}
+
+.plano {
+  background: #f9f9f9;
+  border-radius: 10px;
+  padding: 18px;
+  border-left: 4px solid #007bff;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  transition: 0.2s;
+  max-width: 100%;        /* 🔹 limita largura no mobile */
+  overflow-wrap: break-word;
+}
+
+.plano:hover {
+  background: #f1f6ff;
+  border-left-color: #0056b3;
+  transform: translateY(-3px);
+}
+
+.plano h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #111;
+}
+
+.plano p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.plano ul {
+  margin-top: 8px;
+}
+
+.plano ul li {
+  font-size: 13px;
+  margin: 3px 0;
+}
+
+/* =============================
+   Botões
+============================= */
+.btn {
+  display: inline-block;
+  margin-top: 12px;
+  background: #007bff;
+  color: white;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn:hover {
+  background: #0056b3;
+}
+
+/* =============================
+   Responsividade
+============================= */
+@media (max-width: 600px) {
+  .assinatura-container {
+    padding: 18px;
+  }
+
+  .plano {
+    padding: 14px;
+    border-left-width: 3px;
+  }
+
+  .plano h2 {
+    font-size: 16px;
+  }
+}
+
+/* =============================
+   🔹 Correção global
+============================= */
+body {
+  overflow-x: hidden; /* 🔹 evita deslizar lateral */
+}
+
+/* =========================================
+   Modo Escuro - Planos de Assinatura
+========================================= */
+
+/* Cartões dos planos */
+html[data-theme="dark"] .plano {
+  background: rgba(255,255,255,0.06) !important;
+  border-left: 3px solid #6a03df !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35) !important;
+}
+
+html[data-theme="dark"] .plano:hover {
+  background: rgba(255,255,255,0.12) !important;
+  border-left: 3px solid #6a03df !important;
+}
+
+html[data-theme="dark"] .assinatura-container {
+  background: transparent !important; /* Remove o card de trás */
+  box-shadow: none !important;       /* Remove sombra extra */
+  border: none !important;
+}

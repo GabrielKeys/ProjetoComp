@@ -1,0 +1,146 @@
+/* Função: Arquivo principal que importa todos os estilos específicos mantendo a modularização do projeto.*/
+@import url("../../global/Header.css");
+@import url("../../global/Layout.css");
+@import url("../../global/Sidebar.css");
+@import url("../../global/DarkMode.css");
+@import url("header.css");
+@import url("cards.css");
+@import url("modal.css");
+
+/* ==============================
+   Modo Escuro - Cards e Seções da Carteira
+============================== */
+html[data-theme="dark"] .grid .card {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    color: #ffffff !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45) !important;
+  }
+  
+  /* ==============================
+     Modo Escuro - Transações
+  ============================== */
+  html[data-theme="dark"] .transactions p {
+    color: #ffffff !important;
+  }
+  
+  html[data-theme="dark"] .transactions .neg {
+    color: #ff6b6b !important;
+  }
+  
+  html[data-theme="dark"] .transactions .pos {
+    color: #4cd964 !important;
+  }
+  
+  /* ==============================
+     Modo Escuro - Próxima Reserva
+  ============================== */
+  html[data-theme="dark"] .next-reservation {
+    background: rgba(255,255,255,0.08) !important;
+    color: #ffffff !important;
+  }
+  
+  /* ==============================
+     Modo Escuro - Recarga de Carteira
+  ============================== */
+  html[data-theme="dark"] .wallet-recharge input {
+    background: rgba(255,255,255,0.06) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+  }
+  
+  html[data-theme="dark"] .wallet-recharge button {
+    background: linear-gradient(90deg, #27ae60, #1e8449) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(39, 174, 96, 0.25) !important;
+  }
+  
+  html[data-theme="dark"] .wallet-recharge button:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 10px 28px rgba(39, 174, 96, 0.35) !important;
+  }
+  
+  /* ==============================
+   Modo Escuro - Header e Estatísticas
+============================== */
+html[data-theme="dark"] .stat {
+    background: rgba(0, 166, 255, 0.15) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(0,166,255,0.3) !important;
+  }
+  
+  html[data-theme="dark"] #stationMsg {
+    color: #ffffff !important;
+  }
+  
+  /* ==============================
+     Modo Escuro - Botões de Ação
+  ============================== */
+  html[data-theme="dark"] button#btnSelecionarEstacao,
+  html[data-theme="dark"] button#btnAgendar {
+    background: linear-gradient(90deg, #00A6FF, #0088d3) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(0, 166, 255, 0.25) !important;
+  }
+  
+  html[data-theme="dark"] button#btnSelecionarEstacao:hover,
+  html[data-theme="dark"] button#btnAgendar:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 10px 28px rgba(0,166,255,0.35) !important;
+  }
+  
+  html[data-theme="dark"] button#btnAgendar:disabled {
+    background: rgba(255,255,255,0.1) !important;
+    color: rgba(255,255,255,0.4) !important;
+    cursor: not-allowed !important;
+  }
+  
+  
+  /* ================================
+     Modo Escuro - Modal Seleção Estação
+  ================================ */
+  html[data-theme="dark"] #stationModal .modal-content {
+    background: rgba(15, 25, 45, 0.95) !important;
+    color: #fff !important;
+  }
+  
+  html[data-theme="dark"] #stationModal .estacao-item {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+  }
+  
+  html[data-theme="dark"] #stationModal .estacao-nome {
+    color: #fff !important;
+  }
+  
+  html[data-theme="dark"] #stationModal .detalhes-estacao {
+    background: rgba(255,255,255,0.06) !important;
+    border-left: 3px solid #00A6FF !important;
+    color: #fff !important;
+  }
+  
+  /* ================================
+     Modo Escuro - Modal Detalhes de Reserva
+  ================================ */
+  html[data-theme="dark"] #detalhesReservaModal .modal-content {
+    background: rgba(15, 25, 45, 0.95) !important;
+    color: #fff !important;
+  }
+  
+  html[data-theme="dark"] #detalhesReservaModal li {
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+  }
+  
+  html[data-theme="dark"] #detalhesReservaModal .reserva-nome {
+    color: #fff !important;
+  }
+  
+  html[data-theme="dark"] #detalhesReservaModal .detalhes-reserva {
+    background: rgba(255,255,255,0.06) !important;
+    border-left: 3px solid #00A6FF !important;
+    color: #fff !important;
+  }
+  
+  
+  

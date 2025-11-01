@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VW Carregamento - Perfil</title>
+
+  <!-- Tela de Carregamento -->
+  <div id="preloader">
+    <div class="spinner"></div>
+  </div>
+  <!-- Aplica  o tema salvo escuro/claro-->
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="../global/Sidebar.css">
+  <link rel="stylesheet" href="../global/Header.css">
+  <link rel="stylesheet" href="../global/Layout.css">
+  <link rel="stylesheet" href="../global/DarkMode.css">
+  <link rel="stylesheet" href="../perfil/perfil.css">
+</head>
+
+<body>
+  <div class="container">
+
+     <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>
+          VoltWay
+          <label class="theme-btn" for="darkModeSwitch" id="themeLabel">Claro</label>
+          <input type="checkbox" id="darkModeSwitch" data-theme-toggle hidden>
+        </h2>
+
+      </div>
+      <nav>
+        <a href="home.html" data-page="inicio"><span class="icon"
+            aria-hidden="true"></span><span>Início</span></a>
+        <a href="#" class="active" data-page="perfil"><span class="icon"
+            aria-hidden="true"></span><span>Perfil</span></a>
+      </nav>
+      <div class="user-box">
+        <p class="nomeUsuario"></p>
+        <button class="logout-btn" onclick="logout()">Sair</button>
+      </div>
+    </aside>
+
+    <!-- HEADER FIXO MOBILE -->
+    <div class="mobile-header">
+      <div class="left">
+        <h2>VoltWay</h2>
+        <label class="theme-btn" for="darkModeSwitch" id="themeLabel"></label>
+        <input type="checkbox" id="darkModeSwitch" data-theme-toggle hidden>
+      </div>
+
+      <div class="right">
+        <a href="perfil.html" class="nomeUsuario" aria-label="Ir para perfil"></a>
+        <button class="logout-btn" onclick="logout()"></button>
+      </div>
+    </div>
+
+
+    <!-- Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Botão fixo -->
+    <button id="toggleSidebar">☰</button>
+
+    <!-- Conteúdo principal -->
+    <main class="main">
+      <!-- Cabeçalho -->
+      <section class="header">
+        <div class="header-top">
+          <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+          <div class="header-text">
+            <h1>Perfil do Usuário</h1>
+            <p>Gerencie suas informações pessoais, veículo e preferências.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Foto do Usuário -->
+      <section class="card perfil-container perfil-foto-container">
+        <div class="perfil-foto">
+          <img src="../assets/foto.png" id="fotoUsuario" alt="Foto do usuário">
+          <div style="margin-top:8px;">
+            <button id="btnUploadFoto" class="btn">Alterar Foto</button>
+            <button id="btnRemoverFoto" class="btn btn-ghost" style="margin-left:8px;">Remover</button>
+          </div>
+        </div>
+        <!-- input file escondido -->
+        <input type="file" id="inputFoto" accept="image/*" style="display:none" />
+      </section>
+
+      <!-- Informações do Usuário -->
+      <section class="card perfil-container">
+        <h2>Informações do Usuário</h2>
+        <div id="userDetalhes" class="vehicle-fields"></div>
+        <div id="perfilActions" class="form-actions hidden">
+          <button id="btnSalvarPerfil">Salvar</button>
+          <button id="btnCancelarPerfil" class="btn-cancelar">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- Preferências -->
+      <section class="card perfil-container">
+        <h2>Preferências</h2>
+        <!--        <p>Notificações: Ativadas</p> -->
+
+        <div class="theme-toggle">
+          <span>Tema Escuro</span>
+          <label class="switch">
+            <input type="checkbox" id="darkModeSwitch" data-theme-toggle>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!--        <p>Localização Automática: Ativada</p> -->
+      </section>
+
+      <!-- Histórico de Reservas -->
+      <section id="historicoReservas" class="card perfil-container">
+        <h2>Histórico de Reservas</h2>
+        <ul>
+        </ul>
+        <button class="btn">Ver Mais</button>
+      </section>
+    </main>
+  </div>
+
+  <!-- Ação do botão da engrenagem (gearBtn) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const scrollTarget = localStorage.getItem("scrollToPerfilSection");
+      if (scrollTarget) {
+        const alvo = document.getElementById(scrollTarget);
+        if (alvo) {
+          setTimeout(() => {
+            const targetY = alvo.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({ top: targetY, behavior: "smooth" });
+          }, 200); // espera a página renderizar
+        }
+        localStorage.removeItem("scrollToPerfilSection");
+      }
+    });
+  </script>
+
+  <!-- scripts -->
+  <script src="../home/js/main.js"></script>
+  <script src="perfil.js"></script>
+  <script src="../global/Global.js"></script>
+
+</body>
+
+</html>

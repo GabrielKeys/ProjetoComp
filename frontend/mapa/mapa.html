@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VW Carregamento - Mapa</title>
+
+    <!-- Tela de Carregamento -->
+    <div id="preloader">
+        <div class="spinner"></div>
+    </div>
+    <!-- Aplica  o tema salvo escuro/claro-->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="../global/Sidebar.css">
+    <link rel="stylesheet" href="../global/Layout.css">
+    <link rel="stylesheet" href="../global/DarkMode.css">
+    <link rel="stylesheet" href="mapa.css">
+    <link rel="stylesheet" href="../global/Header.css">
+    <link rel="stylesheet" href="../home/css/modal.css">
+
+    <style>
+        /* Garante altura para o mapa do Google */
+        #map {
+            width: 100%;
+            height: 500px;
+            /* ajuste conforme layout */
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <body data-theme="dark">
+
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h2>
+                        VoltWay
+                        <label class="theme-btn" for="darkModeSwitch" id="themeLabel">Claro</label>
+                        <input type="checkbox" id="darkModeSwitch" data-theme-toggle hidden>
+                    </h2>
+
+                </div>
+                <nav>
+                    <a href="../home/home.html" data-page="inicio"><span class="icon"
+                            aria-hidden="true"></span><span>Início</span></a>
+                    <a href="#" class="active" data-page="mapa"><span class="icon"
+                            aria-hidden="true"></span><span>Mapa</span></a>
+                    <a href="../perfil/perfil.html" data-page="perfil"><span class="icon"
+                            aria-hidden="true"></span><span>Perfil</span></a>
+                    <a href="../assinatura/assinatura.html" data-page="assinatura"><span class="icon"
+                            aria-hidden="true"></span><span>Assinatura</span></a>
+                </nav>
+                <div class="user-box">
+                    <p class="nomeUsuario"></p>
+                    <button class="logout-btn" onclick="logout()">Sair</button>
+                </div>
+            </aside>
+
+            <!-- HEADER FIXO MOBILE -->
+            <div class="mobile-header">
+                <div class="left">
+                    <h2>VoltWay</h2>
+                    <label class="theme-btn" for="darkModeSwitch" id="themeLabel"></label>
+                    <input type="checkbox" id="darkModeSwitch" data-theme-toggle hidden>
+                </div>
+
+                <div class="right">
+                    <a href="../perfil/perfil.html" class="nomeUsuario" aria-label="Ir para perfil"></a>
+                    <button class="logout-btn" onclick="logout()"></button>
+                </div>
+            </div>
+
+            <!-- Overlay -->
+            <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+            <!-- Botão fixo -->
+            <button id="toggleSidebar">☰</button>
+
+            <!-- Conteúdo principal -->
+            <main class="main">
+
+                <!-- Cabeçalho do mapa  -->
+                <section class="header">
+                    <div class="header-top">
+                        <img src="../assets/logo.png" alt="Logo" class="header-logo" />
+
+                        <div class="header-text">
+                            <h1 id="stationTitle">Mapa das Estações</h1>
+                            <p>
+                                Veja as estações de recarga próximas.<br>
+                                Reserve ou adicione-as aos favoritos clicando na estrela ao lado.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Filtro -->
+                    <label>
+                        <input type="checkbox" id="filtroRecarga" checked>
+                        Mostrar apenas estações de carregamento registradas
+                    </label>
+                </section>
+
+                <!-- Mapa Google Maps -->
+                <div id="map"></div>
+
+                <!-- Próxima Reserva (Mapa) -->
+                <section class="card next-reservation" id="proximaReservaCardMapa">
+                    <div>
+                        <h2>Próxima Reserva</h2>
+                        <p id="textoReservaMapa">Nenhuma reserva agendada.</p>
+                    </div>
+                    <div id="listaReservasMapa"></div>
+                </section>
+                <button class="btn" id="btnDetalhesReserva" style="display:none;">Ver Detalhes</button>
+
+
+
+                <!-- ✅ Modal de agendamento (mesmo do Home) -->
+                <div id="agendamentoModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Agendar Reserva</h3>
+
+                        <form id="formAgendamento">
+                            <label for="dataReserva">Data:</label>
+                            <input type="date" id="dataReserva" required>
+
+                            <label for="horaReserva">Hora:</label>
+                            <div class="select-wrapper">
+                                <div class="click-overlay"></div>
+                                <select id="horaReserva" required></select>
+                            </div>
+
+                            <!-- NOVO BLOCO DE DURAÇÃO  -->
+                            <label style="margin-top:10px; display:block;">Tempo de Reserva:</label>
+                            <div style="display:flex; gap:8px;">
+                                <select id="duracaoHoras" required style="flex:1;">
+                                    <!-- Populado via JS -->
+                                </select>
+
+                                <select id="duracaoMinutos" required style="flex:1;">
+                                    <option value="0">00</option>
+                                    <option value="30">30</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" style="margin-top:15px;">Confirmar</button>
+                        </form>
+                    </div>
+                </div>
+
+            </main>
+    </div>
+
+    <!-- Modal de Detalhes da Reserva (mesmo do Home) -->
+    <div id="detalhesReservaModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Detalhes das Reservas</h3>
+            <ul id="listaDetalhesReservas"></ul>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Cancelamento -->
+    <div id="confirmarCancelamentoModal" class="modal">
+        <div class="modal-content">
+            <h3>Cancelar Reserva</h3>
+            <p>Tem certeza que deseja cancelar esta reserva?</p>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                <button id="btnCancelarConfirmar" class="btn-cancelar-reserva">Sim, Cancelar</button>
+                <button id="btnCancelarFechar" class="btn">Não</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- scripts -->
+    <script src="../home/js/main.js"></script>
+    <script src="estacoes.js"></script>
+    <script src="mapa.js"></script>
+    <script src="../global/Global.js"></script>
+    <script src="../home/js/reserva.js"></script>
+    <script src="../home/js/validacao_reserva.js"></script>
+
+    <!-- Forçar renderização das reservas no mapa -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            renderizarReservas();
+        });
+    </script>
+
+    <!-- Google Maps API (adicione sua chave aqui) -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY&callback=initMap&v=beta"></script>
+
+
+</body>
+
+</html>
