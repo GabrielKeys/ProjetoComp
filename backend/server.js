@@ -141,6 +141,19 @@ app.post("/stations", async (req, res) => {
 });
 
 
+// ==========================================
+// LISTAR ESTAÇÕES
+// ==========================================
+app.get("/stations", async (req, res) => {
+  try {
+    const { data, error } = await supabase.from("stations").select("*");
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error("Erro ao buscar estações:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ==========================================
 // START SERVER (⚠️ MOVIDO PARA O FINAL)

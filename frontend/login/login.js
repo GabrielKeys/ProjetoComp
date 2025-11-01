@@ -215,21 +215,26 @@ if (registerForm) {
     }
   });
 }
+
+
+
 // ===============================
-// LOGIN COM GOOGLE (AGORA USANDO BACKEND)
+// LOGIN COM GOOGLE (versão completa e estável com suporte a estações)
 // ===============================
 function initGoogleLogin() {
-  const CLIENT_ID = "288143953215-o49d879dqorujtkpgfqg80gp7u9ai9ra.apps.googleusercontent.com";
+  const CLIENT_ID =
+    "288143953215-o49d879dqorujtkpgfqg80gp7u9ai9ra.apps.googleusercontent.com";
 
   google.accounts.id.initialize({
     client_id: CLIENT_ID,
     callback: handleCredentialResponse,
   });
 
-  google.accounts.id.renderButton(
-    document.getElementById("googleLoginBtn"),
-    { theme: "outline", size: "large", text: "continue_with" }
-  );
+  google.accounts.id.renderButton(document.getElementById("googleLoginBtn"), {
+    theme: "outline",
+    size: "large",
+    text: "continue_with",
+  });
 
   google.accounts.id.prompt();
 }
@@ -240,14 +245,20 @@ async function handleCredentialResponse(response) {
   const name = data.name || "Usuário Google";
   const picture = data.picture || "";
 
-  try {
-    // 🔹 1. Verifica se já existe como usuário no backend
-    let res = await fetch(`${API_BASE}/users`);
-    const users = await res.json();
+  // Fallback em caso de erro de conexão
+  const redirectToRegister = () => {
+    localStorage.setItem("googleCadastro", JSON.stringify({ email, name, picture }));
+    window.location.href = "../login/login.html?registerGoogle=true";
+  };
 
+  try {
+    // 🔹 1. Busca usuários no backend
+    const resUsers = await fetch(`${API_BASE}/users`);
+    const users = resUsers.ok ? await resUsers.json() : [];
     const userFound = users.find(u => (u.email || "").toLowerCase() === email);
 
     if (userFound) {
+      // ✅ Login como usuário
       localStorage.setItem("logado", "true");
       localStorage.setItem("logado_como", "usuario");
       localStorage.setItem("usuario", userFound.full_name || userFound.email);
@@ -257,52 +268,33 @@ async function handleCredentialResponse(response) {
       return;
     }
 
-    // 🔹 2. Verifica se é estação no backend
-    res = await fetch(`${API_BASE}/stations`);
-    const stations = await res.json();
-
+    // 🔹 2. Busca estações no backend
+    const resStations = await fetch(`${API_BASE}/stations`);
+    const stations = resStations.ok ? await resStations.json() : [];
     const stationFound = stations.find(s => (s.email || "").toLowerCase() === email);
 
     if (stationFound) {
+      // ✅ Login como estação
       localStorage.setItem("logado", "true");
       localStorage.setItem("logado_como", "estacao");
-      localStorage.setItem("usuario", stationFound.name || stationFound.email);
+      localStorage.setItem("usuario", stationFound.name || stationFound.full_name || stationFound.email);
       localStorage.setItem("usuarioEmail", stationFound.email);
       localStorage.setItem("estacaoSelecionada", JSON.stringify(stationFound));
       window.location.href = "../station/home.html";
       return;
     }
 
-    // 🔹 3. Se não existir, cria novo usuário no backend
-    const novoUsuario = {
-      full_name: name,
-      email,
-      photo_url: picture,
-      role: "user",
-      password: "google_oauth", // senha fictícia
-    };
-
-    const createRes = await fetch(`${API_BASE}/users`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(novoUsuario),
-    });
-
-    if (!createRes.ok) throw new Error("Erro ao criar usuário Google");
-
-    // Login automático
-    localStorage.setItem("logado", "true");
-    localStorage.setItem("logado_como", "usuario");
-    localStorage.setItem("usuario", name);
-    localStorage.setItem("usuarioEmail", email);
-    localStorage.setItem("usuarioFoto", picture);
-    window.location.href = "../home/home.html";
+    // 🔹 3. Se não encontrou em nenhum dos dois → vai para registro
+    redirectToRegister();
   } catch (err) {
-    console.error("❌ Erro no login com Google:", err);
-    alert("Erro ao conectar com o servidor.");
+    console.warn("⚠️ Erro ao conectar com o servidor. Redirecionando para registro...", err);
+    redirectToRegister();
   }
 }
 
+// ===============================
+// Decodifica o token JWT do Google
+// ===============================
 function parseJwt(token) {
   try {
     const base64Url = token.split(".")[1];
@@ -314,13 +306,14 @@ function parseJwt(token) {
         .join("")
     );
     return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error("Erro ao decodificar token:", e);
+  } catch {
     return {};
   }
 }
 
-// Carregar Google SDK (mantendo estrutura original)
+// ===============================
+// Carrega SDK do Google
+// ===============================
 const script = document.createElement("script");
 script.src = "https://accounts.google.com/gsi/client";
 script.async = true;
@@ -505,7 +498,7 @@ document.getElementById("goToLoginFromStation")?.addEventListener("click", (e) =
 });
 
 // ===============================
-// REGISTRO DE ESTAÇÃO (versão corrigida - backend)
+// REGISTRO DE ESTAÇÃO
 // ===============================
 const registerStationForm = document.getElementById("registerStationForm");
 
@@ -513,14 +506,12 @@ if (registerStationForm) {
   registerStationForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
-    const msg = document.getElementById("stationMsg");
-
     // Dados principais
-    const full_name = document.getElementById("stationFullName")?.value.trim() || "";
+    const stationFullName = registerStationForm.querySelector("#stationFullName")?.value.trim() || "";
     const name = document.getElementById("stationName").value.trim();
     const email = document.getElementById("stationEmail").value.trim();
-    const password = document.getElementById("stationPass").value.trim();
-    const confirmPass = document.getElementById("confirmStationPass").value.trim();
+    const pass = document.getElementById("stationPass").value.trim();
+    const confirmStationPass = document.getElementById("confirmStationPass").value.trim();
     const phone = document.getElementById("stationPhone").value.trim();
     const cep = document.getElementById("stationCep").value.trim();
     const address = document.getElementById("stationAddress").value.trim();
@@ -529,12 +520,14 @@ if (registerStationForm) {
     const city = document.getElementById("stationCity").value.trim();
     const state = document.getElementById("stationState").value.trim();
 
-    // Técnicos e horários
+    // Valores brutos e horários
     const powerRaw = document.getElementById("stationPower").value.trim();
     const priceRaw = document.getElementById("stationPrice")?.value.trim() || "";
     const waitRaw = document.getElementById("stationWait")?.value.trim() || "";
-    const open_time = document.getElementById("stationOpen").value.trim();
-    const close_time = document.getElementById("stationClose").value.trim();
+    const open = document.getElementById("stationOpen").value.trim();
+    const close = document.getElementById("stationClose").value.trim();
+
+    const msg = document.getElementById("stationMsg");
 
     // ===============================
     // Validações
@@ -544,83 +537,73 @@ if (registerStationForm) {
       msg.style.color = "red";
       return;
     }
-    if (password.length < 8) {
+
+    if (pass.length < 8) {
       msg.innerText = "A senha deve ter pelo menos 8 caracteres!";
       msg.style.color = "red";
       return;
     }
-    if (password !== confirmPass) {
+
+    if (pass !== confirmStationPass) {
       msg.innerText = "As senhas não coincidem!";
       msg.style.color = "red";
       return;
     }
 
     // ===============================
-    // Limpeza e conversão de valores
+    // Limpa os sufixos antes de salvar
     // ===============================
-    const power = parseFloat(powerRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
-    const price = parseFloat(priceRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
-    const wait_time = parseInt(waitRaw.replace(/[^\d]/g, "") || "0");
+    const power = powerRaw.replace(/[^\d.,]/g, "");
+    const preco = priceRaw.replace(/[^\d.,]/g, "");
+    const wait = waitRaw.replace(/[^\d.,]/g, "");
 
+    // ===============================
+    // Monta o objeto da nova estação
+    // ===============================
     const novaEstacao = {
-      full_name,
-      name,
+      fullName: stationFullName,
+      nome: name,
       email,
-      password,
-      phone,
+      senha: pass,
+      telefone: phone,
       cep,
-      address,
-      number,
-      district,
-      city,
-      state,
-      power,
-      price,
-      wait_time,
-      open_time,
-      close_time,
+      rua: address,
+      numero: number,
+      bairro: district,
+      cidade: city,
+      estado: state,
+      potencia: power,
+      abertura: open,
+      fechamento: close,
+      preco,
+      tempoEspera: wait,
     };
 
-    try {
-      const response = await fetch(`${API_BASE}/stations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(novaEstacao),
-      });
+    // ===============================
+    // Salva no backend (futuro) ou localStorage (atual)
+    // ===============================
+    let stations = JSON.parse(localStorage.getItem("stations")) || [];
+    stations.push(novaEstacao);
+    localStorage.setItem("stations", JSON.stringify(stations));
 
-      if (!response.ok) {
-        const erro = await response.text();
-        console.error("❌ Erro do servidor:", erro);
-        msg.innerText = `Erro ao registrar estação: ${erro}`;
-        msg.style.color = "red";
-        return;
-      }
+    msg.innerText = "✅ Estação registrada com sucesso!";
+    msg.style.color = "green";
 
-      const data = await response.json();
-      console.log("✅ Estação registrada:", data);
+    // Login automático
+    localStorage.setItem("logado", "true");
+    localStorage.setItem("logado_como", "estacao");
+    localStorage.setItem("usuario", novaEstacao.fullName || novaEstacao.nome || novaEstacao.email);
+    localStorage.setItem("usuarioEmail", novaEstacao.email);
+    localStorage.setItem("estacaoSelecionada", JSON.stringify(novaEstacao));
 
-      msg.innerText = "✅ Estação registrada com sucesso!";
-      msg.style.color = "green";
+    registerStationForm.reset();
+    localStorage.removeItem("googleCadastro");
 
-      // Login automático
-      localStorage.setItem("logado", "true");
+    setTimeout(() => {
       localStorage.setItem("logado_como", "estacao");
-      localStorage.setItem("usuario", data.name || data.email);
-      localStorage.setItem("usuarioEmail", data.email);
-      localStorage.setItem("estacaoSelecionada", JSON.stringify(data));
-
-      registerStationForm.reset();
-
-      setTimeout(() => {
-        window.location.href = "../station/home.html";
-      }, 1200);
-    } catch (error) {
-      console.error("❌ Erro ao conectar com o servidor:", error);
-      msg.innerText = "Erro ao conectar com o servidor!";
-      msg.style.color = "red";
-    }
+      window.location.href = "../station/home.html";
+    }, 1200);
   });
-
 
   // ===============================
   // Preenchimento automático do endereço com CEP (ViaCEP)
