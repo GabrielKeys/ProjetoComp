@@ -1,4 +1,4 @@
-/* mapa.js - versão com logs e geocoding robusto */
+/* mapa.js - versão estruturada como o código antigo, com backend */
 
 let map;
 let userMarker;
@@ -6,9 +6,12 @@ let carregadores = [];
 let ficticios = [];
 let infowindowAtual = null;
 
+// URL base do backend
+const API_BASE = "http://localhost:4000";
+
 /* ===============================
-   Inicializa o mapa Google Maps
-   =============================== */
+   Inicializar mapa
+=============================== */
 function initMap() {
   map = new google.maps.Map(document.getElementById("map"), {
     zoom: 13,
@@ -72,7 +75,7 @@ function initMap() {
   let ultimoZoom = map.getZoom();
   console.log("🗺️ Mapa inicializado.");
 
-  // Remover Label do google
+    // Remover Label do google
   google.maps.event.addListenerOnce(map, 'idle', () => {
     limparFeedbackDoMapa();
   });
@@ -105,401 +108,297 @@ function initMap() {
   });
 
 
+  google.maps.event.addListenerOnce(map,'idle',limparFeedbackDoMapa);
+  google.maps.event.addListenerOnce(map,'tilesloaded',()=>document.getElementById('map')?.classList.add('loaded'));
 
-  // Carrega as estações (fixas + registradas)
-  carregarEstacoesFicticias()
-    .then(() => console.log("✅ carregarEstacoesFicticias finalizado."))
-    .catch(err => console.error("Erro em carregarEstacoesFicticias:", err));
-
-  // ===============================
-  // Geolocalização do usuário (versão corrigida e compatível com TWA)
-  // ===============================
+  // Geolocalização do usuário
   if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      map.setCenter(userLocation); map.setZoom(15);
 
-    // Verifica primeiro o estado da permissão
-    navigator.permissions.query({ name: "geolocation" }).then(result => {
-      console.log("📍 Estado da permissão de geolocalização:", result.state);
+      userMarker = new google.maps.Marker({
+        position: userLocation, map, title:"Você está aqui",
+        icon:{ url:"../assets/carro-icone.png", scaledSize:new google.maps.Size(60,60), anchor:new google.maps.Point(25,50) }
+      });
 
-      if (result.state === "denied") {
-        alert("⚠️ O acesso à localização está bloqueado. Vá em Configurações → Apps → VoltWay → Permissões → e ative a Localização.");
-      } else if (result.state !== "granted") {
-        mostrarMensagem("Para mostrar sua localização, ative o GPS nas permissões do app.", "aviso", true);
-      }
-
-      // Agora solicita a localização
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          console.log("📍 Localização encontrada:", userLocation, "Precisão:", pos.coords.accuracy);
-
-          map.setCenter(userLocation);
-          map.setZoom(15);
-
-          userMarker = new google.maps.Marker({
-            position: userLocation,
-            map,
-            title: "Você está aqui",
-            icon: {
-              url: "../assets/carro-icone.png",
-              scaledSize: new google.maps.Size(60, 60),
-              anchor: new google.maps.Point(40, 40),
-            },
-          });
-
-          setTimeout(() => carregarEstacoesReais(userLocation), 1500);
-        },
-        (err) => {
-          console.warn("❌ Não foi possível obter localização:", err);
-          mostrarMensagem("Não foi possível obter sua localização. Verifique o GPS.", "erro", true);
-          const fallback = { lat: -23.5505, lng: -46.6333 };
-          map.setCenter(fallback);
-          setTimeout(() => carregarEstacoesReais(fallback), 1500);
-        },
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-      );
-    });
-
+      carregarEstacoesDoBanco(userLocation);
+    }, err=>{
+      const fallback = { lat:-23.5505, lng:-46.6333 };
+      map.setCenter(fallback);
+      carregarEstacoesDoBanco(fallback);
+      mostrarMensagem("Não foi possível obter sua localização","erro");
+    }, { enableHighAccuracy:true, timeout:20000, maximumAge:0 });
   } else {
-    console.warn("Geolocalização não suportada neste dispositivo.");
-    const fallback = { lat: -23.5505, lng: -46.6333 };
+    const fallback = { lat:-23.5505, lng:-46.6333 };
     map.setCenter(fallback);
-    setTimeout(() => carregarEstacoesReais(fallback), 1500);
+    carregarEstacoesDoBanco(fallback);
   }
-
 
   // Filtro persistente
   const filtroCheckbox = document.getElementById("filtroRecarga");
   if (filtroCheckbox) {
-    const estadoSalvo = localStorage.getItem("filtroRecarga");
-    if (estadoSalvo !== null) filtroCheckbox.checked = (estadoSalvo === "true");
+    filtroCheckbox.checked = localStorage.getItem("filtroRecarga") === "true";
     aplicarFiltro(filtroCheckbox.checked);
-    filtroCheckbox.addEventListener("change", () => {
-      localStorage.setItem("filtroRecarga", filtroCheckbox.checked);
+    filtroCheckbox.addEventListener("change",()=>{
+      localStorage.setItem("filtroRecarga",filtroCheckbox.checked);
       aplicarFiltro(filtroCheckbox.checked);
     });
   }
 }
+/* ===============================
+   Utilitários
+=============================== */
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+function mostrarMensagem(texto = "", tipo = "info", persistente = false) {
+  try {
+    const id = `toast_${Date.now()}`;
+    const containerId = "toast-container";
+    let container = document.getElementById(containerId);
+    if (!container) {
+      container = document.createElement("div");
+      container.id = containerId;
+      container.style.position = "fixed";
+      container.style.right = "16px";
+      container.style.top = "16px";
+      container.style.zIndex = 99999;
+      document.body.appendChild(container);
+    }
+
+    const el = document.createElement("div");
+    el.id = id;
+    el.className = `toast toast-${tipo}`;
+    el.style.marginBottom = "8px";
+    el.style.padding = "10px 14px";
+    el.style.borderRadius = "8px";
+    el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.3)";
+    el.style.color = "#fff";
+    el.style.fontFamily = "sans-serif";
+    el.style.fontSize = "13px";
+    el.style.maxWidth = "320px";
+
+    switch (tipo) {
+      case "sucesso": el.style.background = "#28a745"; break;
+      case "erro": el.style.background = "#dc3545"; break;
+      case "aviso": el.style.background = "#ffc107"; el.style.color = "#000"; break;
+      default: el.style.background = "#343a40";
+    }
+
+    el.innerText = texto;
+    container.appendChild(el);
+
+    if (!persistente) {
+      setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 400); }, 3500);
+    }
+
+    return el;
+  } catch (e) { console.warn("mostrarMensagem falhou:", e); }
+}
+
+function formatarTelefone(tel) {
+  if (!tel) return "N/D";
+  const digits = String(tel).replace(/\D/g, "");
+  if (digits.length === 11) return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
+  if (digits.length === 10) return `(${digits.slice(0,2)}) ${digits.slice(2,6)}-${digits.slice(6)}`;
+  return tel;
+}
+
+function safeUserKey() {
+  return localStorage.getItem("usuario") || "default";
+}
 
 /* ===============================
-   Geocode (versão Promise)
-   =============================== */
+   Geocode (Promise)
+=============================== */
 function geocodeEnderecoPromise(endereco) {
-  return new Promise((resolve) => {
-    const geocoder = new google.maps.Geocoder();
-    console.log("📌 Geocoding:", endereco);
-    geocoder.geocode({ address: endereco }, (results, status) => {
-      console.log("📡 Status geocode:", status, results && results[0] ? results[0].geometry.location.toString() : results);
-      if (status === "OK" && results && results[0]) {
-        resolve(results[0].geometry.location);
-      } else {
-        resolve(null);
-      }
-    });
+  return new Promise(resolve => {
+    try {
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: endereco }, (results, status) => {
+        if (status === "OK" && results && results[0]) resolve(results[0].geometry.location);
+        else resolve(null);
+      });
+    } catch { resolve(null); }
   });
 }
 
-// URL base do backend (ajuste se o servidor estiver em outro endereço)
-const API_BASE = "http://localhost:4000";
+/* ===============================
+   Limpar marcadores
+=============================== */
+function limparMarkers() {
+  if (ficticios.length) {
+    ficticios.forEach(m => { try { m.setMap(null); } catch(e){} });
+  }
+  ficticios = [];
+}
 
 /* ===============================
-   Carregar estações registradas (fixas + localStorage)
-   =============================== */
-async function carregarEstacoesFicticias() {
+   Filtro simples
+=============================== */
+function aplicarFiltro(mostrarApenasRecarga = false) {
+  const powerMin = mostrarApenasRecarga ? 7 : -Infinity;
+  ficticios.forEach(marker => {
+    const est = marker._estacao || {};
+    const power = Number(est.power ?? est.potencia ?? 0);
+    marker.setVisible(isFinite(power) ? power >= powerMin : !mostrarApenasRecarga);
+  });
+}
+
+/* ===============================
+   Favoritos
+=============================== */
+function toggleFavorito(nome, estrelaElem) {
+  const usuario = safeUserKey();
+  const chave = `favoritos_${usuario}`;
+  let favoritos = JSON.parse(localStorage.getItem(chave) || "[]");
+  const idx = favoritos.findIndex(f => f.nome === nome);
+
+  if (idx >= 0) {
+    favoritos.splice(idx,1);
+    if (estrelaElem) estrelaElem.classList.remove("favorita");
+    mostrarMensagem("Removido dos favoritos","info");
+  } else {
+    favoritos.push({ nome, addedAt: new Date().toISOString() });
+    if (estrelaElem) estrelaElem.classList.add("favorita");
+    mostrarMensagem("Adicionado aos favoritos","sucesso");
+  }
+  localStorage.setItem(chave, JSON.stringify(favoritos));
+}
+
+/* ===============================
+   Atualizar estação (hook)
+=============================== */
+function atualizarEstacao() {
+  console.log("atualizarEstacao() chamado (placeholder)");
+}
+
+
+/* ===============================
+   Limpar botão "Report an issue"
+=============================== */
+function limparFeedbackDoMapa() {
+  const tentarRemover = () => {
+    document.querySelectorAll('*').forEach(el=>{
+      const txt = el.innerText?.trim()||"";
+      if(txt==="Informar erro no mapa" || txt==="Report an issue on the map"){
+        el.style.display="none"; try{el.remove()}catch(e){}
+      }
+    });
+  };
+  tentarRemover();
+  let tent=0;
+  const intervalo = setInterval(()=>{
+    tentarRemover(); tent++;
+    if(tent>10) clearInterval(intervalo);
+  },500);
+}
+
+/* ===============================
+   Carregar estações do banco
+=============================== */
+async function carregarEstacoesDoBanco(userLocation=null) {
   try {
-    console.log("🌐 Buscando estações do backend...");
     const res = await fetch(`${API_BASE}/stations`);
     const estacoesBanco = await res.json();
 
-    console.log("✅ Estações recebidas do backend:", estacoesBanco);
+    limparMarkers();
 
-    // estações salvas localmente (caso o usuário tenha adicionado alguma)
-    let registradas = JSON.parse(localStorage.getItem("stations")) || [];
-
-    // junta banco + locais
-    let todasEstacoes = [...estacoesBanco, ...registradas];
-    console.log("🔎 Total de estações a processar:", todasEstacoes.length);
-
-    // Processa cada estação (faz geocode se precisar)
-    for (let i = 0; i < todasEstacoes.length; i++) {
-      const estacao = todasEstacoes[i];
-      console.log(`→ Processando (${i + 1}/${todasEstacoes.length}):`, estacao.nome || estacao.name);
-
-      if (estacao.lat && estacao.lng) {
+    for (let i=0;i<estacoesBanco.length;i++) {
+      const estacao = estacoesBanco[i];
+      if(estacao.lat!=null && estacao.lng!=null){
         adicionarEstacaoNoMapa(estacao);
       } else {
         const enderecoParts = [
-          estacao.rua || estacao.address,
-          estacao.numero || estacao.number,
-          estacao.bairro || estacao.district,
-          estacao.cidade || estacao.city,
-          estacao.estado || estacao.state,
-          estacao.cep || estacao.zip
+          estacao.address || estacao.rua || "",
+          estacao.number || estacao.numero || "",
+          estacao.district || estacao.bairro || "",
+          estacao.city || estacao.cidade || "",
+          estacao.state || estacao.estado || "",
+          estacao.cep || estacao.zip || ""
         ].filter(Boolean);
+        if(!enderecoParts.length) continue;
 
-        if (enderecoParts.length === 0) {
-          console.warn("⛔ Endereço incompleto / vazio para:", estacao.nome || estacao.name);
-          continue;
-        }
+        const pos = await geocodeEnderecoPromise(enderecoParts.join(", "));
+        await sleep(150);
+        if(!pos) continue;
 
-        const endereco = enderecoParts.join(", ");
-        const pos = await geocodeEnderecoPromise(endereco);
-
-        if (!pos) {
-          console.warn("⛔ Geocode falhou para", estacao.nome || estacao.name, "endereço:", endereco);
-          continue;
-        }
-
-        estacao.lat = pos.lat();
-        estacao.lng = pos.lng();
+        estacao.lat = pos.lat(); estacao.lng = pos.lng();
         adicionarEstacaoNoMapa(estacao);
       }
     }
 
-    console.log(`✅ Processadas ${todasEstacoes.length} estações (backend + locais).`);
-    mostrarMensagem(`${todasEstacoes.length} estações carregadas.`, "sucesso", true);
-
-  } catch (err) {
-    console.error("Erro em carregarEstacoesFicticias:", err);
+    mostrarMensagem(`${estacoesBanco.length} estações carregadas do servidor`,"sucesso");
+  } catch(err){
+    console.error("Erro em carregarEstacoesDoBanco:",err);
+    mostrarMensagem("Erro ao buscar estações do servidor","erro");
   }
 }
 
-
 /* ===============================
-   Adicionar estação no mapa 
-   =============================== */
+   Adicionar estação no mapa
+=============================== */
 function adicionarEstacaoNoMapa(estacao) {
-  const position = { lat: Number(estacao.lat), lng: Number(estacao.lng) };
-  if (!isFinite(position.lat) || !isFinite(position.lng)) {
-    console.warn("⚠️ Coordenadas inválidas para:", estacao.nome, estacao);
-    return;
-  }
+  try{
+    const position = { lat:Number(estacao.lat), lng:Number(estacao.lng) };
+    if(!isFinite(position.lat) || !isFinite(position.lng)) return;
 
-  // Se não tiver nome definido, usar endereço como fallback
-  if (!estacao.nome || estacao.nome.trim() === "") {
-    estacao.nome = [
-      estacao.rua,
-      estacao.numero,
-      estacao.cidade,
-      estacao.estado
-    ].filter(Boolean).join(", ");
-  }
+    const nomeExibicao = estacao.name || estacao.nome || estacao.full_name || "Estação sem nome";
 
-  const marker = new google.maps.Marker({
-    position,
-    map,
-    title: estacao.nome,
-    icon: {
-      url: "../assets/bateria-azul.png",
-      scaledSize: new google.maps.Size(40, 40),
-    },
-  });
-
-  const usuarioAtual = localStorage.getItem("usuario");
-  const chaveFavoritos = `favoritos_${usuarioAtual}`;
-  let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
-  const jaFavorito = favoritos.some((fav) => fav.nome === estacao.nome);
-
-  const contentString = `
-  <div class="popup-estacao">
-    <div class="popup-conteudo">
-      <b>${estacao.nome}</b><br>
-      ${estacao.rua || ""} ${estacao.numero || ""} <br> ${estacao.bairro || "N/D"} - ${estacao.cidade || ""} / ${estacao.estado || ""}<br>
-      Horário: ${estacao.abertura || "?"} - ${estacao.fechamento || "?"}<br>
-      Preço: ${estacao.preco || "N/D"}<br> 
-      Tempo de espera: ${estacao.tempoEspera || "N/D"}<br> 
-      Telefone: ${formatarTelefone(estacao.telefone)}
-    </div>
-    <div class="popup-footer">
-      <button class="btn-reservar">Reservar</button>
-      <span class="estrela ${jaFavorito ? "favorita" : ""}" data-estacao="${estacao.nome}"></span>
-    </div>
-  </div>
-`;
-
-
-  const infowindow = new google.maps.InfoWindow({ content: contentString });
-
-  marker.addListener("click", () => {
-    if (infowindowAtual) infowindowAtual.close();
-    infowindow.open(map, marker);
-    infowindowAtual = infowindow;
-
-
-    // após abrir a janela, registra handlers
-    google.maps.event.addListenerOnce(infowindow, "domready", () => {
-      const btn = document.querySelector(".btn-reservar");
-      if (btn) {
-        btn.addEventListener("click", () => {
-          const usuarioAtual = localStorage.getItem("usuario");
-          localStorage.setItem(`estacaoSelecionada_${usuarioAtual}`, JSON.stringify(estacao));
-          const agendamentoModal = document.getElementById("agendamentoModal");
-          if (agendamentoModal) agendamentoModal.style.display = "flex";
-          if (typeof atualizarEstacao === "function") {
-            atualizarEstacao();
-          }
-        });
-      }
-
-      const estrela = document.querySelector(".estrela");
-      if (estrela) {
-        const handler = (e) => {
-          e.stopPropagation();
-          toggleFavorito(estacao.nome, estrela);
-        };
-        estrela.addEventListener("click", handler);
-        estrela.addEventListener("touchstart", (e) => {
-          e.preventDefault();
-          handler(e);
-        });
-      }
+    const marker = new google.maps.Marker({
+      position, map, title:nomeExibicao,
+      icon:{ url:"../assets/bateria-azul.png", scaledSize:new google.maps.Size(28,28) }
     });
-  });
+    marker._estacao = estacao;
 
-  ficticios.push(marker);
-}
-
-// ===============================
-// Carregar estações não registradas (Places API New)
-// ===============================
-async function carregarEstacoesReais(location) {
-  try {
-    const { Place } = await google.maps.importLibrary("places");
-
-    const request = {
-      fields: ["displayName", "location", "formattedAddress"],
-      locationRestriction: {
-        center: location,
-        radius: 15000, // 15 km
-      },
-      includedTypes: ["electric_vehicle_charging_station"],
-    };
-
-    const { places } = await Place.searchNearby(request);
-
-    if (!places || places.length === 0) {
-      mostrarMensagem("Nenhuma estação não registrada encontrada.", "erro", true);
-      return;
-    }
-
-    places.forEach((place) => {
-      const marker = new google.maps.Marker({
-        position: place.location,
-        map,
-        title: place.displayName,
-        icon: {
-          url: "../assets/bateria-cinza.png",
-          scaledSize: new google.maps.Size(26, 26),
-        },
-      });
-
-      const contentString = `
-        <div class="popup-estacao">
-          <div class="popup-conteudo">
-            <b>${place.displayName}</b>
-            ${place.formattedAddress || ""}<br>
-            <span style="color:#666;font-size:12px">(Não registrada no app)</span>
-          </div>
-          <div class="popup-footer">
-            <span class="estrela" data-estacao="${place.displayName}"></span>
-          </div>
+    // InfoWindow
+    const jaFavorito = (JSON.parse(localStorage.getItem(`favoritos_${safeUserKey()}`)||"[]")).some(f=>f.nome===nomeExibicao);
+    const content = `
+      <div class="popup-estacao">
+        <div class="popup-conteudo">
+          <b>${nomeExibicao}</b><br>
+          ${estacao.address||estacao.rua||""} ${estacao.number||estacao.numero||""}<br>
+          ${estacao.district||estacao.bairro||"N/D"} - ${estacao.city||estacao.cidade||""} / ${estacao.state||estacao.estado||""}<br>
+          Horário: ${estacao.open_time||estacao.open||"?"} - ${estacao.close_time||estacao.close||"?"}<br>
+          Preço: ${estacao.price!=null?`R$ ${Number(estacao.price).toFixed(2)}/kWh`:"N/D"}<br>
+          Potência: ${estacao.power??estacao.potencia??"N/D"} kW<br>
+          Tempo de espera: ${estacao.wait_time??estacao.tempoEspera??"N/D"} min<br>
+          Telefone: ${formatarTelefone(estacao.phone||estacao.telefone)}
         </div>
-      `;
+        <div class="popup-footer">
+          <button class="btn-reservar">Reservar</button>
+          <span class="estrela ${jaFavorito?"favorita":""}" data-estacao="${encodeURIComponent(nomeExibicao)}"></span>
+        </div>
+      </div>
+    `;
+    const infowindow = new google.maps.InfoWindow({ content });
+    marker.addListener("click", ()=>{
+      if(infowindowAtual) infowindowAtual.close();
+      infowindow.open(map,marker); infowindowAtual = infowindow;
 
-      const infowindow = new google.maps.InfoWindow({ content: contentString });
-
-      marker.addListener("click", () => {
-        if (infowindowAtual) infowindowAtual.close();
-        infowindow.open(map, marker);
-        infowindowAtual = infowindow;
-
-
-        google.maps.event.addListenerOnce(infowindow, "domready", () => {
-          const estrela = document.querySelector(".estrela");
-          if (estrela) {
-            const handler = (e) => {
-              e.stopPropagation();
-              toggleFavorito(place.displayName, estrela);
-            };
-            estrela.addEventListener("click", handler);
-            estrela.addEventListener("touchstart", (e) => {
-              e.preventDefault();
-              handler(e);
-            });
-          }
-        });
+      google.maps.event.addListenerOnce(infowindow,"domready",()=>{
+        const btn = document.querySelector(".btn-reservar");
+        if(btn){
+          btn.onclick=null;
+          btn.addEventListener("click",()=>{ 
+            localStorage.setItem(`estacaoSelecionada_${safeUserKey()}`,JSON.stringify(estacao));
+            const modal = document.getElementById("agendamentoModal");
+            if(modal) modal.style.display="flex";
+            atualizarEstacao();
+          });
+        }
+        const estrela = document.querySelector(".estrela");
+        if(estrela){
+          estrela.onclick=null;
+          const handler = e=>{ e.stopPropagation(); toggleFavorito(nomeExibicao,estrela); };
+          estrela.addEventListener("click",handler);
+          estrela.addEventListener("touchstart",e=>{ e.preventDefault(); handler(e); });
+        }
       });
-
-      carregadores.push(marker);
     });
 
-    mostrarMensagem(`${places.length} estações não registradas carregadas.`, "aviso", true);
-    aplicarFiltro(document.getElementById("filtroRecarga")?.checked ?? true);
-
-  } catch (err) {
-    console.error("Erro ao carregar estações (Places API New):", err);
-    mostrarMensagem("Erro ao buscar estações.", "erro", true);
-  }
-}
-/* ===============================
-   Filtro / Favoritos / Mensagens
-   =============================== */
-function aplicarFiltro(somenteRegistradas) {
-  ficticios.forEach((m) => m.setMap(map));
-  carregadores.forEach((m) => m.setMap(somenteRegistradas ? null : map));
+    ficticios.push(marker);
+  } catch(err){ console.error("Erro ao adicionar estação:",err,estacao); }
 }
 
-function toggleFavorito(nomeEstacao, elemento) {
-  const usuarioAtual = localStorage.getItem("usuario");
-  const chaveFavoritos = `favoritos_${usuarioAtual}`;
 
-  let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
-  const index = favoritos.findIndex((fav) => fav.nome === nomeEstacao);
-
-  if (index >= 0) {
-    favoritos.splice(index, 1);
-    mostrarMensagem(`${nomeEstacao} removida dos favoritos.`, "erro", true);
-    if (elemento) elemento.classList.remove("favorita");
-  } else {
-    const estacao = (typeof estacoes !== "undefined" && estacoes.find((e) => e.nome === nomeEstacao)) || { nome: nomeEstacao };
-    favoritos.push(estacao);
-    mostrarMensagem(`${nomeEstacao} adicionada aos favoritos!`, "sucesso", true);
-    if (elemento) elemento.classList.add("favorita");
-  }
-
-  localStorage.setItem(chaveFavoritos, JSON.stringify(favoritos));
-}
-
-function mostrarMensagem(texto, tipo, evitarDuplicado = false) {
-  if (evitarDuplicado) {
-    const jaExiste = document.querySelector(`.msg-${tipo}[data-texto="${texto}"]`);
-    if (jaExiste) return;
-  }
-  const div = document.createElement("div");
-  div.className = `mensagem msg-${tipo}`;
-  div.innerText = texto;
-  div.setAttribute("data-texto", texto);
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 4000);
-}
-
-/* ===============================
-   Ao carregar a página, scroll para hash se houver
-   =============================== */
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.location.hash) {
-    const alvo = document.querySelector(window.location.hash);
-    if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-});
-
-
-
-
-//placeholder de erro
-function atualizarEstacao() {
-  console.log("Função atualizarEstacao chamada (placeholder)");
-}
-
-function inputData() {
-  console.log("Função inputData chamada (placeholder)");
-}

@@ -498,9 +498,8 @@ document.getElementById("goToLoginFromStation")?.addEventListener("click", (e) =
 });
 
 // ===============================
-// REGISTRO DE ESTAÇÃO (versão corrigida)
+// REGISTRO DE ESTAÇÃO (com Geocoding automático)
 // ===============================
-
 
 const registerStationForm = document.getElementById("registerStationForm");
 
@@ -549,12 +548,40 @@ if (registerStationForm) {
       return;
     }
 
-    // Converte e limpa valores numéricos
+    // Converte valores numéricos
     const power = parseFloat(powerRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
     const price = parseFloat(priceRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
     const wait_time = parseInt(waitRaw.replace(/[^\d]/g, "") || "0");
 
-    // Objeto a ser enviado
+    // ===============================
+    // Geocodificação (Google Maps)
+    // ===============================
+    const enderecoCompleto = `${address}, ${number}, ${district}, ${city} - ${state}, ${cep}`;
+    let lat = null;
+    let lng = null;
+
+    try {
+      const geocodeURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        enderecoCompleto
+      )}&key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY`;
+      
+      const geoRes = await fetch(geocodeURL);
+      const geoData = await geoRes.json();
+
+      if (geoData.status === "OK" && geoData.results.length > 0) {
+        lat = geoData.results[0].geometry.location.lat;
+        lng = geoData.results[0].geometry.location.lng;
+        console.log(`📍 Coordenadas obtidas: (${lat}, ${lng})`);
+      } else {
+        console.warn("⚠️ Geocoding falhou:", geoData.status);
+      }
+    } catch (err) {
+      console.error("❌ Erro no geocoding:", err);
+    }
+
+    // ===============================
+    // Monta objeto final
+    // ===============================
     const novaEstacao = {
       full_name,
       name,
@@ -572,6 +599,8 @@ if (registerStationForm) {
       wait_time,
       open_time,
       close_time,
+      lat,
+      lng,
     };
 
     try {
@@ -594,7 +623,6 @@ if (registerStationForm) {
       msg.innerText = "✅ Estação registrada com sucesso!";
       msg.style.color = "green";
 
-      // Login automático
       localStorage.setItem("logado", "true");
       localStorage.setItem("logado_como", "estacao");
       localStorage.setItem("usuario", data.name || data.email);
@@ -637,7 +665,7 @@ document.getElementById("stationCep")?.addEventListener("blur", function () {
 });
 
 // ===============================
-// Formatação de campos numéricos e monetários
+// Formatação
 // ===============================
 function configurarCampoNumeroComSufixo(input, sufixo) {
   if (!input) return;
@@ -672,3 +700,4 @@ function configurarCampoMoeda(input) {
 configurarCampoNumeroComSufixo(document.getElementById("stationPower"), "kW");
 configurarCampoNumeroComSufixo(document.getElementById("stationWait"), "min");
 configurarCampoMoeda(document.getElementById("stationPrice"));
+
