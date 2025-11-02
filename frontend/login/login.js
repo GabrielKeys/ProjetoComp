@@ -498,20 +498,24 @@ document.getElementById("goToLoginFromStation")?.addEventListener("click", (e) =
 });
 
 // ===============================
-// REGISTRO DE ESTAÇÃO
+// REGISTRO DE ESTAÇÃO (versão corrigida)
 // ===============================
+
+
 const registerStationForm = document.getElementById("registerStationForm");
 
 if (registerStationForm) {
   registerStationForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
-    // Dados principais
-    const stationFullName = registerStationForm.querySelector("#stationFullName")?.value.trim() || "";
+    const msg = document.getElementById("stationMsg");
+
+    // Dados do formulário
+    const full_name = document.getElementById("stationFullName")?.value.trim() || "";
     const name = document.getElementById("stationName").value.trim();
     const email = document.getElementById("stationEmail").value.trim();
-    const pass = document.getElementById("stationPass").value.trim();
-    const confirmStationPass = document.getElementById("confirmStationPass").value.trim();
+    const password = document.getElementById("stationPass").value.trim();
+    const confirmPass = document.getElementById("confirmStationPass").value.trim();
     const phone = document.getElementById("stationPhone").value.trim();
     const cep = document.getElementById("stationCep").value.trim();
     const address = document.getElementById("stationAddress").value.trim();
@@ -520,14 +524,11 @@ if (registerStationForm) {
     const city = document.getElementById("stationCity").value.trim();
     const state = document.getElementById("stationState").value.trim();
 
-    // Valores brutos e horários
     const powerRaw = document.getElementById("stationPower").value.trim();
     const priceRaw = document.getElementById("stationPrice")?.value.trim() || "";
     const waitRaw = document.getElementById("stationWait")?.value.trim() || "";
-    const open = document.getElementById("stationOpen").value.trim();
-    const close = document.getElementById("stationClose").value.trim();
-
-    const msg = document.getElementById("stationMsg");
+    const open_time = document.getElementById("stationOpen").value.trim();
+    const close_time = document.getElementById("stationClose").value.trim();
 
     // ===============================
     // Validações
@@ -537,130 +538,137 @@ if (registerStationForm) {
       msg.style.color = "red";
       return;
     }
-
-    if (pass.length < 8) {
+    if (password.length < 8) {
       msg.innerText = "A senha deve ter pelo menos 8 caracteres!";
       msg.style.color = "red";
       return;
     }
-
-    if (pass !== confirmStationPass) {
+    if (password !== confirmPass) {
       msg.innerText = "As senhas não coincidem!";
       msg.style.color = "red";
       return;
     }
 
-    // ===============================
-    // Limpa os sufixos antes de salvar
-    // ===============================
-    const power = powerRaw.replace(/[^\d.,]/g, "");
-    const preco = priceRaw.replace(/[^\d.,]/g, "");
-    const wait = waitRaw.replace(/[^\d.,]/g, "");
+    // Converte e limpa valores numéricos
+    const power = parseFloat(powerRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
+    const price = parseFloat(priceRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
+    const wait_time = parseInt(waitRaw.replace(/[^\d]/g, "") || "0");
 
-    // ===============================
-    // Monta o objeto da nova estação
-    // ===============================
+    // Objeto a ser enviado
     const novaEstacao = {
-      fullName: stationFullName,
-      nome: name,
+      full_name,
+      name,
       email,
-      senha: pass,
-      telefone: phone,
+      password,
+      phone,
       cep,
-      rua: address,
-      numero: number,
-      bairro: district,
-      cidade: city,
-      estado: state,
-      potencia: power,
-      abertura: open,
-      fechamento: close,
-      preco,
-      tempoEspera: wait,
+      address,
+      number,
+      district,
+      city,
+      state,
+      power,
+      price,
+      wait_time,
+      open_time,
+      close_time,
     };
 
-    // ===============================
-    // Salva no backend (futuro) ou localStorage (atual)
-    // ===============================
-    let stations = JSON.parse(localStorage.getItem("stations")) || [];
-    stations.push(novaEstacao);
-    localStorage.setItem("stations", JSON.stringify(stations));
+    try {
+      const response = await fetch(`${API_BASE}/stations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(novaEstacao),
+      });
 
-    msg.innerText = "✅ Estação registrada com sucesso!";
-    msg.style.color = "green";
+      if (!response.ok) {
+        const erro = await response.text();
+        console.error("Erro do servidor:", erro);
+        msg.innerText = `Erro ao registrar estação: ${erro}`;
+        msg.style.color = "red";
+        return;
+      }
 
-    // Login automático
-    localStorage.setItem("logado", "true");
-    localStorage.setItem("logado_como", "estacao");
-    localStorage.setItem("usuario", novaEstacao.fullName || novaEstacao.nome || novaEstacao.email);
-    localStorage.setItem("usuarioEmail", novaEstacao.email);
-    localStorage.setItem("estacaoSelecionada", JSON.stringify(novaEstacao));
+      const data = await response.json();
+      console.log("✅ Estação registrada:", data);
+      msg.innerText = "✅ Estação registrada com sucesso!";
+      msg.style.color = "green";
 
-    registerStationForm.reset();
-    localStorage.removeItem("googleCadastro");
-
-    setTimeout(() => {
+      // Login automático
+      localStorage.setItem("logado", "true");
       localStorage.setItem("logado_como", "estacao");
-      window.location.href = "../station/home.html";
-    }, 1200);
-  });
+      localStorage.setItem("usuario", data.name || data.email);
+      localStorage.setItem("usuarioEmail", data.email);
+      localStorage.setItem("estacaoSelecionada", JSON.stringify(data));
 
-  // ===============================
-  // Preenchimento automático do endereço com CEP (ViaCEP)
-  // ===============================
-  document.getElementById("stationCep")?.addEventListener("blur", function () {
-    let cep = this.value.replace(/\D/g, "");
-    if (cep.length === 8) {
-      fetch(`https://viacep.com.br/ws/${cep}/json/`)
-        .then(response => response.json())
-        .then(data => {
-          if (!data.erro) {
-            document.getElementById("stationAddress").value = data.logradouro;
-            document.getElementById("stationDistrict").value = data.bairro;
-            document.getElementById("stationCity").value = data.localidade;
-            document.getElementById("stationState").value = data.uf;
-          }
-        })
-        .catch(() => console.log("Erro ao buscar CEP"));
+      registerStationForm.reset();
+      localStorage.removeItem("googleCadastro");
+
+      setTimeout(() => {
+        window.location.href = "../station/home.html";
+      }, 1200);
+
+    } catch (error) {
+      console.error("❌ Erro ao conectar com o servidor:", error);
+      msg.innerText = "Erro ao conectar com o servidor!";
+      msg.style.color = "red";
     }
   });
-
-  // ===============================
-  // Funções para aplicar sufixos e prefixos nos campos numéricos
-  // ===============================
-  function configurarCampoNumeroComSufixo(input, sufixo) {
-    if (!input) return;
-    input.addEventListener("input", () => {
-      input.value = input.value.replace(/[^\d.,]/g, "");
-    });
-    input.addEventListener("blur", () => {
-      if (input.value && !input.value.includes(sufixo)) {
-        input.value = input.value + " " + sufixo;
-      }
-    });
-    input.addEventListener("focus", () => {
-      input.value = input.value.replace(" " + sufixo, "");
-    });
-  }
-
-  function configurarCampoMoeda(input) {
-    if (!input) return;
-    input.addEventListener("input", () => {
-      input.value = input.value.replace(/[^\d.,]/g, "");
-    });
-    input.addEventListener("blur", () => {
-      if (input.value && !input.value.startsWith("R$")) {
-        input.value = "R$ " + input.value;
-      }
-    });
-    input.addEventListener("focus", () => {
-      input.value = input.value.replace("R$ ", "");
-    });
-  }
-
-  // Aplica as formatações
-  configurarCampoNumeroComSufixo(document.getElementById("stationPower"), "kW");
-  configurarCampoNumeroComSufixo(document.getElementById("stationWait"), "min");
-  configurarCampoMoeda(document.getElementById("stationPrice"));
 }
 
+// ===============================
+// CEP automático (ViaCEP)
+// ===============================
+document.getElementById("stationCep")?.addEventListener("blur", function () {
+  const cep = this.value.replace(/\D/g, "");
+  if (cep.length === 8) {
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.erro) {
+          document.getElementById("stationAddress").value = data.logradouro;
+          document.getElementById("stationDistrict").value = data.bairro;
+          document.getElementById("stationCity").value = data.localidade;
+          document.getElementById("stationState").value = data.uf;
+        }
+      })
+      .catch(() => console.log("Erro ao buscar CEP"));
+  }
+});
+
+// ===============================
+// Formatação de campos numéricos e monetários
+// ===============================
+function configurarCampoNumeroComSufixo(input, sufixo) {
+  if (!input) return;
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/[^\d.,]/g, "");
+  });
+  input.addEventListener("blur", () => {
+    if (input.value && !input.value.includes(sufixo)) {
+      input.value += ` ${sufixo}`;
+    }
+  });
+  input.addEventListener("focus", () => {
+    input.value = input.value.replace(` ${sufixo}`, "");
+  });
+}
+
+function configurarCampoMoeda(input) {
+  if (!input) return;
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/[^\d.,]/g, "");
+  });
+  input.addEventListener("blur", () => {
+    if (input.value && !input.value.startsWith("R$")) {
+      input.value = "R$ " + input.value;
+    }
+  });
+  input.addEventListener("focus", () => {
+    input.value = input.value.replace("R$ ", "");
+  });
+}
+
+configurarCampoNumeroComSufixo(document.getElementById("stationPower"), "kW");
+configurarCampoNumeroComSufixo(document.getElementById("stationWait"), "min");
+configurarCampoMoeda(document.getElementById("stationPrice"));

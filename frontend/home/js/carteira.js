@@ -73,8 +73,8 @@ if (!usuarioAtual) {
   }
 
   function recarregarLocal(valor) {
-    salvarRecargaBackend(valor); // tenta reenviar se backend estiver disponível
-    transacoes.push({ valor: valor, tipo: "Recarga" });
+    saldo += valor;
+    transacoes.push({ valor: valor, tipo: "Recarga" }); // ✅ AGORA NO NOVO FORMATO
     persistir();
     atualizarCarteiraUI();
     info(`✅ Recarga de R$${valor.toFixed(2)} aplicada (modo local).`, "sucesso");
@@ -100,29 +100,6 @@ if (!usuarioAtual) {
       }).format(valor);
     });
   }
-
-// ===============================
-  // Banco de dados
-  // ===============================
-  async function salvarRecargaBackend(valor) {
-  const email = localStorage.getItem("usuarioEmail");
-  try {
-    const res = await fetch(`${API_BASE}/wallet/recharge`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, amount: valor }),
-    });
-
-    if (!res.ok) throw new Error("Falha ao registrar recarga no backend");
-
-    const data = await res.json();
-    console.log("✅ Recarga salva no banco:", data);
-    info(`✅ Recarga de R$${valor.toFixed(2)} salva no servidor.`, "sucesso");
-  } catch (err) {
-    console.warn("⚠️ Falha ao salvar no backend, usando localStorage:", err);
-    recarregarLocal(valor); // fallback
-  }
-}
 
   // ===============================
   // Google Pay
@@ -204,9 +181,9 @@ if (!usuarioAtual) {
       const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest);
       console.log("Google Pay - paymentData:", paymentData);
 
-      salvarRecargaBackend(valor); // tenta reenviar se backend estiver disponível
-      
-      transacoes.push({ valor: valor, tipo: "Recarga" }); 
+      saldo += valor;
+      // garante que usamos o novo formato
+      transacoes.push({ valor: valor, tipo: "Recarga" }); // ✅ CORRIGIDO AQUI TAMBÉM
       persistir();
       atualizarCarteiraUI();
       info(`✅ Recarga de R$${valor.toFixed(2)} realizada com sucesso.`, "sucesso");

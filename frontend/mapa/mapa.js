@@ -142,7 +142,7 @@ function initMap() {
             icon: {
               url: "../assets/carro-icone.png",
               scaledSize: new google.maps.Size(60, 60),
-              anchor: new google.maps.Point(25, 50),
+              anchor: new google.maps.Point(40, 40),
             },
           });
 
@@ -290,7 +290,7 @@ function adicionarEstacaoNoMapa(estacao) {
     title: estacao.nome,
     icon: {
       url: "../assets/bateria-azul.png",
-      scaledSize: new google.maps.Size(28, 28),
+      scaledSize: new google.maps.Size(40, 40),
     },
   });
 
