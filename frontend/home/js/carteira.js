@@ -223,3 +223,31 @@ function atualizarCarteiraUI() {
     });
   }
 });
+
+
+async function debitarReservaBackend(usuarioEmail, custoReserva) {
+  try {
+    const res = await fetch(`${API_BASE}/wallet/debit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: usuarioEmail,
+        amount: custoReserva,
+        type: "Reserva"
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Falha ao debitar reserva.");
+    }
+
+    // Retorna o novo saldo após o débito
+    return data.new_balance;
+  } catch (err) {
+    console.error("❌ Erro ao debitar reserva:", err);
+    throw err;
+  }
+}
+
+window.debitarReservaBackend = debitarReservaBackend;

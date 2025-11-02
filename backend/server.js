@@ -148,7 +148,15 @@ app.get("/stations", async (req, res) => {
   try {
     const { data, error } = await supabase.from("stations").select("*");
     if (error) throw error;
-    res.json(data);
+
+    // 🔹 Formata os horários no backend
+    const formatadas = data.map((s) => ({
+      ...s,
+      open_time: s.open_time ? s.open_time.slice(0, 5) : null, // transforma 22:00:00 → 22:00
+      close_time: s.close_time ? s.close_time.slice(0, 5) : null,
+    }));
+
+    res.json(formatadas);
   } catch (err) {
     console.error("Erro ao buscar estações:", err.message);
     res.status(500).json({ error: err.message });

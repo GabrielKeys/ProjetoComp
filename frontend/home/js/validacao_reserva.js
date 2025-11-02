@@ -26,7 +26,7 @@ function validarDisponibilidade(estacao, data, hora, reservasExistentes = []) {
     };
   }
 
-  // ⬇️ Filtra apenas reservas ATIVAS (ignora canceladas)
+  // Filtra apenas reservas ATIVAS (ignora canceladas)
   const reservasAtivas = reservasExistentes.filter(r => r.status !== "cancelada");
 
   const conflito = reservasAtivas.find(r =>

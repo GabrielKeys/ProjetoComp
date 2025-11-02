@@ -205,34 +205,34 @@ document.addEventListener("DOMContentLoaded", () => {
       detalhes.className = "detalhes-estacao ativo";
 
       detalhes.innerHTML = `
-  <p><strong>Endereço:</strong><br>
-    ${estacaoCompleta.address || estacaoCompleta.rua || ""} 
-    ${estacaoCompleta.number || estacaoCompleta.numero || ""}<br>
-    ${estacaoCompleta.district || estacaoCompleta.bairro || "N/D"} - 
-    ${estacaoCompleta.city || estacaoCompleta.cidade || "N/D"} / 
-    ${estacaoCompleta.state || estacaoCompleta.estado || ""}
-  </p>
-  <p><strong>Horário:</strong> 
-    ${estacaoCompleta.open_time || estacaoCompleta.abertura || "?"} - 
-    ${estacaoCompleta.close_time || estacaoCompleta.fechamento || "?"}
-  </p>
-  <p><strong>Preço:</strong> 
-    ${estacaoCompleta.price != null 
-      ? `R$ ${Number(estacaoCompleta.price).toFixed(2)}/kWh` 
-      : (estacaoCompleta.preco != null 
-        ? `R$ ${Number(estacaoCompleta.preco).toFixed(2)}/kWh` 
-        : "N/D")}
-  </p>
-  <p><strong>Potência:</strong> 
-    ${estacaoCompleta.power ?? estacaoCompleta.potencia ?? "N/D"} kW
-  </p>
-  <p><strong>Tempo de espera:</strong> 
-    ${estacaoCompleta.wait_time ?? estacaoCompleta.tempoEspera ?? "N/D"} min
-  </p>
-  <p><strong>Telefone:</strong> 
-    ${formatarTelefone(estacaoCompleta.phone || estacaoCompleta.telefone)}
-  </p>
-`;
+      <p><strong>Endereço:</strong><br>
+      ${estacaoCompleta.address || estacaoCompleta.rua || ""} 
+      ${estacaoCompleta.number || estacaoCompleta.numero || ""}<br>
+      ${estacaoCompleta.district || estacaoCompleta.bairro || "N/D"} - 
+      ${estacaoCompleta.city || estacaoCompleta.cidade || "N/D"} / 
+      ${estacaoCompleta.state || estacaoCompleta.estado || ""}
+      </p>
+      <p><strong>Horário:</strong> 
+      ${estacaoCompleta.open_time || estacaoCompleta.abertura || "?"} - 
+      ${estacaoCompleta.close_time || estacaoCompleta.fechamento || "?"}
+      </p>
+      <p><strong>Preço:</strong> 
+      ${estacaoCompleta.price != null
+          ? `R$ ${Number(estacaoCompleta.price).toFixed(2)}/kWh`
+          : (estacaoCompleta.preco != null
+            ? `R$ ${Number(estacaoCompleta.preco).toFixed(2)}/kWh`
+            : "N/D")}
+      </p>
+      <p><strong>Potência:</strong> 
+        ${estacaoCompleta.power ?? estacaoCompleta.potencia ?? "N/D"} kW
+      </p>
+      <p><strong>Tempo de espera:</strong> 
+        ${estacaoCompleta.wait_time ?? estacaoCompleta.tempoEspera ?? "N/D"} min
+      </p>
+      <p><strong>Telefone:</strong> 
+        ${formatarTelefone(estacaoCompleta.phone || estacaoCompleta.telefone)}
+      </p>
+  `;
 
       li.appendChild(linha);
       li.appendChild(detalhes);
@@ -324,17 +324,36 @@ function salvarReservas(reservas) {
   localStorage.setItem(`reservas_${usuario}`, JSON.stringify(reservas));
 }
 
-// 🔹 Função para validar dados do veículo
-function dadosVeiculoPreenchidos(usuarioIdCandidate) {
-  // uso findUsuarioIdForVeiculo para pegar o id correto/compatível
-  const usuarioId = findUsuarioIdForVeiculo(usuarioIdCandidate);
-  if (!usuarioId) return false;
-  const campos = ["Modelo", "Ano", "Placa", "Bateria", "Carregamento"];
-  return campos.every(campo => {
-    const valor = localStorage.getItem(`veiculo${campo}_${usuarioId}`);
-    return isFilledValue(valor);
-  });
+// ====================================
+// Validação de dados do veículo (via banco)
+// ====================================
+async function dadosVeiculoPreenchidos(usuarioEmail) {
+  if (!usuarioEmail) return false;
+
+  try {
+    const resp = await fetch(`http://localhost:4000/veiculos/${usuarioEmail}`);
+    if (!resp.ok) {
+      console.warn("⚠️ Erro ao buscar veículo:", resp.status);
+      return false;
+    }
+
+    const veiculo = await resp.json();
+    if (!veiculo || Object.keys(veiculo).length === 0) return false;
+
+    const camposValidos =
+      veiculo.modelo &&
+      veiculo.ano &&
+      veiculo.placa &&
+      veiculo.bateria &&
+      veiculo.carregamento;
+
+    return Boolean(camposValidos);
+  } catch (err) {
+    console.error("❌ Erro de rede ao verificar veículo:", err);
+    return false;
+  }
 }
+
 
 function renderizarReservas() {
   const reservas = carregarReservas();
@@ -457,7 +476,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return null;
   }
 
-  function renderizarDetalhes() {
+  // ================================
+  // Renderiza detalhes das reservas
+  // ================================
+  async function renderizarDetalhes() {
     try {
       const reservas = carregarReservas();
       const usuarioAtual = localStorage.getItem("usuario");
@@ -472,9 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const stations = JSON.parse(localStorage.getItem("stations")) || [];
       const favoritos = JSON.parse(localStorage.getItem(`favoritos_${usuarioAtual}`)) || [];
 
-      reservas.forEach((r, idx) => {
+      for (const [idx, r] of reservas.entries()) {
         const li = document.createElement("li");
-
         const linha = document.createElement("div");
         linha.className = "reserva-linha";
 
@@ -491,7 +512,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnCancelar.textContent = "Cancelar";
         btnCancelar.dataset.index = idx;
 
-        // ❌ Se já estiver cancelada ou outro status inválido → desativa
+        // Desativa botão se já estiver cancelada/finalizada
         if (r.status && r.status !== "pendente" && r.status !== "confirmada") {
           btnCancelar.disabled = true;
           btnCancelar.textContent = "Indisponível";
@@ -506,74 +527,99 @@ document.addEventListener("DOMContentLoaded", () => {
         linha.appendChild(statusSpan);
         linha.appendChild(btnCancelar);
 
-        // 🔹 Busca dados completos
-        let estacaoDados = stations.find(e => namesEqual(e.nome, r.estacao))
-          || favoritos.find(e => namesEqual(e.nome, r.estacao))
-          || (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao))
-          || {};
+        // 🔹 Busca dados da estação
+        let estacaoDados =
+          stations.find(e => namesEqual(e.nome, r.estacao)) ||
+          favoritos.find(e => namesEqual(e.nome, r.estacao)) ||
+          (window.estacoes || []).find(e => namesEqual(e.nome, r.estacao)) ||
+          {};
 
-        // 🔹 Pega dados do veículo
-        const veiculoObj = getVeiculoForReservation(r);
+        // 🔹 Busca dados do veículo do backend
         let veiculoHtml = "";
-        if (veiculoObj) {
-          veiculoHtml = `
-            <p><strong>Usuário:</strong> ${r.usuario || r.usuarioEmail || localStorage.getItem("usuario")}</p>
-            <p><strong>Modelo:</strong> ${veiculoObj.modelo || "N/D"} ${veiculoObj.ano ? `(${veiculoObj.ano})` : ""}</p>
-            <p><strong>Placa:</strong> ${veiculoObj.placa || "N/D"}</p>
-            <p><strong>Bateria:</strong> ${veiculoObj.bateria || "N/D"}</p>
-            <p><strong>Carga:</strong> ${veiculoObj.carga || "N/D"}</p>
-          `;
+        try {
+          const usuarioEmail = r.usuarioEmail || localStorage.getItem("usuarioEmail");
+          if (usuarioEmail) {
+            const resp = await fetch(`${API_BASE}/veiculos/${usuarioEmail}`);
+            const data = await resp.json();
+
+            console.log("🚗 Dados retornados do backend:", data);
+
+            if (data && Object.keys(data).length) {
+              const v = data;
+              veiculoHtml = `
+              <p><strong>Usuário:</strong> ${usuarioEmail}</p>
+              <p><strong>Modelo:</strong> ${v.modelo || "N/D"} ${v.ano ? `(${v.ano})` : ""}</p>
+              <p><strong>Placa:</strong> ${v.placa || "N/D"}</p>
+              <p><strong>Bateria:</strong> ${v.bateria ? v.bateria + " kWh" : "N/D"}</p>
+              <p><strong>Carga:</strong> ${v.carregamento ? v.carregamento + " kW" : "N/D"}</p>
+            `;
+            } else {
+              veiculoHtml = `<p><em>Veículo não cadastrado.</em></p>`;
+            }
+          } else {
+            veiculoHtml = `<p><em>Email de usuário não identificado.</em></p>`;
+          }
+        } catch (err) {
+          console.warn("⚠ Falha ao buscar veículo do backend:", err);
+          veiculoHtml = `<p><em>Erro ao carregar informações do veículo.</em></p>`;
         }
 
+        // 🔹 Monta detalhes da reserva
         const detalhes = document.createElement("div");
         detalhes.className = "detalhes-reserva";
 
-        // Detecta a duração e monta o intervalo de horário
-        let horarioFormatado = r.hora; // padrão, caso nada mais exista
+        // Duração e horário formatado
+        let horarioFormatado = r.hora;
 
         if (r.inicio && r.fim) {
-          // Se já tiver início e fim na reserva
-          const dur = horaParaMinutos(r.fim) - horaParaMinutos(r.inicio);
+          let dur = horaParaMinutos(r.fim) - horaParaMinutos(r.inicio);
+          if (dur < 0) dur += 24 * 60;
+
           const horas = Math.floor(dur / 60);
           const minutos = dur % 60;
-          horarioFormatado = `${r.inicio} - ${r.fim} (${horas}h${minutos > 0 ? " " + minutos + "min" : ""})`;
+          horarioFormatado = `${r.inicio} - ${r.fim} (${horas}h${minutos ? " " + minutos + "min" : ""})`;
+
         } else if (r.hora && r.duracaoMin) {
-          // Se tiver apenas hora inicial + duração
           const inicioMin = horaParaMinutos(r.hora);
           const fimMin = inicioMin + r.duracaoMin;
           const fimHora = minutosParaHora(fimMin);
           const horas = Math.floor(r.duracaoMin / 60);
           const minutos = r.duracaoMin % 60;
-          horarioFormatado = `${r.hora} - ${fimHora} (${horas}h${minutos > 0 ? " " + minutos + "min" : ""})`;
+          horarioFormatado = `${r.hora} - ${fimHora} (${horas}h${minutos ? " " + minutos + "min" : ""})`;
         }
 
-        detalhes.innerHTML = `
-  <p><strong>Data:</strong> ${r.data}</p>
-  <p><strong>Horário:</strong> ${horarioFormatado}</p>
-  <p><strong>Status:</strong> ${r.status || "pendente"}</p>
-  <p><strong>Endereço:</strong> ${estacaoDados?.rua || "N/D"} ${estacaoDados?.numero || ""} </p> ${estacaoDados?.bairro || "N/D"} - ${estacaoDados?.cidade || "N/D"} / ${estacaoDados?.estado || ""}</p>
-  <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia ? (estacaoDados.potencia + " kW") : "N/D"}</p>
-  <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || "?"} - ${estacaoDados?.fechamento || "?"}</p>
-  <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ? (estacaoDados.tempoEspera + " min") : "--"}</p>
-  <p><strong>Preço:</strong> ${estacaoDados?.preco ? (estacaoDados.preco + " R$/kWh") : "--"}</p>
-  ${veiculoHtml}
-`;
 
+        detalhes.innerHTML = `
+        <p><strong>Data:</strong> ${r.data}</p>
+        <p><strong>Horário:</strong> ${horarioFormatado}</p>
+        <p><strong>Status:</strong> ${r.status || "pendente"}</p>
+        <p><strong>Endereço:</strong> 
+        ${estacaoDados?.address || estacaoDados?.rua || "N/D"} 
+        ${estacaoDados?.number || estacaoDados?.numero || ""} 
+        ${estacaoDados?.district || estacaoDados?.bairro || "N/D"} - 
+        ${estacaoDados?.city || estacaoDados?.cidade || "N/D"} / 
+        ${estacaoDados?.state || estacaoDados?.estado || ""}</p>
+        <p><strong>Potência Máx:</strong> ${estacaoDados?.potencia ? estacaoDados.potencia + " kW" : "N/D"}</p>
+        <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || "?"} - ${estacaoDados?.fechamento || "?"}</p>
+        <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ? estacaoDados.tempoEspera + " min" : "--"}</p>
+        <p><strong>Preço:</strong> ${estacaoDados?.preco ? estacaoDados.preco + " R$/kWh" : "--"}</p>
+        ${veiculoHtml}
+      `;
 
         li.appendChild(linha);
         li.appendChild(detalhes);
-
         listaDetalhes.appendChild(li);
-      });
+      }
     } catch (err) {
       console.error("Erro em renderizarDetalhes:", err);
       if (listaDetalhes) listaDetalhes.innerHTML = "<li>Erro ao carregar detalhes.</li>";
     }
   }
 
+
   // Confirmar cancelamento (status → cancelada)
   if (btnConfirmar) {
-    btnConfirmar.addEventListener("click", () => {
+    btnConfirmar.addEventListener("click", async () => {
       if (reservaIndexParaCancelar !== null) {
         const reservas = carregarReservas();
         const r = reservas[reservaIndexParaCancelar];
@@ -612,28 +658,34 @@ document.addEventListener("DOMContentLoaded", () => {
             console.warn("Falha ao atualizar reservas da estação", e);
           }
 
-
-          // REEMBOLSO FIXO DE R$10
+          // 💰 REEMBOLSO FIXO DE R$10 (via backend)
           try {
-            const usuarioAtual = localStorage.getItem("usuarioEmail") || "default";
-            const carteiraKey = `saldoCarteira_${usuarioAtual}`;
-            const transKey = `transacoesCarteira_${usuarioAtual}`;
-            let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
-            saldoAtual = +(saldoAtual + 10).toFixed(2);
-            localStorage.setItem(carteiraKey, saldoAtual);
+            const usuarioEmail = localStorage.getItem("usuarioEmail");
+            if (!usuarioEmail) throw new Error("Usuário não autenticado.");
 
-            const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
-            transacoes.push({ valor: 10, tipo: "Reembolso" }); // ✅ AGORA FICA CORRETO!
-            localStorage.setItem(transKey, JSON.stringify(transacoes));
+            // Chama o backend para processar o reembolso
+            const resposta = await fetch("http://localhost:4000/wallet/refund", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: usuarioEmail,
+                amount: 10,
+                description: "Reembolso automático por cancelamento"
+              }),
+            });
 
-            // 🔔 Atualiza carteira em tempo real
+            const data = await resposta.json();
+
+            if (!resposta.ok) throw new Error(data.error || "Falha no reembolso");
+            console.log("💰 Reembolso de R$10 aplicado com sucesso:", data);
+
+            // Atualiza carteira em tempo real
             window.dispatchEvent(new Event("carteiraAtualizada"));
-
           } catch (e) {
-            console.error("Falha ao reembolsar:", e);
+            console.error("Falha ao processar reembolso:", e);
           }
 
-
+          // Re-renderiza as telas
           renderizarReservas();
           renderizarDetalhes();
 
@@ -643,11 +695,14 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => location.reload(), 300);
           }
         }
+
         reservaIndexParaCancelar = null;
       }
+
       if (confirmarModal) confirmarModal.style.display = "none";
     });
   }
+
 
   // Fechar modal de confirmação
   if (btnFechar) {
@@ -743,53 +798,100 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Sempre usar email como chave fixa
       const usuarioEmail = localStorage.getItem("usuarioEmail");
-      const carteiraKey = `saldoCarteira_${usuarioEmail}`;
-      let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
-
-      if (saldoAtual < custoReserva) {
+      if (!usuarioEmail) {
+        console.error("⚠ Nenhum usuário logado encontrado.");
         if (typeof mostrarMensagem === "function") {
-          mostrarMensagem("❌ Saldo insuficiente! Recarregue sua carteira com pelo menos R$10.", "erro");
+          mostrarMensagem("⚠ Nenhum usuário logado. Faça login para agendar.", "erro");
         }
         return;
       }
 
-      // realiza débito e persiste
-      saldoAtual = +(saldoAtual - custoReserva).toFixed(2);
-      localStorage.setItem(carteiraKey, saldoAtual);
+      async function atualizarCarteiraUI() {
+        try {
+          const res = await fetch(`${API_BASE}/wallet/${usuarioEmail}`);
+          const data = await res.json();
 
-      const transKey = `transacoesCarteira_${usuarioEmail}`;
-      const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
-      // registra transação negativa com label para reserva (será renderizada pela UI)
-      transacoes.push({ valor: -custoReserva, tipo: "Reserva" });
-      localStorage.setItem(transKey, JSON.stringify(transacoes));
+          if (!res.ok || !data.wallet) throw new Error("Falha ao obter dados da carteira");
 
-      // Atualiza imediatamente a UI da carteira, se os elementos existirem na página
-      try {
-        const saldoEl = document.getElementById("saldoCarteira");
-        if (saldoEl) saldoEl.innerText = `R$${saldoAtual.toFixed(2)}`;
+          const saldoEl = document.getElementById("saldoCarteira");
+          const listaTransacoes = document.getElementById("listaTransacoes");
 
-        const listaTransacoes = document.getElementById("listaTransacoes");
-        if (listaTransacoes) {
-          listaTransacoes.innerHTML = transacoes.length
-            ? transacoes
-              .slice()
-              .reverse()
-              .map((t) => `
-    <p class="${t.valor >= 0 ? 'pos' : 'neg'}">
-      ${t.valor >= 0 ? '+' : '-'} R$${Math.abs(t.valor).toFixed(2)} (${t.tipo})
-    </p>
-  `)
-              .join("")
-            : "<p>Nenhuma transação ainda.</p>";
+          if (saldoEl) saldoEl.innerText = `R$${Number(data.wallet.balance).toFixed(2)}`;
+
+          if (listaTransacoes) {
+            const transacoes = data.transactions || [];
+
+            // ✅ Mostra a transação mais recente primeiro
+            listaTransacoes.innerHTML = transacoes.length
+              ? transacoes
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // ordena do mais novo pro mais antigo
+                .map(
+                  (t) => `
+          <p class="${Number(t.amount) >= 0 ? 'pos' : 'neg'}">
+            ${Number(t.amount) >= 0 ? '+' : '-'} R$${Math.abs(Number(t.amount)).toFixed(2)} (${t.type})
+          </p>`
+                )
+                .join("")
+              : "<p>Nenhuma transação ainda.</p>";
+          }
+
+        } catch (e) {
+          console.warn("⚠ Falha ao atualizar UI da carteira:", e);
+        }
+      }
+
+      // Função para debitar no backend
+      async function debitarReserva(email, valor) {
+        try {
+          const res = await fetch(`${API_BASE}/wallet/debit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, amount: valor, type: "Reserva" }),
+          });
+
+          const data = await res.json();
+          console.log("💳 Resposta do backend (débito):", data);
+
+          if (!res.ok || !data.success) {
+            throw new Error(data.message || "Falha ao realizar débito.");
+          }
+
+          if (typeof mostrarMensagem === "function") {
+            mostrarMensagem(`R$${valor.toFixed(2)} debitados da carteira (Reserva).`, "aviso");
+          }
+
+          // ✅ Atualiza a carteira completa logo após o débito
+          await atualizarCarteiraUI();
+
+          return true;
+        } catch (err) {
+          console.error("❌ Erro ao debitar reserva:", err);
+          if (typeof mostrarMensagem === "function") {
+            mostrarMensagem("❌ Falha ao debitar a reserva. Tente novamente.", "erro");
+          }
+          return false;
+        }
+      }
+
+      // Executa o débito e só continua se o saldo for suficiente
+      (async () => {
+        const resSaldo = await fetch(`${API_BASE}/wallet/${usuarioEmail}`);
+        const dataSaldo = await resSaldo.json();
+
+        if (!resSaldo.ok || !dataSaldo.wallet) {
+          mostrarMensagem("❌ Erro ao consultar saldo no servidor.", "erro");
+          return;
         }
 
-      } catch (e) {
-        console.warn("Não foi possível atualizar UI da carteira imediatamente:", e);
-      }
+        const saldoAtual = dataSaldo.wallet.balance;
+        if (saldoAtual < custoReserva) {
+          mostrarMensagem("❌ Saldo insuficiente! Recarregue sua carteira com pelo menos R$10.", "erro");
+          return;
+        }
 
-      if (typeof mostrarMensagem === "function") {
-        mostrarMensagem(`R$${custoReserva.toFixed(2)} debitados da carteira (Reserva).`, "aviso");
-      }
+        await debitarReserva(usuarioEmail, custoReserva);
+      })();
+
 
       // Capturar telefone do usuário 
       let telefoneUsuario = "";

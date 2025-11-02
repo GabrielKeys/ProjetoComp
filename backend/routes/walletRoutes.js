@@ -10,7 +10,6 @@ router.get("/:email", async (req, res) => {
   const { email } = req.params;
 
   try {
-    // busca carteira
     const { data: wallet, error: walletErr } = await supabase
       .from("wallets")
       .select("*")
@@ -19,7 +18,6 @@ router.get("/:email", async (req, res) => {
 
     if (walletErr && walletErr.code !== "PGRST116") throw walletErr;
 
-    // ⚠️ Só busca transações da carteira do usuário
     let transactions = [];
     if (wallet) {
       const { data, error: transErr } = await supabase
@@ -50,7 +48,6 @@ router.post("/recharge", async (req, res) => {
     return res.status(400).json({ error: "Email e valor são obrigatórios." });
 
   try {
-    // garante que a carteira existe
     const { data: wallet, error: findErr } = await supabase
       .from("wallets")
       .select("*")
@@ -63,7 +60,6 @@ router.post("/recharge", async (req, res) => {
     let newBalance;
 
     if (!wallet) {
-      // cria uma nova carteira
       const { data: newWallet, error: createErr } = await supabase
         .from("wallets")
         .insert([{ user_email: email, balance: amount }])
@@ -74,7 +70,6 @@ router.post("/recharge", async (req, res) => {
       walletId = newWallet.id;
       newBalance = amount;
     } else {
-      // atualiza saldo existente
       newBalance = Number(wallet.balance) + Number(amount);
       const { error: updateErr } = await supabase
         .from("wallets")
@@ -84,7 +79,6 @@ router.post("/recharge", async (req, res) => {
       walletId = wallet.id;
     }
 
-    // registra a transação
     const { error: transErr } = await supabase.from("transactions").insert([
       {
         wallet_id: walletId,
@@ -105,4 +99,105 @@ router.post("/recharge", async (req, res) => {
   }
 });
 
-module.exports = router;
+// ===============================
+// POST /wallet/debit  → debita saldo (ex: reserva)
+// ===============================
+router.post("/debit", async (req, res) => {
+  const { email, amount, description } = req.body;
+  if (!email || !amount)
+    return res.status(400).json({ error: "Email e valor são obrigatórios." });
+
+  try {
+    const { data: wallet, error: walletErr } = await supabase
+      .from("wallets")
+      .select("*")
+      .eq("user_email", email)
+      .single();
+
+    if (walletErr && walletErr.code !== "PGRST116") throw walletErr;
+    if (!wallet) {
+      return res.status(404).json({ error: "Carteira não encontrada." });
+    }
+
+    if (Number(wallet.balance) < Number(amount)) {
+      return res.status(400).json({ error: "Saldo insuficiente." });
+    }
+
+    const newBalance = Number(wallet.balance) - Number(amount);
+    const { error: updateErr } = await supabase
+      .from("wallets")
+      .update({ balance: newBalance, updated_at: new Date() })
+      .eq("id", wallet.id);
+
+    if (updateErr) throw updateErr;
+
+    const { error: transErr } = await supabase.from("transactions").insert([
+      {
+        wallet_id: wallet.id,
+        amount: -Math.abs(amount),
+        type: "Reserva",
+        description: description || "Débito de reserva",
+      },
+    ]);
+    if (transErr) throw transErr;
+
+    res.status(200).json({
+      success: true,
+      message: "Débito realizado com sucesso.",
+      new_balance: newBalance,
+    });
+  } catch (err) {
+    console.error("Erro ao debitar:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ===============================
+// POST /wallet/refund → reembolsa saldo (ex: cancelamento)
+// ===============================
+router.post("/refund", async (req, res) => {
+  const { email, amount = 10, description } = req.body;
+  if (!email)
+    return res.status(400).json({ error: "Email é obrigatório." });
+
+  try {
+    const { data: wallet, error: walletErr } = await supabase
+      .from("wallets")
+      .select("*")
+      .eq("user_email", email)
+      .single();
+
+    if (walletErr && walletErr.code !== "PGRST116") throw walletErr;
+    if (!wallet) {
+      return res.status(404).json({ error: "Carteira não encontrada." });
+    }
+
+    const newBalance = Number(wallet.balance) + Number(amount);
+    const { error: updateErr } = await supabase
+      .from("wallets")
+      .update({ balance: newBalance, updated_at: new Date() })
+      .eq("id", wallet.id);
+    if (updateErr) throw updateErr;
+
+    const { error: transErr } = await supabase.from("transactions").insert([
+      {
+        wallet_id: wallet.id,
+        amount: Math.abs(amount),
+        type: "Reembolso",
+        description: description || "Reembolso automático",
+      },
+    ]);
+    if (transErr) throw transErr;
+
+    res.status(200).json({
+      success: true,
+      message: "Reembolso realizado com sucesso.",
+      new_balance: newBalance,
+    });
+  } catch (err) {
+    console.error("Erro ao reembolsar:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router; 
