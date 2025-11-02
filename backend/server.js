@@ -162,6 +162,64 @@ const walletRoutes = require("./routes/walletRoutes");
 app.use("/wallet", walletRoutes);
 
 // ==========================================
+// ROTAS DE VEÍCULOS
+// ==========================================
+
+// Buscar veículo de um usuário
+app.get("/veiculos/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    const { data, error } = await supabase
+      .from("veiculos")
+      .select("*")
+      .eq("usuario_email", email)
+      .single();
+
+    if (error) {
+      console.error("❌ Erro ao buscar veículo:", error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Erro inesperado:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Inserir/atualizar veículo
+app.post("/veiculos", async (req, res) => {
+  const { usuario_email, modelo, ano, placa, bateria, carregamento } = req.body;
+
+  console.log("📩 Dados recebidos do front:", req.body);
+
+  try {
+    const { data, error } = await supabase
+      .from("veiculos")
+      .upsert(
+        [{ usuario_email, modelo, ano, placa, bateria, carregamento }],
+        { onConflict: "usuario_email" }
+      )
+      .select()
+      .single();
+
+    if (error) {
+      console.error("❌ Erro Supabase ao salvar veículo:", error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    console.log("✅ Veículo salvo com sucesso:", data);
+    res.json(data);
+
+  } catch (err) {
+    console.error("❌ Erro inesperado no servidor:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// ==========================================
 // START SERVER (⚠️ MOVIDO PARA O FINAL)
 // ==========================================
 app.listen(PORT, () => {
