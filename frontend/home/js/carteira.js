@@ -1,33 +1,24 @@
-// carteira.js (versão com Google Pay TEST + input moeda formatado)
-// ----------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
-// Sempre usar email como chave fixa da carteira
-const usuarioAtual = localStorage.getItem("usuarioEmail");
-if (!usuarioAtual) {
-  console.error("⚠ Nenhum usuarioEmail encontrado no localStorage! A carteira não funcionará sem email.");
-}
+  // ======================================
+  // Verifica se há um usuário logado
+  // ======================================
+  const usuarioAtual = localStorage.getItem("usuarioEmail");
+  if (!usuarioAtual) {
+    console.error("⚠ Nenhum usuarioEmail encontrado no localStorage!");
+    return;
+  }
 
-  // Carrega saldo e transações iniciais (padrão)
-  let saldo = parseFloat(localStorage.getItem(`saldoCarteira_${usuarioAtual}`)) || 0;
-  let transacoes = JSON.parse(localStorage.getItem(`transacoesCarteira_${usuarioAtual}`)) || [];
-
-
-  // 🔄 Conversão automática para o novo formato (apenas números → { valor, tipo })
-  transacoes = transacoes.map(t => {
-    if (typeof t === "number") {
-      return { valor: t, tipo: "Recarga" }; // padrão antigo considerado recarga
-    }
-    return t;
-  });
+  let saldo = 0;
+  let transacoes = [];
 
   const saldoEl = document.getElementById("saldoCarteira");
   const listaTransacoes = document.getElementById("listaTransacoes");
   const btnRecarregar = document.getElementById("btnRecarregar");
   const inputValor = document.getElementById("valorRecarga");
 
-  // ===============================
+  // ======================================
   // Helpers
-  // ===============================
+  // ======================================
   function info(msg, tipo = "sucesso") {
     if (typeof mostrarMensagem === "function") {
       mostrarMensagem(msg, tipo);
@@ -36,74 +27,81 @@ if (!usuarioAtual) {
     }
   }
 
-  // Nota: agora esta função RECARREGA os dados do localStorage antes de renderizar,
-  // garantindo que atualizações feitas por outros scripts (ex.: reserva.js) apareçam.
-  function atualizarCarteiraUI() {
-    // recarrega valores atuais do localStorage (mantém consistência entre scripts)
-    saldo = parseFloat(localStorage.getItem(`saldoCarteira_${usuarioAtual}`)) || 0;
-    transacoes = JSON.parse(localStorage.getItem(`transacoesCarteira_${usuarioAtual}`)) || [];
-    transacoes = transacoes.map(t => {
-      if (typeof t === "number") return { valor: t, tipo: "Recarga" };
-      return t;
-    });
+// Atualiza a interface da carteira (saldo e transações)
+function atualizarCarteiraUI() {
+  if (saldoEl) saldoEl.innerText = `R$${saldo.toFixed(2)}`;
+  if (listaTransacoes) {
+    listaTransacoes.innerHTML = transacoes.length
+      ? transacoes
+          .map(
+            (t) => `
+            <p class="${(t.amount || 0) >= 0 ? 'pos' : 'neg'}">
+              ${(t.amount || 0) >= 0 ? "+" : "-"} 
+              R$${Math.abs(t.amount || 0).toFixed(2)} 
+              (${t.type || "Transação"})
+            </p>`
+          )
+          .join("")
+      : "<p>Nenhuma transação ainda.</p>";
+  }
+}
 
-    if (saldoEl) saldoEl.innerText = `R$${saldo.toFixed(2)}`;
-    if (listaTransacoes) {
-      listaTransacoes.innerHTML = transacoes.length
-        ? transacoes
-            .slice()
-            .reverse()
-            .map((t) => `
-        <p class="${(t.valor || 0) >= 0 ? 'pos' : 'neg'}">
-          ${(t.valor || 0) >= 0 ? '+' : '-'} R$${Math.abs(t.valor || 0).toFixed(2)} (${t.tipo || 'Transação'})
-        </p>
-      `)
-            .join("")
-        : "<p>Nenhuma transação ainda.</p>";
+  // ======================================
+  // Busca saldo e transações do backend
+  // ======================================
+  async function obterDadosDaCarteira() {
+    try {
+      const res = await fetch(`${API_BASE}/wallet/${usuarioAtual}`);
+      if (!res.ok) throw new Error("Falha ao obter dados da carteira");
+      const data = await res.json();
+
+      saldo = data.wallet.balance;
+      transacoes = data.transactions || [];
+
+      atualizarCarteiraUI();
+    } catch (err) {
+      console.error("Erro ao atualizar os dados da carteira:", err);
+      info("❌ Erro ao carregar dados da carteira.", "erro");
     }
   }
-  atualizarCarteiraUI();
 
-  // Atualiza quando outra parte do sistema avisar
-  window.addEventListener("carteiraAtualizada", atualizarCarteiraUI);
+  // Carrega a carteira ao iniciar
+  obterDadosDaCarteira();
 
-  function persistir() {
-    localStorage.setItem(`saldoCarteira_${usuarioAtual}`, saldo);
-    localStorage.setItem(`transacoesCarteira_${usuarioAtual}`, JSON.stringify(transacoes));
+  // ======================================
+  // Função para recarregar no banco de dados
+  // ======================================
+  async function recarregarBackend(valor) {
+    const email = usuarioAtual;
+    try {
+      const res = await fetch(`${API_BASE}/wallet/recharge`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, amount: valor }),
+      });
+
+      const data = await res.json();
+      console.log("✅ Resposta do backend:", data);
+
+      // Corrige o campo retornado (usa new_balance)
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Falha ao registrar recarga no backend");
+      }
+
+      saldo = data.new_balance || saldo;
+      // Atualiza transações com uma nova chamada ao backend
+      await obterDadosDaCarteira();
+
+      info(`✅ Recarga de R$${valor.toFixed(2)} salva no servidor.`, "sucesso");
+    } catch (err) {
+      console.error("⚠️ Falha ao salvar no backend:", err);
+      info(`❌ Falha ao registrar a recarga no servidor: ${err.message}`, "erro");
+    }
   }
 
-  function recarregarLocal(valor) {
-    saldo += valor;
-    transacoes.push({ valor: valor, tipo: "Recarga" }); // ✅ AGORA NO NOVO FORMATO
-    persistir();
-    atualizarCarteiraUI();
-    info(`✅ Recarga de R$${valor.toFixed(2)} aplicada (modo local).`, "sucesso");
-  }
-
-  // ===============================
-  // Input de moeda formatado (BRL)
-  // ===============================
-  if (inputValor) {
-    inputValor.value = "R$ 0,00"; // inicia formatado
-
-    inputValor.addEventListener("input", () => {
-      let valor = inputValor.value.replace(/\D/g, ""); // só números
-      if (!valor) valor = "0";
-
-      // divide centavos
-      valor = (parseInt(valor, 10) / 100).toFixed(2);
-
-      // aplica formatação BRL
-      inputValor.value = new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      }).format(valor);
-    });
-  }
-
-  // ===============================
+  // ======================================
   // Google Pay
-  // ===============================
+  // ======================================
   function waitForGooglePay(timeoutMs = 5000) {
     return new Promise((resolve, reject) => {
       const intervalMs = 100;
@@ -132,19 +130,17 @@ if (!usuarioAtual) {
       await waitForGooglePay(5000);
     } catch (err) {
       console.warn("Google Pay não disponível:", err);
-      info("Google Pay não carregou — aplicando recarga local (modo teste).", "aviso");
-      recarregarLocal(valor);
+      info("Google Pay não carregou — aplicando recarga diretamente no backend.", "aviso");
+      recarregarBackend(valor);
       return;
     }
 
     try {
-      const paymentsClient = new google.payments.api.PaymentsClient({ environment: "TEST" });
+      const paymentsClient = new google.payments.api.PaymentsClient({
+        environment: "TEST",
+      });
 
-      const baseRequest = {
-        apiVersion: 2,
-        apiVersionMinor: 0,
-      };
-
+      const baseRequest = { apiVersion: 2, apiVersionMinor: 0 };
       const allowedCardNetworks = ["VISA", "MASTERCARD"];
       const allowedAuthMethods = ["PAN_ONLY", "CRYPTOGRAM_3DS"];
 
@@ -162,7 +158,7 @@ if (!usuarioAtual) {
           allowedAuthMethods,
           allowedCardNetworks,
         },
-        tokenizationSpecification: tokenizationSpecification,
+        tokenizationSpecification,
       };
 
       const paymentDataRequest = Object.assign({}, baseRequest, {
@@ -173,29 +169,22 @@ if (!usuarioAtual) {
           currencyCode: "BRL",
           countryCode: "BR",
         },
-        merchantInfo: {
-          merchantName: "VoltWay (Teste)",
-        },
+        merchantInfo: { merchantName: "VoltWay (Teste)" },
       });
 
       const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest);
       console.log("Google Pay - paymentData:", paymentData);
 
-      saldo += valor;
-      // garante que usamos o novo formato
-      transacoes.push({ valor: valor, tipo: "Recarga" }); // ✅ CORRIGIDO AQUI TAMBÉM
-      persistir();
-      atualizarCarteiraUI();
-      info(`✅ Recarga de R$${valor.toFixed(2)} realizada com sucesso.`, "sucesso");
+      await recarregarBackend(valor);
     } catch (err) {
       console.error("loadPaymentData erro:", err);
       info("❌ Pagamento cancelado ou não autorizado.", "erro");
     }
   }
 
-  // ===============================
+  // ======================================
   // Botão Recarregar
-  // ===============================
+  // ======================================
   if (btnRecarregar) {
     btnRecarregar.addEventListener("click", (ev) => {
       ev.preventDefault();
@@ -204,7 +193,6 @@ if (!usuarioAtual) {
         return;
       }
 
-      // pega só dígitos e divide por 100
       let valor = inputValor.value.replace(/\D/g, "");
       valor = parseFloat(valor) / 100;
 
@@ -214,9 +202,24 @@ if (!usuarioAtual) {
       }
 
       iniciarGooglePay(valor);
-      inputValor.value = "R$ 0,00"; // resetar
+      inputValor.value = "R$ 0,00";
     });
-  } else {
-    console.warn("Botão #btnRecarregar não encontrado no DOM.");
+  }
+
+  // ======================================
+  // Input formatado em BRL
+  // ======================================
+  if (inputValor) {
+    inputValor.value = "R$ 0,00";
+
+    inputValor.addEventListener("input", () => {
+      let valor = inputValor.value.replace(/\D/g, "");
+      if (!valor) valor = "0";
+      valor = (parseInt(valor, 10) / 100).toFixed(2);
+      inputValor.value = new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      }).format(valor);
+    });
   }
 });

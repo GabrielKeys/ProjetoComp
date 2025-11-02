@@ -156,6 +156,12 @@ app.get("/stations", async (req, res) => {
 });
 
 // ==========================================
+// WALLET ROUTES
+// ==========================================
+const walletRoutes = require("./routes/walletRoutes");
+app.use("/wallet", walletRoutes);
+
+// ==========================================
 // START SERVER (⚠️ MOVIDO PARA O FINAL)
 // ==========================================
 app.listen(PORT, () => {
