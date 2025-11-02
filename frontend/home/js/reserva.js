@@ -96,6 +96,22 @@ function atualizarEstacao() {
 // ====================================
 // Modal de Seleção de Estação
 // ====================================
+
+// 🔹 Garante que window.estacoes tenha os dados do banco antes de carregar favoritos
+if (!window.estacoes || !window.estacoes.length) {
+  const estacoesBD = localStorage.getItem("stations");
+  if (estacoesBD) {
+    try {
+      window.estacoes = JSON.parse(estacoesBD);
+    } catch (e) {
+      console.warn("Erro ao carregar stations do localStorage:", e);
+      window.estacoes = [];
+    }
+  } else {
+    window.estacoes = [];
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioAtual = localStorage.getItem("usuario");
   const btnSelecionar = document.getElementById("btnSelecionarEstacao");
@@ -111,7 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let favoritos = carregarFavoritos();
   let favoritosVisuais = favoritos.map(() => true);
 
-  // Renderiza lista (mostra favoritos, mas resolve dados completos via stations / estacoes)
+  // ============================================================
+  // Renderiza lista de estações favoritas (dados via localStorage)
+  // ============================================================
   function renderizarLista() {
     if (!listaEstacoes) return;
     listaEstacoes.innerHTML = "";
@@ -124,11 +142,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // pega stations salvas (registradas)
     const stations = JSON.parse(localStorage.getItem("stations")) || [];
 
     favoritos.forEach((fav, idx) => {
-      // 🔹 resolve objeto completo: primeiro stations, depois window.estacoes, enfim use fav
       const estacaoCompleta =
         stations.find(s => namesEqual(s.nome, fav.nome)) ||
         (window.estacoes || []).find(s => namesEqual(s.nome, fav.nome)) ||
@@ -148,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const acoes = document.createElement("div");
       acoes.className = "estacao-acoes";
 
-      // Estrela (visual) - mantém a lógica anterior de favoritosVisuais
+      // Estrela de favorito (visual)
       const estrela = document.createElement("span");
       estrela.className = "estrela-modal favorita";
       estrela.title = "Clique para desfavoritar";
@@ -159,7 +175,6 @@ document.addEventListener("DOMContentLoaded", () => {
         e.stopPropagation();
         favoritosVisuais[idx] = !favoritosVisuais[idx];
         estrela.classList.toggle("favorita", favoritosVisuais[idx]);
-
         if (favoritosVisuais[idx]) {
           if (typeof mostrarMensagem === "function") mostrarMensagem(`${estacaoCompleta.nome} adicionada aos favoritos!`, "sucesso", true);
         } else {
@@ -167,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      // Botão Selecionar -> salva a estacao completa
+      // Botão Selecionar
       const btnSelect = document.createElement("button");
       btnSelect.className = "btn-selecionar-estacao";
       btnSelect.textContent = "Selecionar";
@@ -183,16 +198,40 @@ document.addEventListener("DOMContentLoaded", () => {
       linha.appendChild(nome);
       linha.appendChild(acoes);
 
-      // Detalhes sempre visíveis(placeholders R$/kWh)
+      // ============================================================
+      // Detalhes da estação (com formatação completa do mapa.js)
+      // ============================================================
       const detalhes = document.createElement("div");
       detalhes.className = "detalhes-estacao ativo";
+
       detalhes.innerHTML = `
-  <p><strong>Endereço:</strong> ${estacaoCompleta.rua || "N/D"} ${estacaoCompleta.numero || ""} </p> ${estacaoCompleta.bairro || "N/D"} - ${estacaoCompleta.cidade || "N/D"} / ${estacaoCompleta.estado || ""}</p>
-  <p><strong>Potência Máx:</strong> ${estacaoCompleta.potencia ? (estacaoCompleta.potencia + "") : "N/D"}</p>
-  <p><strong>Disponibilidade:</strong> ${estacaoCompleta.abertura || "?"} - ${estacaoCompleta.fechamento || "?"}</p>
-  <p><strong>Tempo de Espera:</strong> ${estacaoCompleta.tempoEspera ? (estacaoCompleta.tempoEspera + " min") : "--"}</p>
-  <p><strong>Preço:</strong> ${estacaoCompleta.preco ? (estacaoCompleta.preco + "/kWh") : "--"}</p>
-  <p><strong>Telefone:</strong> ${formatarTelefone(estacaoCompleta.telefone)}</p>
+  <p><strong>Endereço:</strong><br>
+    ${estacaoCompleta.address || estacaoCompleta.rua || ""} 
+    ${estacaoCompleta.number || estacaoCompleta.numero || ""}<br>
+    ${estacaoCompleta.district || estacaoCompleta.bairro || "N/D"} - 
+    ${estacaoCompleta.city || estacaoCompleta.cidade || "N/D"} / 
+    ${estacaoCompleta.state || estacaoCompleta.estado || ""}
+  </p>
+  <p><strong>Horário:</strong> 
+    ${estacaoCompleta.open_time || estacaoCompleta.abertura || "?"} - 
+    ${estacaoCompleta.close_time || estacaoCompleta.fechamento || "?"}
+  </p>
+  <p><strong>Preço:</strong> 
+    ${estacaoCompleta.price != null 
+      ? `R$ ${Number(estacaoCompleta.price).toFixed(2)}/kWh` 
+      : (estacaoCompleta.preco != null 
+        ? `R$ ${Number(estacaoCompleta.preco).toFixed(2)}/kWh` 
+        : "N/D")}
+  </p>
+  <p><strong>Potência:</strong> 
+    ${estacaoCompleta.power ?? estacaoCompleta.potencia ?? "N/D"} kW
+  </p>
+  <p><strong>Tempo de espera:</strong> 
+    ${estacaoCompleta.wait_time ?? estacaoCompleta.tempoEspera ?? "N/D"} min
+  </p>
+  <p><strong>Telefone:</strong> 
+    ${formatarTelefone(estacaoCompleta.phone || estacaoCompleta.telefone)}
+  </p>
 `;
 
       li.appendChild(linha);
@@ -202,6 +241,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // ============================================================
+  // Funções auxiliares
+  // ============================================================
   function salvarFavoritos() {
     const originais = carregarFavoritos();
     const novos = originais.filter((_, i) => favoritosVisuais[i]);
@@ -243,6 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === modal) salvarFavoritosEFechar();
   });
 });
+
 
 // ====================================
 // Modal de Agendamento

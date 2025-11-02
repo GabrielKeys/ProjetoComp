@@ -528,7 +528,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-
 //placeholder de erro
 function atualizarEstacao() {
   console.log("Função atualizarEstacao chamada (placeholder)");
@@ -537,3 +536,50 @@ function atualizarEstacao() {
 function inputData() {
   console.log("Função inputData chamada (placeholder)");
 }
+
+// =========================================
+// Sincroniza estações com o backend (único ponto)
+// =========================================
+async function sincronizarEstacoes() {
+  try {
+    // Usa o mesmo endpoint do mapa (backend local)
+    const resp = await fetch(`${API_BASE}/stations`);
+    const estacoes = await resp.json();
+
+    if (Array.isArray(estacoes)) {
+      // Normaliza campos para compatibilidade com reserva.js
+      const normalizadas = estacoes.map(e => ({
+        nome: e.nome || e.name || e.full_name || "Sem nome",
+        potencia: e.potencia ?? e.power ?? null,
+        preco: e.preco ?? e.price ?? null,
+        abertura: e.abertura ?? e.open_time ?? e.open ?? "?",
+        fechamento: e.fechamento ?? e.close_time ?? e.close ?? "?",
+        telefone: e.telefone ?? e.phone ?? "",
+        tempoEspera: e.tempoEspera ?? e.wait_time ?? null,
+        lat: Number(e.lat),
+        lng: Number(e.lng),
+        address: e.address ?? e.rua ?? "",
+        number: e.number ?? e.numero ?? "",
+        district: e.district ?? e.bairro ?? "",
+        city: e.city ?? e.cidade ?? "",
+        state: e.state ?? e.estado ?? "",
+        cep: e.cep ?? e.zip ?? ""
+      }));
+
+      window.estacoes = normalizadas;
+      localStorage.setItem("stations", JSON.stringify(normalizadas));
+
+      console.log(`✅ ${normalizadas.length} estações salvas no localStorage e no window.estacoes`);
+    } else {
+      console.warn("⚠️ Resposta inesperada ao carregar estações:", estacoes);
+    }
+  } catch (e) {
+    console.error("❌ Erro ao buscar estações:", e);
+  }
+}
+
+// 🔹 Chama antes de inicializar o mapa
+window.addEventListener("load", async () => {
+  await sincronizarEstacoes();
+  initMap(); // só inicia o mapa depois de sincronizar
+});
