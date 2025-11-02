@@ -333,6 +333,11 @@ async function carregarEstacoesDoBanco(userLocation=null) {
     console.error("Erro em carregarEstacoesDoBanco:",err);
     mostrarMensagem("Erro ao buscar estações do servidor","erro");
   }
+
+  if (userLocation) {
+  carregarEstacoesReais(userLocation);
+}
+
 }
 
 /* ===============================
@@ -347,7 +352,7 @@ function adicionarEstacaoNoMapa(estacao) {
 
     const marker = new google.maps.Marker({
       position, map, title:nomeExibicao,
-      icon:{ url:"../assets/bateria-azul.png", scaledSize:new google.maps.Size(28,28) }
+      icon:{ url:"../assets/bateria-azul.png", scaledSize:new google.maps.Size(40,40) }
     });
     marker._estacao = estacao;
 
@@ -402,3 +407,133 @@ function adicionarEstacaoNoMapa(estacao) {
 }
 
 
+/* ===============================
+   Carregar estações não registradas (Places API New)
+   =============================== */
+async function carregarEstacoesReais(location) {
+  try {
+    const { Place } = await google.maps.importLibrary("places");
+
+    const request = {
+      fields: ["displayName", "location", "formattedAddress"],
+      locationRestriction: {
+        center: location,
+        radius: 15000, // 15 km
+      },
+      includedTypes: ["electric_vehicle_charging_station"],
+    };
+
+    const { places } = await Place.searchNearby(request);
+
+    if (!places || places.length === 0) {
+      mostrarMensagem("Nenhuma estação não registrada encontrada.", "erro", true);
+      return;
+    }
+
+    places.forEach((place) => {
+      const marker = new google.maps.Marker({
+        position: place.location,
+        map,
+        title: place.displayName,
+        icon: {
+          url: "../assets/bateria-cinza.png",
+          scaledSize: new google.maps.Size(40, 40),
+        },
+      });
+
+      const nomeExibicao = place.displayName || "Estação Desconhecida";
+
+      // 🔹 Popup SEM estrela (nem footer)
+      const content = `
+        <div class="popup-estacao">
+          <div class="popup-conteudo">
+            <b>${nomeExibicao}</b><br>
+            ${place.formattedAddress || "Endereço não disponível"}<br>
+            <span style="color:#666;font-size:12px">(Não registrada no app)</span>
+          </div>
+        </div>
+      `;
+
+      const infowindow = new google.maps.InfoWindow({ content });
+
+      marker.addListener("click", () => {
+        if (infowindowAtual) infowindowAtual.close();
+        infowindow.open(map, marker);
+        infowindowAtual = infowindow;
+      });
+
+      carregadores.push(marker);
+    });
+
+    mostrarMensagem(`${places.length} estações não registradas carregadas.`, "aviso", true);
+    aplicarFiltro(document.getElementById("filtroRecarga")?.checked ?? true);
+
+  } catch (err) {
+    console.error("Erro ao carregar estações (Places API New):", err);
+    mostrarMensagem("Erro ao buscar estações.", "erro", true);
+  }
+}
+
+/* ===============================
+   Filtro / Favoritos / Mensagens
+   =============================== */
+function aplicarFiltro(somenteRegistradas) {
+  ficticios.forEach((m) => m.setMap(map));
+  carregadores.forEach((m) => m.setMap(somenteRegistradas ? null : map));
+}
+
+function toggleFavorito(nomeEstacao, elemento) {
+  const usuarioAtual = localStorage.getItem("usuario");
+  const chaveFavoritos = `favoritos_${usuarioAtual}`;
+
+  let favoritos = JSON.parse(localStorage.getItem(chaveFavoritos)) || [];
+  const index = favoritos.findIndex((fav) => fav.nome === nomeEstacao);
+
+  if (index >= 0) {
+    favoritos.splice(index, 1);
+    mostrarMensagem(`${nomeEstacao} removida dos favoritos.`, "erro", true);
+    if (elemento) elemento.classList.remove("favorita");
+  } else {
+    const estacao = (typeof estacoes !== "undefined" && estacoes.find((e) => e.nome === nomeEstacao)) || { nome: nomeEstacao };
+    favoritos.push(estacao);
+    mostrarMensagem(`${nomeEstacao} adicionada aos favoritos!`, "sucesso", true);
+    if (elemento) elemento.classList.add("favorita");
+  }
+
+  localStorage.setItem(chaveFavoritos, JSON.stringify(favoritos));
+}
+
+function mostrarMensagem(texto, tipo, evitarDuplicado = false) {
+  if (evitarDuplicado) {
+    const jaExiste = document.querySelector(`.msg-${tipo}[data-texto="${texto}"]`);
+    if (jaExiste) return;
+  }
+  const div = document.createElement("div");
+  div.className = `mensagem msg-${tipo}`;
+  div.innerText = texto;
+  div.setAttribute("data-texto", texto);
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 4000);
+}
+
+/* ===============================
+   Ao carregar a página, scroll para hash se houver
+   =============================== */
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.location.hash) {
+    const alvo = document.querySelector(window.location.hash);
+    if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
+
+
+
+
+//placeholder de erro
+function atualizarEstacao() {
+  console.log("Função atualizarEstacao chamada (placeholder)");
+}
+
+function inputData() {
+  console.log("Função inputData chamada (placeholder)");
+}
