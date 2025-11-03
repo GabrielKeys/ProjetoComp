@@ -297,6 +297,30 @@ app.post("/reservas", async (req, res) => {
 });
 
 // ==========================================
+// GET - Buscar reservas por usuário
+// ==========================================
+app.get("/reservas/:email", async (req, res) => {
+  const { email } = req.params;
+  console.log(`📦 Buscando reservas do usuário: ${email}`);
+
+  try {
+    const { data, error } = await supabase
+      .from("reservas")
+      .select("*")
+      .eq("usuario_email", email)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    console.log("✅ Reservas encontradas:", data.length);
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Erro ao buscar reservas:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
 // START SERVER 
 // ==========================================
 app.listen(PORT, () => {
