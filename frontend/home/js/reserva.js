@@ -932,7 +932,7 @@ document.addEventListener("DOMContentLoaded", () => {
         || estacaoSel;
 
       // Busca reservas existentes para validação
-      const reservas = carregarReservas?.() || [];
+      const reservas = await carregarReservas?.() || [];
 
       if (typeof validarDisponibilidade === "function") {
         const resultado = validarDisponibilidade(estacao, data, hora, reservas);
