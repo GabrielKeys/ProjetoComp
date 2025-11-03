@@ -176,31 +176,31 @@ app.use("/wallet", walletRoutes);
 // Buscar veículo de um usuário
 app.get("/veiculos/:email", async (req, res) => {
   const { email } = req.params;
+  console.log(`🚗 Buscando veículo do usuário: ${email}`);
   try {
     const { data, error } = await supabase
       .from("veiculos")
       .select("*")
       .eq("usuario_email", email)
-      .single();
+      .maybeSingle(); // evita erro se não existir
 
     if (error) {
       console.error("❌ Erro ao buscar veículo:", error);
       return res.status(400).json({ error: error.message });
     }
 
-    res.json(data);
+    res.json(data || {}); // retorna objeto vazio se não houver veículo
   } catch (err) {
     console.error("❌ Erro inesperado:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-
 // Inserir/atualizar veículo
 app.post("/veiculos", async (req, res) => {
   const { usuario_email, modelo, ano, placa, bateria, carregamento } = req.body;
 
-  console.log("📩 Dados recebidos do front:", req.body);
+  console.log("📦 Dados recebidos do front:", req.body);
 
   try {
     const { data, error } = await supabase
@@ -219,16 +219,85 @@ app.post("/veiculos", async (req, res) => {
 
     console.log("✅ Veículo salvo com sucesso:", data);
     res.json(data);
-
   } catch (err) {
     console.error("❌ Erro inesperado no servidor:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
+// ==========================================
+// RESERVAS
+// ==========================================
+app.post("/reservas", async (req, res) => {
+  try {
+    console.log("📥 Dados recebidos em /reservas:", req.body);
+
+    const {
+      usuario_email,
+      estacao_email,
+      data,
+      inicio,
+      fim,
+      duracao_horas,
+      duracao_minutos,
+      status,
+      veiculo_modelo,
+      veiculo_ano,
+      veiculo_placa,
+      veiculo_bateria,
+      veiculo_carga,
+      telefone
+    } = req.body || {};
+
+    if (!usuario_email || !estacao_email || !data || !inicio || !fim) {
+      console.warn("⚠️ Campos obrigatórios faltando:", { usuario_email, estacao_email, data, inicio, fim });
+      return res.status(400).json({ error: "Campos obrigatórios faltando." });
+    }
+
+    // ✅ Normaliza campos numéricos
+    const safeInt = (val) => (val === "" || val === undefined ? null : Number(val));
+    const safeNum = (val) => (val === "" || val === undefined ? null : Number(val));
+
+    const reservaData = {
+      usuario_email,
+      estacao_email,
+      data,
+      inicio,
+      fim,
+      duracao_horas: safeInt(duracao_horas),
+      duracao_minutos: safeInt(duracao_minutos),
+      status,
+      veiculo_modelo,
+      veiculo_ano: safeInt(veiculo_ano),
+      veiculo_placa,
+      veiculo_bateria: safeNum(veiculo_bateria),
+      veiculo_carga: safeNum(veiculo_carga),
+      telefone
+    };
+
+    const { error } = await supabase.from("reservas").insert([reservaData]);
+
+    if (error) {
+      console.error("❌ Erro ao salvar reserva:", error);
+      return res.status(500).json({
+        error: "Erro ao salvar reserva",
+        details: error.message
+      });
+    }
+
+    console.log("✅ Nova reserva salva no banco com sucesso!");
+    return res.status(201).json({ success: true, message: "Reserva criada com sucesso" });
+  } catch (err) {
+    console.error("❌ Erro interno no endpoint /reservas:", err);
+    return res.status(500).json({
+      error: "Erro interno do servidor",
+      details: err.message
+    });
+  }
+});
 
 // ==========================================
-// START SERVER (⚠️ MOVIDO PARA O FINAL)
+// START SERVER 
 // ==========================================
 app.listen(PORT, () => {
   console.log(`⚡ VoltWay backend rodando em http://localhost:${PORT}`);

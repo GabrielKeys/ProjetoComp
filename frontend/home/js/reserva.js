@@ -1,10 +1,11 @@
 // ====================================
 // reserva.js (usuário)
 // ====================================
-
 // ====================================
 // pequenos utilitários
 // ====================================
+
+
 function normalizeName(n) {
   return (n || "")
     .toString()
@@ -22,6 +23,7 @@ function namesEqual(a, b) {
 function getEstacaoKey(estacao) {
   return (estacao && (estacao.email || estacao.nome)) || "unknown";
 }
+
 
 // ====================================
 // Encontrar qual identificador de usuário usar para os keys do veículo
@@ -199,7 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
       linha.appendChild(acoes);
 
       // ============================================================
-      // Detalhes da estação (com formatação completa do mapa.js)
+      // Detalhes da estação 
       // ============================================================
       const detalhes = document.createElement("div");
       detalhes.className = "detalhes-estacao ativo";
@@ -354,7 +356,6 @@ async function dadosVeiculoPreenchidos(usuarioEmail) {
   }
 }
 
-
 function renderizarReservas() {
   const reservas = carregarReservas();
   const textoReserva = document.getElementById("textoReserva");
@@ -424,14 +425,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let reservaIndexParaCancelar = null;
 
-  // 🔹 Atualiza status tanto no usuário quanto na estação (função usada mais abaixo)
+  // Atualiza status tanto no usuário quanto na estação 
   const atualizarStatus = typeof atualizarStatusReservaEstacao === "function"
     ? atualizarStatusReservaEstacao
     : atualizarStatusReserva; // compatibilidade com código antigo
 
-  // 🔹 Função que atualiza no usuário e na estação
+  // Função que atualiza no usuário e na estação
   function atualizarStatusReservaEstacao(estacaoEmail, usuarioEmail, data, hora, status) {
-    // Atualiza no usuário (mantive sua lógica original)
+    // Atualiza no usuário 
     const reservasUsuario = JSON.parse(localStorage.getItem(`reservasUsuario_${usuarioEmail}`)) || [];
     const reservaU = reservasUsuario.find(r => r.data === data && r.hora === hora && r.estacaoEmail === estacaoEmail);
     if (reservaU) reservaU.status = status;
@@ -745,49 +746,50 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ====================================
-// Confirmar Nova Reserva
+// Confirmar Nova Reserva (corrigido)
 // ====================================
 document.addEventListener("DOMContentLoaded", () => {
   const formAgendamento = document.getElementById("formAgendamento");
   if (!formAgendamento) return;
 
-  formAgendamento.addEventListener("submit", (e) => {
+  formAgendamento.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     try {
       const data = document.getElementById("dataReserva").value;
       const hora = document.getElementById("horaReserva").value;
       const usuarioAtual = localStorage.getItem("usuario");
+      const usuarioEmail = localStorage.getItem("usuarioEmail");
       const estacaoSel = JSON.parse(localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`));
 
       if (!data || !hora || !estacaoSel) {
-        if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Selecione estação, data e horário!", "erro");
+        mostrarMensagem?.("❌ Selecione estação, data e horário!", "erro");
         return;
       }
 
-      // 🔹 garanto usar objeto completo para validar disponibilidade
+      // Carrega estações do localStorage ou do global
       const stations = JSON.parse(localStorage.getItem("stations")) || [];
       const estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome))
         || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
         || estacaoSel;
 
-      const reservas = carregarReservas();
+      // Busca reservas existentes para validação
+      const reservas = carregarReservas?.() || [];
 
-      // chamar validarDisponibilidade se existir (proteção caso esteja em outro arquivo)
       if (typeof validarDisponibilidade === "function") {
         const resultado = validarDisponibilidade(estacao, data, hora, reservas);
         if (!resultado.disponivel) {
-          if (typeof mostrarMensagem === "function") mostrarMensagem("❌ " + resultado.mensagem, "erro");
+          mostrarMensagem?.("❌ " + resultado.mensagem, "erro");
           return;
         }
-      } else {
-        console.warn("validarDisponibilidade não encontrada — pulando validação de disponibilidade.");
       }
 
-      // 🔹 Verificação — só deixa reservar se o veículo estiver preenchido
-      const usuarioIdParaVeiculo = findUsuarioIdForVeiculo(localStorage.getItem("usuarioEmail") || usuarioAtual);
-      if (!dadosVeiculoPreenchidos(usuarioIdParaVeiculo)) {
-        if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Preencha as informações do veículo antes de reservar!", "erro");
+      // 🔍 Buscar dados do veículo direto do backend
+      const veiculoRes = await fetch(`${API_BASE}/veiculos/${usuarioEmail}`);
+      const veiculo = veiculoRes.ok ? await veiculoRes.json() : null;
+
+      if (!veiculo || !veiculo.modelo || !veiculo.placa) {
+        mostrarMensagem?.("❌ Preencha as informações do veículo antes de reservar!", "erro");
         return;
       }
 
@@ -796,22 +798,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // ===========================
       const custoReserva = 10.00;
 
-      // Sempre usar email como chave fixa
-      const usuarioEmail = localStorage.getItem("usuarioEmail");
-      if (!usuarioEmail) {
-        console.error("⚠ Nenhum usuário logado encontrado.");
-        if (typeof mostrarMensagem === "function") {
-          mostrarMensagem("⚠ Nenhum usuário logado. Faça login para agendar.", "erro");
-        }
-        return;
-      }
-
       async function atualizarCarteiraUI() {
         try {
           const res = await fetch(`${API_BASE}/wallet/${usuarioEmail}`);
           const data = await res.json();
-
-          if (!res.ok || !data.wallet) throw new Error("Falha ao obter dados da carteira");
+          if (!res.ok || !data.wallet) throw new Error();
 
           const saldoEl = document.getElementById("saldoCarteira");
           const listaTransacoes = document.getElementById("listaTransacoes");
@@ -820,27 +811,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
           if (listaTransacoes) {
             const transacoes = data.transactions || [];
-
-            // ✅ Mostra a transação mais recente primeiro
             listaTransacoes.innerHTML = transacoes.length
               ? transacoes
-                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // ordena do mais novo pro mais antigo
-                .map(
-                  (t) => `
-          <p class="${Number(t.amount) >= 0 ? 'pos' : 'neg'}">
-            ${Number(t.amount) >= 0 ? '+' : '-'} R$${Math.abs(Number(t.amount)).toFixed(2)} (${t.type})
-          </p>`
-                )
-                .join("")
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .map(t => `
+                  <p class="${Number(t.amount) >= 0 ? 'pos' : 'neg'}">
+                    ${Number(t.amount) >= 0 ? '+' : '-'} R$${Math.abs(Number(t.amount)).toFixed(2)} (${t.type})
+                  </p>`).join("")
               : "<p>Nenhuma transação ainda.</p>";
           }
-
         } catch (e) {
-          console.warn("⚠ Falha ao atualizar UI da carteira:", e);
+          console.warn("⚠ Falha ao atualizar carteira:", e);
         }
       }
 
-      // Função para debitar no backend
       async function debitarReserva(email, valor) {
         try {
           const res = await fetch(`${API_BASE}/wallet/debit`, {
@@ -848,73 +832,47 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, amount: valor, type: "Reserva" }),
           });
-
           const data = await res.json();
-          console.log("💳 Resposta do backend (débito):", data);
 
-          if (!res.ok || !data.success) {
-            throw new Error(data.message || "Falha ao realizar débito.");
-          }
-
-          if (typeof mostrarMensagem === "function") {
-            mostrarMensagem(`R$${valor.toFixed(2)} debitados da carteira (Reserva).`, "aviso");
-          }
-
-          // ✅ Atualiza a carteira completa logo após o débito
+          if (!res.ok || !data.success) throw new Error(data.message);
+          mostrarMensagem?.(`R$${valor.toFixed(2)} debitados da carteira.`, "aviso");
           await atualizarCarteiraUI();
-
           return true;
         } catch (err) {
-          console.error("❌ Erro ao debitar reserva:", err);
-          if (typeof mostrarMensagem === "function") {
-            mostrarMensagem("❌ Falha ao debitar a reserva. Tente novamente.", "erro");
-          }
+          console.error("❌ Erro ao debitar:", err);
+          mostrarMensagem?.("❌ Falha ao debitar a reserva. Tente novamente.", "erro");
           return false;
         }
       }
 
-      // Executa o débito e só continua se o saldo for suficiente
-      (async () => {
-        const resSaldo = await fetch(`${API_BASE}/wallet/${usuarioEmail}`);
-        const dataSaldo = await resSaldo.json();
+      // 💰 Verifica saldo
+      const resSaldo = await fetch(`${API_BASE}/wallet/${usuarioEmail}`);
+      const dataSaldo = await resSaldo.json();
+      if (!resSaldo.ok || !dataSaldo.wallet) {
+        mostrarMensagem?.("❌ Erro ao consultar saldo.", "erro");
+        return;
+      }
 
-        if (!resSaldo.ok || !dataSaldo.wallet) {
-          mostrarMensagem("❌ Erro ao consultar saldo no servidor.", "erro");
-          return;
-        }
+      const saldoAtual = dataSaldo.wallet.balance;
+      if (saldoAtual < custoReserva) {
+        mostrarMensagem?.("❌ Saldo insuficiente! Recarregue sua carteira.", "erro");
+        return;
+      }
 
-        const saldoAtual = dataSaldo.wallet.balance;
-        if (saldoAtual < custoReserva) {
-          mostrarMensagem("❌ Saldo insuficiente! Recarregue sua carteira com pelo menos R$10.", "erro");
-          return;
-        }
+      const debitoOK = await debitarReserva(usuarioEmail, custoReserva);
+      if (!debitoOK) return;
 
-        await debitarReserva(usuarioEmail, custoReserva);
-      })();
-
-
-      // Capturar telefone do usuário 
+      // ☎️ Capturar telefone
       let telefoneUsuario = "";
       try {
         const users = JSON.parse(localStorage.getItem("users")) || [];
-        const emailUser = (localStorage.getItem("usuarioEmail") || "").toLowerCase();
-        const dadosUser = users.find(u => (u.email || "").toLowerCase() === emailUser);
+        const dadosUser = users.find(u => (u.email || "").toLowerCase() === usuarioEmail.toLowerCase());
         telefoneUsuario = dadosUser?.phone || localStorage.getItem("usuarioTelefone") || "";
       } catch (e) {
-        console.warn("Telefone não encontrado, seguindo sem telefone.");
+        console.warn("Telefone não encontrado.");
       }
 
-      const veiculo = {
-        modelo: localStorage.getItem(`veiculoModelo_${usuarioIdParaVeiculo}`) || "",
-        ano: localStorage.getItem(`veiculoAno_${usuarioIdParaVeiculo}`) || "",
-        placa: localStorage.getItem(`veiculoPlaca_${usuarioIdParaVeiculo}`) || "",
-        bateria: localStorage.getItem(`veiculoBateria_${usuarioIdParaVeiculo}`) || "",
-        carga: localStorage.getItem(`veiculoCarregamento_${usuarioIdParaVeiculo}`) || "",
-        telefone: telefoneUsuario // 👉 agora sempre vem preenchido ou vazio, sem quebrar
-      };
-
-
-      // Garantir que as variáveis existam
+      // 🕒 Cálculo horário fim
       const durH = parseInt(document.getElementById("duracaoHoras")?.value || 1);
       const durM = parseInt(document.getElementById("duracaoMinutos")?.value || 0);
 
@@ -929,80 +887,65 @@ document.addEventListener("DOMContentLoaded", () => {
       const inicio = hora;
       const fim = addMinutesToHora(hora, durH * 60 + durM);
 
-      let reservasEstacao = JSON.parse(localStorage.getItem(`reservasEstacao_${estacao.email}`)) || [];
+      console.log("🧩 Estação selecionada:", estacao);
 
+      const estacaoEmail =
+        estacao?.email ||
+        estacao?.user_email ||
+        estacao?.estacaoEmail ||
+        estacao?.responsavel_email ||
+        estacao?.contato ||
+        (stations.find(s => namesEqual(s.nome, estacaoSel.nome))?.email) ||
+        null;
 
+      if (!estacaoEmail) {
+        console.warn("⚠️ Nenhum e-mail encontrado na estação:", estacao);
+        mostrarMensagem?.("❌ Esta estação não possui e-mail cadastrado. Contate o suporte.", "erro");
+        return;
+      }
 
-      //TESTE
-      console.log("DEBUG - TELEFONE DO USUÁRIO NA RESERVA:", {
-        usuarioAtual,
-        usuarioEmail: localStorage.getItem("usuarioEmail"),
-        veiculo,
-        telefoneVeiculo: veiculo.telefone || "(não veio)"
-      });
-
-      // 📌 Salvar reserva com duração
-      reservas.push({
-        estacao: estacao.nome,
-        estacaoEmail: estacao.email,
-        usuario: usuarioAtual,
-        usuarioEmail: localStorage.getItem("usuarioEmail") || usuarioAtual,
-        data,
-        hora,              // legado
-        inicio,
-        fim,
-        duracaoHoras: durH,
-        duracaoMinutos: durM,
-        status: "pendente",
+      // 🚀 Envia reserva ao backend
+      console.log("🛰️ Enviando reserva:", {
+        usuario_email: usuarioEmail,
+        estacao_email: estacaoEmail,
         veiculo
       });
 
-      salvarReservas(reservas);
-
-      // Salva também na estação
-      reservasEstacao.push({
-        usuarioEmail: usuarioIdParaVeiculo || usuarioAtual,
-        data,
-        hora, // legado
-        inicio,
-        fim,
-        duracaoHoras: durH,
-        duracaoMinutos: durM,
-        status: "pendente",
-        veiculo
+      const resposta = await fetch(`${API_BASE}/reservas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          usuario_email: usuarioEmail,
+          estacao_email: estacaoEmail,
+          data,
+          inicio,
+          fim,
+          duracao_horas: durH,
+          duracao_minutos: durM,
+          status: "pendente",
+          veiculo_modelo: veiculo.modelo,
+          veiculo_ano: parseInt(veiculo.ano) || null,
+          veiculo_placa: veiculo.placa,
+          veiculo_bateria: parseFloat(veiculo.bateria) || null,
+          veiculo_carga: parseFloat(veiculo.carregamento) || null,
+          telefone: telefoneUsuario || null
+        })
       });
 
-      localStorage.setItem(`reservasEstacao_${estacao.email}`, JSON.stringify(reservasEstacao));
-      // Salva também como RESERVA GLOBAL (visível para todos os usuários)
-      const keyGlobais = `reservasGlobais_${getEstacaoKey(estacao)}`;
-      let reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
-      reservasGlobais.push({
-        data,
-        hora, // legado (mantido para compatibilidade)
-        inicio, // "HH:MM"
-        fim,    // "HH:MM"
-        duracaoHoras: durH,
-        duracaoMinutos: durM,
-        duracaoMin: durH * 60 + durM, // campo simples em minutos (útil)
-        usuario: usuarioAtual,
-        usuarioEmail: localStorage.getItem("usuarioEmail") || usuarioAtual,
-        status: "pendente"
-      });
-      localStorage.setItem(keyGlobais, JSON.stringify(reservasGlobais));
+      if (!resposta.ok) throw new Error("Erro ao salvar reserva no backend.");
 
-
-      renderizarReservas();
+      mostrarMensagem?.("✅ Reserva criada com sucesso!", "sucesso");
+      renderizarReservas?.();
 
       const agendamentoModal = document.getElementById("agendamentoModal");
       if (agendamentoModal) agendamentoModal.style.display = "none";
 
     } catch (err) {
-      console.error("Erro no submit de agendamento:", err);
-      if (typeof mostrarMensagem === "function") mostrarMensagem("❌ Erro ao processar a reserva.", "erro");
+      console.error("❌ Erro no submit de agendamento:", err);
+      mostrarMensagem?.("❌ Erro ao processar a reserva.", "erro");
     }
   });
 });
-
 
 
 // ===================================
