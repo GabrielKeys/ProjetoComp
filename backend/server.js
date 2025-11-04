@@ -234,7 +234,11 @@ app.post("/reservas", async (req, res) => {
 
     const {
       usuario_email,
+      usuario_nome,
+      usuario_telefone,
       estacao_email,
+      estacao_nome,
+      estacao_telefone,
       data,
       inicio,
       fim,
@@ -246,7 +250,7 @@ app.post("/reservas", async (req, res) => {
       veiculo_placa,
       veiculo_bateria,
       veiculo_carga,
-      telefone
+      telefone // 🔸 antigo campo genérico (mantido por compatibilidade)
     } = req.body || {};
 
     if (!usuario_email || !estacao_email || !data || !inicio || !fim) {
@@ -254,13 +258,16 @@ app.post("/reservas", async (req, res) => {
       return res.status(400).json({ error: "Campos obrigatórios faltando." });
     }
 
-    // ✅ Normaliza campos numéricos
     const safeInt = (val) => (val === "" || val === undefined ? null : Number(val));
     const safeNum = (val) => (val === "" || val === undefined ? null : Number(val));
 
     const reservaData = {
       usuario_email,
+      usuario_nome,
+      usuario_telefone,
       estacao_email,
+      estacao_nome,
+      estacao_telefone,
       data,
       inicio,
       fim,
@@ -272,7 +279,7 @@ app.post("/reservas", async (req, res) => {
       veiculo_placa,
       veiculo_bateria: safeNum(veiculo_bateria),
       veiculo_carga: safeNum(veiculo_carga),
-      telefone
+      telefone // mantido se ainda quiser compatibilidade
     };
 
     const { error } = await supabase.from("reservas").insert([reservaData]);

@@ -424,7 +424,7 @@ async function renderizarReservas() {
 
   if (textoReserva) textoReserva.innerHTML = reservaHtml;
   if (textoReservaMapa) textoReservaMapa.innerHTML = reservaHtml;
-  if (document.getElementById("btnDetalhesReserva")) 
+  if (document.getElementById("btnDetalhesReserva"))
     document.getElementById("btnDetalhesReserva").style.display = "block";
 }
 
@@ -498,244 +498,242 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ================================
-// Renderiza detalhes das reservas (agora buscando do backend)
-// ================================
-async function renderizarDetalhes() {
-  try {
-    const email = localStorage.getItem("usuarioEmail");
-    if (!listaDetalhes) return;
-    listaDetalhes.innerHTML = "";
-
-    if (!email) {
-      listaDetalhes.innerHTML = "<li>Usuário não autenticado.</li>";
-      return;
-    }
-
-    // 1) Buscar reservas do backend
-    let fetched = [];
+  // Renderiza detalhes das reservas (agora buscando do backend)
+  // ================================
+  async function renderizarDetalhes() {
     try {
-      const res = await fetch(`${API_BASE}/reservas/${encodeURIComponent(email)}`);
-      if (!res.ok) {
-        console.warn("Falha ao buscar reservas do backend:", res.status);
-      } else {
-        fetched = await res.json();
+      const email = localStorage.getItem("usuarioEmail");
+      if (!listaDetalhes) return;
+      listaDetalhes.innerHTML = "";
+
+      if (!email) {
+        listaDetalhes.innerHTML = "<li>Usuário não autenticado.</li>";
+        return;
       }
-    } catch (e) {
-      console.warn("Erro na fetch de reservas:", e);
-    }
 
-    // 2) Normaliza o formato das reservas para uso no frontend
-    const reservasCache = (Array.isArray(fetched) ? fetched : []).map(item => ({
-      id: item.id || null,
-      data: item.data || item.date || "",
-      inicio: item.inicio || item.hora || "",
-      fim: item.fim || "",
-      hora: item.inicio || item.hora || "",
-      duracaoMin: item.duracao_minutos ?? item.duracaoMin ?? item.duracao_min ?? 0,
-      duracaoHoras: item.duracao_horas ?? item.duracaoHoras ?? 0,
-      estacao: item.estacao_name || item.estacao || item.estacao_nome || item.estacao_nome || item.estacao_email || item.estacaoEmail || "",
-      estacaoEmail: item.estacao_email || item.estacaoEmail || item.estacao_email || null,
-      usuarioEmail: item.usuario_email || item.usuarioEmail || "",
-      status: item.status || "pendente",
-      __raw: item
-    }));
-
-    if (!reservasCache || reservasCache.length === 0) {
-      listaDetalhes.innerHTML = "<li>Nenhuma reserva encontrada.</li>";
-      return;
-    }
-
-    // 3) Garante stations (window.estacoes / localStorage). Se vazio, tenta buscar do backend.
-    let stations = (window.estacoes && window.estacoes.length) ? window.estacoes : (JSON.parse(localStorage.getItem("stations") || "[]") || []);
-    if ((!stations || stations.length === 0) && typeof API_BASE !== "undefined") {
+      // 1) Buscar reservas do backend
+      let fetched = [];
       try {
-        const resp = await fetch(`${API_BASE}/stations`);
-        if (resp.ok) {
-          const rawStations = await resp.json();
-          if (Array.isArray(rawStations)) {
-            // opcional: normalizar aqui se quiser, mas assumimos que sua rotina de sincronização usa a mesma normalização
-            stations = rawStations.map(e => ({
-              nome: e.nome || e.name || e.full_name || "",
-              potencia: e.potencia ?? e.power ?? null,
-              preco: e.preco ?? e.price ?? null,
-              abertura: e.abertura ?? e.open_time ?? e.open ?? "?",
-              fechamento: e.fechamento ?? e.close_time ?? e.close ?? "?",
-              telefone: e.telefone ?? e.phone ?? "",
-              tempoEspera: e.tempoEspera ?? e.wait_time ?? null,
-              lat: e.lat ? Number(e.lat) : null,
-              lng: e.lng ? Number(e.lng) : null,
-              address: e.address ?? e.rua ?? "",
-              number: e.number ?? e.numero ?? "",
-              district: e.district ?? e.bairro ?? "",
-              city: e.city ?? e.cidade ?? "",
-              state: e.state ?? e.estado ?? "",
-              cep: e.cep ?? e.zip ?? "",
-              email: e.email || e.estacaoEmail || e.user_email || e.responsavel_email || e.contato || e.owner_email || (e.user && e.user.email) || null,
-              // mantém campos originais como fallback
-              raw: e
-            }));
-            window.estacoes = stations;
-            localStorage.setItem("stations", JSON.stringify(stations));
-            console.log(`✅ stations sincronizadas (${stations.length}) dentro do renderizarDetalhes`);
-          }
+        const res = await fetch(`${API_BASE}/reservas/${encodeURIComponent(email)}`);
+        if (!res.ok) {
+          console.warn("Falha ao buscar reservas do backend:", res.status);
+        } else {
+          fetched = await res.json();
         }
       } catch (e) {
-        console.warn("Falha ao buscar /stations dentro do renderizarDetalhes:", e);
-      }
-    }
-
-    const usuarioAtual = localStorage.getItem("usuario");
-    const favoritos = JSON.parse(localStorage.getItem(`favoritos_${usuarioAtual}`) || "[]");
-
-    // 4) Itera e renderiza cada reserva
-    for (const [idx, r] of reservasCache.entries()) {
-      const li = document.createElement("li");
-      const linha = document.createElement("div");
-      linha.className = "reserva-linha";
-
-      const nome = document.createElement("span");
-      nome.className = "reserva-nome";
-      nome.textContent = r.estacao || (r.__raw && (r.__raw.estacao || r.__raw.estacao_name)) || "Estação desconhecida";
-
-      const statusSpan = document.createElement("span");
-      statusSpan.className = "reserva-status";
-      statusSpan.textContent = r.status || "pendente";
-
-      const btnCancelar = document.createElement("button");
-      btnCancelar.className = "btn-cancelar-reserva";
-      btnCancelar.textContent = "Cancelar";
-      btnCancelar.dataset.index = idx;
-
-      if (r.status && r.status !== "pendente" && r.status !== "confirmada") {
-        btnCancelar.disabled = true;
-        btnCancelar.textContent = "Indisponível";
-      } else {
-        btnCancelar.addEventListener("click", () => {
-          reservaIndexParaCancelar = idx;
-          if (confirmarModal) confirmarModal.style.display = "flex";
-        });
+        console.warn("Erro na fetch de reservas:", e);
       }
 
-      linha.appendChild(nome);
-      linha.appendChild(statusSpan);
-      linha.appendChild(btnCancelar);
+      // 2) Normaliza o formato das reservas para uso no frontend
+      const reservasCache = (Array.isArray(fetched) ? fetched : []).map(item => ({
+        id: item.id || null,
+        data: item.data || item.date || "",
+        inicio: item.inicio || item.hora || "",
+        fim: item.fim || "",
+        hora: item.inicio || item.hora || "",
+        duracaoMin: item.duracao_minutos ?? item.duracaoMin ?? item.duracao_min ?? 0,
+        duracaoHoras: item.duracao_horas ?? item.duracaoHoras ?? 0,
+        estacao: item.estacao_name || item.estacao || item.estacao_nome || item.estacao_nome || item.estacao_email || item.estacaoEmail || "",
+        estacaoEmail: item.estacao_email || item.estacaoEmail || item.estacao_email || null,
+        usuarioEmail: item.usuario_email || item.usuarioEmail || "",
+        status: item.status || "pendente",
+        __raw: item
+      }));
 
-      // 5) Resolve dados da estação (prioriza email -> nome -> payload bruto -> favoritos)
-      let estacaoDados = {};
-      const raw = r.__raw || {};
-
-      // procura por email se disponível
-      const estacaoEmailDaReserva = r.estacaoEmail || raw.estacao_email || raw.estacaoEmail || null;
-      if (estacaoEmailDaReserva) {
-        estacaoDados = stations.find(s => {
-          const sEmail = (s.email || s.estacaoEmail || s.user_email || "").toString().toLowerCase();
-          return sEmail && sEmail === estacaoEmailDaReserva.toString().toLowerCase();
-        }) || {};
+      if (!reservasCache || reservasCache.length === 0) {
+        listaDetalhes.innerHTML = "<li>Nenhuma reserva encontrada.</li>";
+        return;
       }
 
-      // fallback por nome (namesEqual)
-      if (!estacaoDados || Object.keys(estacaoDados).length === 0) {
-        const nomeReserva = r.estacao || raw.estacao || raw.estacao_name || "";
-        if (nomeReserva) {
-          estacaoDados = stations.find(s => namesEqual(s.nome || s.name || s.full_name, nomeReserva)) ||
-                        favoritos.find(f => namesEqual(f.nome, nomeReserva)) ||
-                        {};
+      // 3) Garante stations (window.estacoes / localStorage). Se vazio, tenta buscar do backend.
+      let stations = (window.estacoes && window.estacoes.length) ? window.estacoes : (JSON.parse(localStorage.getItem("stations") || "[]") || []);
+      if ((!stations || stations.length === 0) && typeof API_BASE !== "undefined") {
+        try {
+          const resp = await fetch(`${API_BASE}/stations`);
+          if (resp.ok) {
+            const rawStations = await resp.json();
+            if (Array.isArray(rawStations)) {
+              // opcional: normalizar aqui se quiser, mas assumimos que sua rotina de sincronização usa a mesma normalização
+              stations = rawStations.map(e => ({
+                nome: e.nome || e.name || e.full_name || "",
+                potencia: e.potencia ?? e.power ?? null,
+                preco: e.preco ?? e.price ?? null,
+                abertura: e.abertura ?? e.open_time ?? e.open ?? "?",
+                fechamento: e.fechamento ?? e.close_time ?? e.close ?? "?",
+                telefone: e.telefone ?? e.phone ?? "",
+                tempoEspera: e.tempoEspera ?? e.wait_time ?? null,
+                lat: e.lat ? Number(e.lat) : null,
+                lng: e.lng ? Number(e.lng) : null,
+                address: e.address ?? e.rua ?? "",
+                number: e.number ?? e.numero ?? "",
+                district: e.district ?? e.bairro ?? "",
+                city: e.city ?? e.cidade ?? "",
+                state: e.state ?? e.estado ?? "",
+                cep: e.cep ?? e.zip ?? "",
+                email: e.email || e.estacaoEmail || e.user_email || e.responsavel_email || e.contato || e.owner_email || (e.user && e.user.email) || null,
+                // mantém campos originais como fallback
+                raw: e
+              }));
+              window.estacoes = stations;
+              localStorage.setItem("stations", JSON.stringify(stations));
+              console.log(`✅ stations sincronizadas (${stations.length}) dentro do renderizarDetalhes`);
+            }
+          }
+        } catch (e) {
+          console.warn("Falha ao buscar /stations dentro do renderizarDetalhes:", e);
         }
       }
 
-      // ainda vazio? tenta preencher com campos do payload bruto (raw) — pega várias variantes
-      if (!estacaoDados || Object.keys(estacaoDados).length === 0) {
-        estacaoDados = {
-          address: raw.address || raw.endereco || raw.rua || "",
-          number: raw.number || raw.numero || "",
-          district: raw.district || raw.bairro || "",
-          city: raw.city || raw.cidade || "",
-          state: raw.state || raw.estado || "",
-          potencia: raw.power || raw.potencia || null,
-          preco: raw.price || raw.preco || null,
-          abertura: raw.open_time || raw.abertura || raw.open || "?",
-          fechamento: raw.close_time || raw.fechamento || raw.close || "?",
-          tempoEspera: raw.wait_time || raw.tempoEspera || null
-        };
-      }
+      const usuarioAtual = localStorage.getItem("usuario");
+      const favoritos = JSON.parse(localStorage.getItem(`favoritos_${usuarioAtual}`) || "[]");
 
-      console.log("🔎 estacaoDados resolvida:", { reserva: r, estacaoDados });
+      // 4) Itera e renderiza cada reserva
+      for (const [idx, r] of reservasCache.entries()) {
+        const li = document.createElement("li");
+        const linha = document.createElement("div");
+        linha.className = "reserva-linha";
 
-      // 6) Busca dados do veículo do backend
-      let veiculoHtml = "";
-      try {
-        const usuarioEmailParaVeiculo = r.usuarioEmail || localStorage.getItem("usuarioEmail");
-        if (usuarioEmailParaVeiculo) {
-          const resp = await fetch(`${API_BASE}/veiculos/${encodeURIComponent(usuarioEmailParaVeiculo)}`);
-          const data = resp.ok ? await resp.json() : null;
-          if (data && Object.keys(data).length) {
-            const v = data;
-            veiculoHtml = `
+        const nome = document.createElement("span");
+        nome.className = "reserva-nome";
+        nome.textContent = r.estacao || (r.__raw && (r.__raw.estacao || r.__raw.estacao_name)) || "Estação desconhecida";
+
+        const statusSpan = document.createElement("span");
+        statusSpan.className = "reserva-status";
+        statusSpan.textContent = r.status || "pendente";
+
+        const btnCancelar = document.createElement("button");
+        btnCancelar.className = "btn-cancelar-reserva";
+        btnCancelar.textContent = "Cancelar";
+        btnCancelar.dataset.index = idx;
+
+        if (r.status && r.status !== "pendente" && r.status !== "confirmada") {
+          btnCancelar.disabled = true;
+          btnCancelar.textContent = "Indisponível";
+        } else {
+          btnCancelar.addEventListener("click", () => {
+            reservaIndexParaCancelar = idx;
+            if (confirmarModal) confirmarModal.style.display = "flex";
+          });
+        }
+
+        linha.appendChild(nome);
+        linha.appendChild(statusSpan);
+        linha.appendChild(btnCancelar);
+
+        // 5) Resolve dados da estação (prioriza email -> nome -> payload bruto -> favoritos)
+        let estacaoDados = {};
+        const raw = r.__raw || {};
+
+        // procura por email se disponível
+        const estacaoEmailDaReserva = r.estacaoEmail || raw.estacao_email || raw.estacaoEmail || null;
+        if (estacaoEmailDaReserva) {
+          estacaoDados = stations.find(s => {
+            const sEmail = (s.email || s.estacaoEmail || s.user_email || "").toString().toLowerCase();
+            return sEmail && sEmail === estacaoEmailDaReserva.toString().toLowerCase();
+          }) || {};
+        }
+
+        // fallback por nome (namesEqual)
+        if (!estacaoDados || Object.keys(estacaoDados).length === 0) {
+          const nomeReserva = r.estacao || raw.estacao || raw.estacao_name || "";
+          if (nomeReserva) {
+            estacaoDados = stations.find(s => namesEqual(s.nome || s.name || s.full_name, nomeReserva)) ||
+              favoritos.find(f => namesEqual(f.nome, nomeReserva)) ||
+              {};
+          }
+        }
+
+        // Garante que sempre haja um objeto mesmo se nada vier
+        estacaoDados = estacaoDados || {};
+
+        console.log("🔎 estacaoDados resolvida:", { reserva: r, estacaoDados });
+
+        // 6) Busca dados do veículo do backend
+        let veiculoHtml = "";
+        try {
+          const usuarioEmailParaVeiculo = r.usuarioEmail || localStorage.getItem("usuarioEmail");
+          if (usuarioEmailParaVeiculo) {
+            const resp = await fetch(`${API_BASE}/veiculos/${encodeURIComponent(usuarioEmailParaVeiculo)}`);
+            const data = resp.ok ? await resp.json() : null;
+            if (data && Object.keys(data).length) {
+              const v = data;
+              veiculoHtml = `
               <p><strong>Usuário:</strong> ${usuarioEmailParaVeiculo}</p>
               <p><strong>Modelo:</strong> ${v.modelo || "N/D"} ${v.ano ? `(${v.ano})` : ""}</p>
               <p><strong>Placa:</strong> ${v.placa || "N/D"}</p>
               <p><strong>Bateria:</strong> ${v.bateria ? v.bateria + " kWh" : "N/D"}</p>
               <p><strong>Carga:</strong> ${v.carregamento ? v.carregamento + " kW" : "N/D"}</p>
             `;
+            } else {
+              veiculoHtml = `<p><em>Veículo não cadastrado.</em></p>`;
+            }
           } else {
-            veiculoHtml = `<p><em>Veículo não cadastrado.</em></p>`;
+            veiculoHtml = `<p><em>Email de usuário não identificado.</em></p>`;
           }
-        } else {
-          veiculoHtml = `<p><em>Email de usuário não identificado.</em></p>`;
+        } catch (err) {
+          console.warn("⚠ Falha ao buscar veículo do backend:", err);
+          veiculoHtml = `<p><em>Erro ao carregar informações do veículo.</em></p>`;
         }
-      } catch (err) {
-        console.warn("⚠ Falha ao buscar veículo do backend:", err);
-        veiculoHtml = `<p><em>Erro ao carregar informações do veículo.</em></p>`;
-      }
 
-      // 7) Formata horário/duração
-      let horarioFormatado = r.hora || r.inicio || "";
-      if (r.inicio && r.fim) {
-        let dur = horaParaMinutos(r.fim) - horaParaMinutos(r.inicio);
-        if (dur < 0) dur += 24 * 60;
-        const horas = Math.floor(dur / 60);
-        const minutos = dur % 60;
-        horarioFormatado = `${r.inicio} - ${r.fim} (${horas}h${minutos ? " " + minutos + "min" : ""})`;
-      } else if (r.hora && r.duracaoMin) {
-        const inicioMin = horaParaMinutos(r.hora);
-        const fimMin = inicioMin + r.duracaoMin;
-        const fimHora = minutosParaHora(fimMin);
-        const horas = Math.floor(r.duracaoMin / 60);
-        const minutos = r.duracaoMin % 60;
-        horarioFormatado = `${r.hora} - ${fimHora} (${horas}h${minutos ? " " + minutos + "min" : ""})`;
-      }
+        // 7) Formata horário/duração
+        let horarioFormatado = r.hora || r.inicio || "";
+        if (r.inicio && r.fim) {
+          let dur = horaParaMinutos(r.fim) - horaParaMinutos(r.inicio);
+          if (dur < 0) dur += 24 * 60;
+          const horas = Math.floor(dur / 60);
+          const minutos = dur % 60;
+          horarioFormatado = `${r.inicio} - ${r.fim} (${horas}h${minutos ? " " + minutos + "min" : ""})`;
+        } else if (r.hora && r.duracaoMin) {
+          const inicioMin = horaParaMinutos(r.hora);
+          const fimMin = inicioMin + r.duracaoMin;
+          const fimHora = minutosParaHora(fimMin);
+          const horas = Math.floor(r.duracaoMin / 60);
+          const minutos = r.duracaoMin % 60;
+          horarioFormatado = `${r.hora} - ${fimHora} (${horas}h${minutos ? " " + minutos + "min" : ""})`;
+        }
 
-      // 8) Monta HTML final
-      detalhes = document.createElement("div");
-      detalhes.className = "detalhes-reserva";
+        // 8) Monta HTML final
+        detalhes = document.createElement("div");
+        detalhes.className = "detalhes-reserva";
 
-      detalhes.innerHTML = `
+        detalhes.innerHTML = `
         <p><strong>Data:</strong> ${r.data || "--/--/----"}</p>
         <p><strong>Horário:</strong> ${horarioFormatado || "--:--"}</p>
         <p><strong>Status:</strong> ${r.status || "pendente"}</p>
         <p><strong>Endereço:</strong><br>
-          ${estacaoDados?.address || estacaoDados?.rua || "N/D"}
-          ${estacaoDados?.number || estacaoDados?.numero ? " " + (estacaoDados.number || estacaoDados.numero) : ""}<br>
-          ${estacaoDados?.district || estacaoDados?.bairro || "N/D"} - 
-          ${estacaoDados?.city || estacaoDados?.cidade || "N/D"} / 
-          ${estacaoDados?.state || estacaoDados?.estado || ""}
+        ${estacaoDados?.address || estacaoDados?.rua || "N/D"}
+        ${estacaoDados?.number || estacaoDados?.numero ? " " + (estacaoDados.number || estacaoDados.numero) : ""}<br>
+        ${estacaoDados?.district || estacaoDados?.bairro || "N/D"} - 
+        ${estacaoDados?.city || estacaoDados?.cidade || "N/D"} / 
+        ${estacaoDados?.state || estacaoDados?.estado || ""}
         </p>
-        <p><strong>Potência Máx:</strong> ${ (estacaoDados?.potencia ?? estacaoDados?.power) ? ((estacaoDados.potencia ?? estacaoDados.power) + " kW") : "N/D" }</p>
-        <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || estacaoDados?.open_time || "?"} - ${estacaoDados?.fechamento || estacaoDados?.close_time || "?"}</p>
-        <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ?? estacaoDados?.wait_time ? (estacaoDados.tempoEspera ?? estacaoDados.wait_time) + " min" : "--"}</p>
-        <p><strong>Preço:</strong> ${ (estacaoDados?.preco != null) ? (estacaoDados.preco + " R$/kWh") : (estacaoDados?.price != null ? (Number(estacaoDados.price).toFixed(2) + " R$/kWh") : "--") }</p>
-        ${veiculoHtml}
-      `;
+        <p><strong>Telefone da Estação:</strong> ${r.estacao_telefone || estacaoDados?.telefone || "N/D"}</p>
+        <p><strong>Potência Máx:</strong> ${(estacaoDados?.potencia ?? estacaoDados?.power)
+            ? ((estacaoDados.potencia ?? estacaoDados.power) + " kW")
+            : "N/D"}</p>
 
-      li.appendChild(linha);
-      li.appendChild(detalhes);
-      listaDetalhes.appendChild(li);
+        <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || estacaoDados?.open_time || "?"} - ${estacaoDados?.fechamento || estacaoDados?.close_time || "?"}</p>
+
+        <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ?? estacaoDados?.wait_time
+            ? (estacaoDados.tempoEspera ?? estacaoDados.wait_time) + " min"
+            : "--"}</p>
+
+        <p><strong>Preço:</strong> ${(estacaoDados?.preco != null)
+            ? (estacaoDados.preco + " R$/kWh")
+            : (estacaoDados?.price != null ? (Number(estacaoDados.price).toFixed(2) + " R$/kWh") : "--")}</p>
+
+          ${veiculoHtml}
+        `;
+
+        li.appendChild(linha);
+        li.appendChild(detalhes);
+        listaDetalhes.appendChild(li);
+      }
+    } catch (err) {
+      console.error("Erro em renderizarDetalhes:", err);
+      if (listaDetalhes) listaDetalhes.innerHTML = "<li>Erro ao carregar detalhes.</li>";
     }
-  } catch (err) {
-    console.error("Erro em renderizarDetalhes:", err);
-    if (listaDetalhes) listaDetalhes.innerHTML = "<li>Erro ao carregar detalhes.</li>";
   }
-}
 
   // Confirmar cancelamento (status → cancelada)
   if (btnConfirmar) {
@@ -1020,7 +1018,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const debitoOK = await debitarReserva(usuarioEmail, custoReserva);
       if (!debitoOK) return;
 
-      // ☎️ Capturar telefone
+      // Capturar telefone
       let telefoneUsuario = "";
       try {
         const users = JSON.parse(localStorage.getItem("users")) || [];
@@ -1030,7 +1028,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn("Telefone não encontrado.");
       }
 
-      // 🕒 Cálculo horário fim
+      // Cálculo horário fim
       const durH = parseInt(document.getElementById("duracaoHoras")?.value || 1);
       const durM = parseInt(document.getElementById("duracaoMinutos")?.value || 0);
 
@@ -1062,10 +1060,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 🚀 Envia reserva ao backend
+      // Envia reserva ao backend
       console.log("🛰️ Enviando reserva:", {
         usuario_email: usuarioEmail,
+        usuario_nome: usuarioAtual, // 🆕 nome do usuário (pode vir do localStorage)
         estacao_email: estacaoEmail,
+        estacao_nome: estacao?.nome || estacaoSel?.nome || "Sem nome", // 🆕 nome da estação
         veiculo
       });
 
@@ -1074,7 +1074,11 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           usuario_email: usuarioEmail,
+          usuario_nome: usuarioAtual,
+          usuario_telefone: telefoneUsuario || null,
           estacao_email: estacaoEmail,
+          estacao_nome: estacao?.nome || "Sem nome",
+          estacao_telefone: estacao?.telefone || null,
           data,
           inicio,
           fim,
@@ -1085,10 +1089,11 @@ document.addEventListener("DOMContentLoaded", () => {
           veiculo_ano: parseInt(veiculo.ano) || null,
           veiculo_placa: veiculo.placa,
           veiculo_bateria: parseFloat(veiculo.bateria) || null,
-          veiculo_carga: parseFloat(veiculo.carregamento) || null,
-          telefone: telefoneUsuario || null
+          veiculo_carga: parseFloat(veiculo.carregamento) || null
         })
       });
+
+
 
       if (!resposta.ok) throw new Error("Erro ao salvar reserva no backend.");
 
