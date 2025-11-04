@@ -808,33 +808,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           // ============================================================
-          // REEMBOLSO FIXO DE R$10 (via backend)
-          // ============================================================
-          try {
-            const usuarioEmail = localStorage.getItem("usuarioEmail");
-            if (!usuarioEmail) throw new Error("Usuário não autenticado.");
-
-            const resposta = await fetch(`${API_BASE}/wallet/refund`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: usuarioEmail,
-                amount: 10,
-                description: "Reembolso automático por cancelamento de reserva"
-              }),
-            });
-
-            const data = await resposta.json();
-            if (!resposta.ok) throw new Error(data.error || "Falha no reembolso");
-
-            console.log("💰 Reembolso de R$10 aplicado com sucesso:", data);
-            // Atualiza carteira em tempo real (caso a tela mostre saldo)
-            window.dispatchEvent(new Event("carteiraAtualizada"));
-          } catch (e) {
-            console.error("❌ Falha ao processar reembolso:", e);
-          }
-
-          // ============================================================
           // Atualiza interface e estado local
           // ============================================================
           if (typeof renderizarReservas === "function") await renderizarReservas();

@@ -27,12 +27,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-// Atualiza a interface da carteira (saldo e transações)
-function atualizarCarteiraUI() {
-  if (saldoEl) saldoEl.innerText = `R$${saldo.toFixed(2)}`;
-  if (listaTransacoes) {
-    listaTransacoes.innerHTML = transacoes.length
-      ? transacoes
+  // Atualiza a interface da carteira (saldo e transações)
+  function atualizarCarteiraUI() {
+    if (saldoEl) saldoEl.innerText = `R$${saldo.toFixed(2)}`;
+    if (listaTransacoes) {
+      listaTransacoes.innerHTML = transacoes.length
+        ? transacoes
           .map(
             (t) => `
             <p class="${(t.amount || 0) >= 0 ? 'pos' : 'neg'}">
@@ -42,9 +42,9 @@ function atualizarCarteiraUI() {
             </p>`
           )
           .join("")
-      : "<p>Nenhuma transação ainda.</p>";
+        : "<p>Nenhuma transação ainda.</p>";
+    }
   }
-}
 
   // ======================================
   // Busca saldo e transações do backend
@@ -64,6 +64,17 @@ function atualizarCarteiraUI() {
       info("❌ Erro ao carregar dados da carteira.", "erro");
     }
   }
+
+  // ======================================
+  // Atualização em tempo real da carteira
+  // ======================================
+  window.atualizarCarteira = async function () {
+    console.log("🔄 Atualizando carteira em tempo real...");
+    await obterDadosDaCarteira();
+  };
+
+  // escuta o evento global "carteiraAtualizada"
+  window.addEventListener("carteiraAtualizada", window.atualizarCarteira);
 
   // Carrega a carteira ao iniciar
   obterDadosDaCarteira();
@@ -251,3 +262,5 @@ async function debitarReservaBackend(usuarioEmail, custoReserva) {
 }
 
 window.debitarReservaBackend = debitarReservaBackend;
+
+

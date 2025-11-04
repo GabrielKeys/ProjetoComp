@@ -2,7 +2,9 @@
 // reserva.js (estação)
 // ====================================
 
-const API_BASE = "http://localhost:4000"; 
+const API_BASE = "http://localhost:4000";
+let reservasCache = []; // cache global de reservas
+let reservaIndexParaCancelar = null; // índice global da reserva a cancelar
 
 // ---------------------------
 // Util: Safe JSON parse
@@ -191,6 +193,75 @@ function renderizarReservasEstacao() {
   });
 }
 
+
+// ====================================
+// Atualiza o status da reserva no backend (versão compatível com seu servidor atual)
+// ====================================
+async function atualizarStatusReservaBackend(estacaoEmail, usuarioEmail, data, hora, novoStatus) {
+  try {
+    // tenta obter a reserva pelo e-mail da estação
+    const resBusca = await fetch(`${API_BASE}/reservas/estacao/${encodeURIComponent(estacaoEmail)}`);
+    if (!resBusca.ok) throw new Error("Falha ao buscar reservas");
+    const reservas = await resBusca.json();
+
+    // procura a reserva correspondente
+    const reserva = reservas.find(r =>
+      (r.usuario_email === usuarioEmail || r.usuario === usuarioEmail) &&
+      r.data === data &&
+      (r.hora === hora || r.inicio === hora)
+    );
+
+    if (!reserva || !reserva.id) {
+      console.warn("⚠️ Reserva não encontrada para atualizar status.");
+      return false;
+    }
+
+    // atualiza no backend via ID
+    const res = await fetch(`${API_BASE}/reservas/${reserva.id}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: novoStatus })
+    });
+
+    if (!res.ok) {
+      console.warn("❌ Falha ao atualizar status no backend:", res.status);
+      return false;
+    }
+
+    const dataRes = await res.json();
+    console.log("✅ Status atualizado no backend:", dataRes);
+    return true;
+  } catch (err) {
+    console.error("❌ Erro em atualizarStatusReservaBackend:", err);
+    return false;
+  }
+}
+
+// ================================================
+// ✅ Atualizar status da reserva (confirmação)
+// ================================================
+async function atualizarStatusReservaEstacao(idReserva, novoStatus) {
+  try {
+    console.log("📤 Enviando atualização de status para o backend...");
+    const resp = await fetch(`${API_BASE}/reservas/${idReserva}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: novoStatus }),
+    });
+
+    console.log("🌐 PUT /reservas status:", resp.status);
+    if (!resp.ok) throw new Error("Falha ao atualizar reserva no backend");
+
+    const data = await resp.json();
+    console.log("✅ Status atualizado com sucesso no backend:", data);
+
+    return true;
+  } catch (error) {
+    console.error("❌ Erro ao atualizar status no backend:", error);
+    return false;
+  }
+}
+
 // ---------------------------
 // Modais, formulários e detalhes 
 // ---------------------------
@@ -225,6 +296,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function renderizarDetalhes() {
     try {
       const reservas = await carregarReservasEstacao();
+      reservasCache = reservas; // ✅ atualiza o cache global com as reservas atuais
+      console.log("💾 reservasCache atualizado via renderizarDetalhes:", reservasCache.length);
+
       if (!listaDetalhes) return;
       listaDetalhes.innerHTML = "";
 
@@ -261,6 +335,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const usuarioEmail = r.usuario_email || r.usuarioEmail || r.usuario || "";
             const estacaoKey = localStorage.getItem("usuarioEmail") || "";
             const okBackend = await atualizarStatusReservaBackend(estacaoKey, usuarioEmail, r.data, r.inicio || r.hora, "confirmada");
+
+            // ✅ chamada correta com o ID da reserva
+            if (r.id) {
+              await atualizarStatusReservaEstacao(r.id, "confirmada");
+            }
             atualizarStatusReservaEstacao(estacaoKey, usuarioEmail, r.data, r.inicio || r.hora, "confirmada");
             renderizarReservasEstacao();
             await renderizarDetalhes();
@@ -281,9 +360,11 @@ document.addEventListener("DOMContentLoaded", () => {
           btnCancelar.style.opacity = "0.5";
         } else {
           btnCancelar.addEventListener("click", () => {
-            reservaIndexParaCancelar = idx;
+            window.reservaIndexParaCancelar = idx; // ✅ usa window para manter acessível globalmente
             if (confirmarModal) confirmarModal.style.display = "flex";
+            console.log("🟢 Reserva selecionada para cancelamento:", idx);
           });
+
         }
 
         const statusSpan = document.createElement("span");
@@ -314,15 +395,15 @@ document.addEventListener("DOMContentLoaded", () => {
             horarioFormatado = `${r.inicio} - ${r.fim} (${formatDuracao(dur)})`;
           } else if (typeof r.duracaoMin === "number") {
             const inicio = r.hora || r.inicio || "00:00";
-            const inicioMin = (() => { const [h, m] = inicio.split(":").map(Number); return h*60 + (m||0); })();
+            const inicioMin = (() => { const [h, m] = inicio.split(":").map(Number); return h * 60 + (m || 0); })();
             const fimMin = inicioMin + Number(r.duracaoMin);
-            const hh = Math.floor(fimMin/60)%24; const mm = fimMin%60;
-            const fimHora = String(hh).padStart(2,"0") + ":" + String(mm).padStart(2,"0");
+            const hh = Math.floor(fimMin / 60) % 24; const mm = fimMin % 60;
+            const fimHora = String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
             horarioFormatado = `${inicio} - ${fimHora} (${formatDuracao(r.duracaoMin)})`;
           } else if (r.hora || r.inicio) {
             const inicio = r.hora || r.inicio;
             const [h, m] = (inicio + "").split(":").map(Number);
-            const fimHora = String((h+1)%24).padStart(2,"0") + ":" + String(m||0).padStart(2,"0");
+            const fimHora = String((h + 1) % 24).padStart(2, "0") + ":" + String(m || 0).padStart(2, "0");
             horarioFormatado = `${inicio} - ${fimHora} (1h)`;
           } else {
             horarioFormatado = r.hora || r.inicio || "--";
@@ -358,57 +439,146 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Erro em renderizarDetalhes:", err);
       if (listaDetalhes) listaDetalhes.innerHTML = "<li>Erro ao carregar detalhes.</li>";
     }
+
   }
+
 
   // confirmar cancelamento (modal)
   if (btnConfirmar) {
     btnConfirmar.addEventListener("click", async () => {
-      if (reservaIndexParaCancelar !== null) {
-        // carregar reservas originais (para compatibilidade de índices com localStorage fallback)
-        const reservasOriginais = JSON.parse(localStorage.getItem(`reservasEstacao_${localStorage.getItem("usuarioEmail")}`)) || [];
-        const r = reservasOriginais[reservaIndexParaCancelar];
-        if (r) {
-          const usuarioKey = r.usuarioEmail || r.usuario || r.usuario_email || "";
-          const estacaoKey = localStorage.getItem("usuarioEmail") || "";
+      console.log("🟡 Botão Confirmar Cancelamento clicado!");
 
-          // tenta backend
-          const okBackend = await atualizarStatusReservaBackend(estacaoKey, usuarioKey, r.data, r.hora || r.inicio, "cancelada");
+      // índice (pode ser global ou local, depende do seu código)
+      console.log("🔢 window.reservaIndexParaCancelar:", window.reservaIndexParaCancelar);
 
-          // atualiza localmente (mesma lógica original)
-          atualizarStatusReservaEstacao(estacaoKey, usuarioKey, r.data, r.hora || r.inicio, "cancelada");
-
-          // REEMBOLSO FIXO R$10 (mantive o comportamento original em localStorage)
-          try {
-            const usuarioEmail = usuarioKey;
-            if (usuarioEmail) {
-              const carteiraKey = `saldoCarteira_${usuarioEmail}`;
-              const transKey = `transacoesCarteira_${usuarioEmail}`;
-
-              let saldoAtual = parseFloat(localStorage.getItem(carteiraKey)) || 0;
-              saldoAtual = +(saldoAtual + 10).toFixed(2);
-              localStorage.setItem(carteiraKey, saldoAtual);
-
-              const transacoes = JSON.parse(localStorage.getItem(transKey)) || [];
-              transacoes.push({ valor: 10, tipo: "Reembolso", data: new Date().toISOString() });
-              localStorage.setItem(transKey, JSON.stringify(transacoes));
-              window.dispatchEvent(new Event("carteiraAtualizada"));
-            }
-          } catch (e) {
-            console.error("Falha ao reembolsar usuário:", e);
-          }
-
-          renderizarReservasEstacao();
-          await renderizarDetalhes();
-          reservaIndexParaCancelar = null;
-
-          if (okBackend) {
-            if (typeof mostrarMensagem === "function") mostrarMensagem("Reserva cancelada e sincronizada (backend).", "sucesso");
-          } else {
-            if (typeof mostrarMensagem === "function") mostrarMensagem("Reserva cancelada (offline). Reembolso aplicado localmente.", "sucesso");
-          }
-        }
-        if (confirmarModal) confirmarModal.style.display = "none";
+      try {
+        // 1) Verifica cache completo
+        console.log("📚 reservasCache (length):", Array.isArray(reservasCache) ? reservasCache.length : reservasCache);
+      } catch (err) {
+        console.warn("⚠️ Erro ao ler reservasCache:", err);
       }
+
+      if (window.reservaIndexParaCancelar === null || window.reservaIndexParaCancelar === undefined) {
+        console.warn("⚠️ reservaIndexParaCancelar está nulo/undefined — nada a cancelar.");
+        if (confirmarModal) confirmarModal.style.display = "none";
+        return;
+      }
+
+      const idx = Number(window.reservaIndexParaCancelar);
+      console.log("🔎 Índice usado:", idx);
+
+      // 2) Pega a reserva do cache
+      const r = Array.isArray(reservasCache) ? reservasCache[idx] : undefined;
+      console.log("📘 Reserva selecionada (r):", r);
+
+      if (!r) {
+        console.error("❌ Reserva não encontrada no reservasCache. Possíveis causas: cache não preenchido ou índice incorreto.");
+        // Ajuda rápida: tentar recarregar reservas do backend para popular o cache
+        try {
+          console.log("⏳ Tentando recarregar reservas do backend para popular reservasCache...");
+          const email = localStorage.getItem("usuarioEmail");
+          if (email && typeof API_BASE !== "undefined") {
+            const resp = await fetch(`${API_BASE}/reservas/estacao/${encodeURIComponent(email)}`);
+            console.log("🌐 fetch /reservas response status:", resp.status);
+            if (resp.ok) {
+              const fetched = await resp.json();
+              reservasCache = Array.isArray(fetched) ? fetched.map(item => ({
+                id: item.id || null,
+                data: item.data || item.date || "",
+                inicio: item.inicio || item.hora || "",
+                fim: item.fim || "",
+                hora: item.inicio || item.hora || "",
+                duracaoMin: item.duracao_minutos ?? item.duracaoMin ?? item.duracao_min ?? 0,
+                estacao: item.estacao_name || item.estacao || item.estacao_nome || item.estacao_email || "",
+                estacaoEmail: item.estacao_email || item.estacaoEmail || null,
+                usuarioEmail: item.usuario_email || item.usuarioEmail || "",
+                status: item.status || "pendente",
+                __raw: item
+              })) : [];
+              console.log("✅ reservasCache recarregado (length):", reservasCache.length);
+            } else {
+              const text = await resp.text();
+              console.warn("⚠️ fetch retornou não-ok. body:", text);
+            }
+          } else {
+            console.warn("⚠️ Não foi possível recarregar: email ou API_BASE ausente.");
+          }
+        } catch (e) {
+          console.error("❌ Erro ao tentar recarregar reservas do backend:", e);
+        }
+
+        // após recarregar, tenta novamente localizar
+        const r2 = Array.isArray(reservasCache) ? reservasCache[idx] : undefined;
+        console.log("🔁 Reserva após recarregamento:", r2);
+        if (!r2) {
+          if (confirmarModal) confirmarModal.style.display = "none";
+          return;
+        }
+      }
+
+      // se chegou até aqui, r existe
+      const reserva = Array.isArray(reservasCache) ? reservasCache[idx] : null;
+      console.log("✅ Reserva válida encontrada:", reserva);
+
+      // 3) Log antes da chamada ao backend
+      console.log("📤 Preparando PUT para atualizar status no backend:", {
+        url: `${API_BASE}/reservas/${reserva.id}/status`,
+        body: { status: "cancelada" }
+      });
+
+      // 4) Chamada ao backend com tratamento explícito de erros
+      try {
+        if (reserva && reserva.id) {
+          const resposta = await fetch(`${API_BASE}/reservas/${reserva.id}/status`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "cancelada" })
+          });
+
+          console.log("🌐 fetch PUT status:", resposta.status);
+
+          // tenta ler como texto se não for JSON válido
+          const text = await resposta.text();
+          let parsed;
+          try {
+            parsed = text ? JSON.parse(text) : null;
+          } catch (parseErr) {
+            console.warn("⚠️ Resposta do backend não é JSON válido. Conteúdo:", text);
+          }
+
+          console.log("📦 Conteúdo da resposta:", parsed ?? text);
+
+          if (!resposta.ok) {
+            console.error("❌ Backend respondeu com erro ao atualizar status:", resposta.status, parsed ?? text);
+          } else {
+            console.log("✅ Backend atualizou status com sucesso:", parsed);
+          }
+        } else {
+          console.warn("⚠️ Reserva sem ID — pulando atualização no backend.");
+        }
+      } catch (e) {
+        console.error("❌ Erro na fetch de atualização:", e);
+      }
+
+      // 5) Continua com o fluxo local (atualizações locais e UI)
+      try {
+        // atualiza localmente nos indices que você já possui (ex.: reservasGlobais, reservasEstacao)
+        const rLocal = reserva;
+        if (rLocal) {
+          rLocal.status = "cancelada";
+          console.log("🔁 Atualizando localmente status da reserva para 'cancelada' (cache).");
+        }
+        // executar suas rotinas de atualização/refresh aqui:
+        if (typeof renderizarReservas === "function") await renderizarReservas();
+        if (typeof renderizarDetalhes === "function") await renderizarDetalhes();
+      } catch (e) {
+        console.error("❌ Erro ao atualizar UI/local:", e);
+      }
+
+      // finaliza
+      window.reservaIndexParaCancelar = null;
+      if (confirmarModal) confirmarModal.style.display = "none";
+      console.log("🏁 Fluxo de cancelamento finalizado.");
     });
   }
 

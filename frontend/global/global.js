@@ -54,7 +54,7 @@ function atualizarSidebar() {
   const foto = localStorage.getItem("usuarioFoto") || "../assets/foto.png";
 
   document.querySelectorAll(".nomeUsuario").forEach((el) => {
-  el.innerHTML = `
+    el.innerHTML = `
     <span class="user-photo">
       <img src="${foto}" alt="Foto do usuário" />
     </span>
@@ -63,7 +63,7 @@ function atualizarSidebar() {
       <img src="../assets/engrenagem.png" alt="Configurações" />
     </button>
   `;
-});
+  });
 
 }
 
@@ -197,35 +197,130 @@ function mostrarCancelamentoCustomizado(mensagem) {
 }
 
 // ✅ Verifica automaticamente se há reservas canceladas pela estação (com modal customizado)
-function verificarCancelamentosPendentes() {
+// Substituir pela versão abaixo para consultar o backend quando possível.
+async function verificarCancelamentosPendentes() {
   const usuarioEmail = localStorage.getItem("usuarioEmail");
   const usuarioNome = localStorage.getItem("usuario");
 
   if (!usuarioEmail && !usuarioNome) return;
 
-  // Buscar reservas tanto por email quanto por nome
-  const reservasEmail = JSON.parse(localStorage.getItem(`reservas_${usuarioEmail}`)) || [];
-  const reservasNome = JSON.parse(localStorage.getItem(`reservas_${usuarioNome}`)) || [];
-  const reservas = [...reservasEmail, ...reservasNome];
-
+  // carrega notificações já mostradas
   const jaNotificados = JSON.parse(localStorage.getItem("cancelamentosNotificados")) || [];
 
-  reservas.forEach(r => {
-    const idReserva = r.data + r.hora;
+  // 1) tenta buscar reservas do backend (se tiver email)
+  let reservasBackend = [];
+  if (usuarioEmail && typeof API_BASE !== "undefined") {
+    try {
+      const resp = await fetch(`${API_BASE}/reservas/${encodeURIComponent(usuarioEmail)}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data)) reservasBackend = data;
+      } else {
+        // não depoe erro, só loga (fallback para localStorage)
+        console.warn("verificarCancelamentosPendentes: fetch reservas devolveu", resp.status);
+      }
+    } catch (e) {
+      console.warn("verificarCancelamentosPendentes: falha ao buscar backend:", e);
+    }
+  }
 
-    if (r.status === "cancelada" && !jaNotificados.includes(idReserva)) {
-      mostrarCancelamentoCustomizado(`⚠️ Sua reserva em ${r.estacao} para ${r.data} às ${r.hora} foi cancelada. Foram reembolsados R$10`);
+  // 2) ler reservas antigas do localStorage (mantém compatibilidade)
+  const reservasEmailLocal = JSON.parse(localStorage.getItem(`reservas_${usuarioEmail}`) || "[]");
+  const reservasNomeLocal = JSON.parse(localStorage.getItem(`reservas_${usuarioNome}`) || "[]");
+  const reservasLocal = [...reservasEmailLocal, ...reservasNomeLocal];
+
+  // 3) combina as listas (backend tem prioridade). Usa 'id' quando disponível, senão data+hora+estacao
+  const mapa = new Map();
+
+  function keyFor(r) {
+    if (!r) return null;
+    return r.id || `${r.data || ""}::${r.hora || r.inicio || ""}::${r.estacao || r.estacao_nome || r.estacaoEmail || r.estacao_email || ""}`;
+  }
+
+  // adiciona backend primeiro (prioridade)
+  for (const r of reservasBackend) {
+    const k = keyFor(r);
+    if (k) mapa.set(k, r);
+  }
+
+  // adiciona locais se não existirem
+  for (const r of reservasLocal) {
+    const k = keyFor(r);
+    if (k && !mapa.has(k)) mapa.set(k, r);
+  }
+
+  const todasReservas = Array.from(mapa.values());
+
+  // 4) verifica canceladas e mostra o modal apenas se não notificado
+  for (const r of todasReservas) {
+    const idReserva = r.id || `${r.data || ""}_${(r.hora || r.inicio) || ""}`;
+
+    // normaliza status (alguns registros podem ter campos diferentes)
+    const status = (r.status || r.status_reserva || "").toString().toLowerCase();
+
+    if (status === "cancelada" && !jaNotificados.includes(idReserva)) {
+      // monta mensagem amigável (usa campos alternativos)
+      const nomeEstacao =
+        r.estacao ||
+        r.estacao_nome ||
+        r.estacaoName ||
+        r.estacaoEmail ||
+        r.estacao_email ||
+        "estação";
+      const data = r.data || r.date || "--/--/----";
+      const hora = r.hora || r.inicio || r.time || "--:--";
+
+      // mostra aviso visual
+      mostrarCancelamentoCustomizado(
+        `⚠️ Sua reserva na ${nomeEstacao} para ${data} às ${hora} foi cancelada. Um reembolso de R$10 foi aplicado.`
+      );
+
+      // ============================================================
+      // REEMBOLSO FIXO DE R$10 (caso a estação tenha cancelado)
+      // ============================================================
+      try {
+        const usuarioEmail = localStorage.getItem("usuarioEmail");
+        if (!usuarioEmail) throw new Error("Usuário não autenticado.");
+
+        const resposta = await fetch(`${API_BASE}/wallet/refund`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: usuarioEmail,
+            amount: 10,
+            description: "Reembolso automático por cancelamento da estação",
+          }),
+        });
+
+        const dataResp = await resposta.json();
+        if (!resposta.ok) throw new Error(dataResp.error || "Falha no reembolso");
+
+        console.log("💰 Reembolso automático aplicado:", dataResp);
+
+        // ✅ Atualiza a carteira visualmente imediatamente
+        if (window.atualizarCarteira) {
+          await window.atualizarCarteira(); // chama a função que recarrega a carteira
+        } else {
+          // fallback caso a função não esteja no escopo global
+          window.dispatchEvent(new Event("carteiraAtualizada"));
+        }
+
+      } catch (e) {
+        console.error("❌ Falha ao processar reembolso automático:", e);
+      }
+
+      // marca como notificado
       jaNotificados.push(idReserva);
     }
-  });
+  }
 
+  // grava notificações já exibidas
   localStorage.setItem("cancelamentosNotificados", JSON.stringify(jaNotificados));
 }
-
-// ✅ Executa assim que abre o Home
+// Executa assim que abre o Home (se já não tiver isso em outro lugar)
 document.addEventListener("DOMContentLoaded", verificarCancelamentosPendentes);
 
-// ✅ Continua verificando a cada 3s
+// Continua verificando a cada 3s (substitua o setInterval existente se já houver um)
 setInterval(verificarCancelamentosPendentes, 3000);
 
 
@@ -345,11 +440,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Tela de Loading
 window.addEventListener('load', () => {
-    const preloader = document.getElementById('preloader');
-    if (preloader) {
-      preloader.classList.add('hidden');
-      setTimeout(() => preloader.remove(), 500); // Remove após o fade-out
-    }
-  });
+  const preloader = document.getElementById('preloader');
+  if (preloader) {
+    preloader.classList.add('hidden');
+    setTimeout(() => preloader.remove(), 500); // Remove após o fade-out
+  }
+});
 
-  

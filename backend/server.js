@@ -354,7 +354,7 @@ app.get("/reservas/estacao/:email", async (req, res) => {
 
 
 // ==========================================
-// PUT - Atualizar status da reserva
+// PUT - Atualizar status da reserva + reembolso
 // ==========================================
 app.put("/reservas/:id/status", async (req, res) => {
   const { id } = req.params;
@@ -367,22 +367,59 @@ app.put("/reservas/:id/status", async (req, res) => {
   }
 
   try {
-    const { data, error } = await supabase
+    // 1️⃣ Buscar reserva atual
+    const { data: reserva, error: fetchError } = await supabase
+      .from("reservas")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !reserva) {
+      throw new Error("Reserva não encontrada.");
+    }
+
+    // 2️⃣ Atualizar status
+    const { data: updated, error: updateError } = await supabase
       .from("reservas")
       .update({ status })
       .eq("id", id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (updateError) throw updateError;
 
-    console.log("✅ Status atualizado com sucesso:", data);
-    res.json(data);
+    console.log("✅ Status atualizado:", updated);
+
+    // 3️⃣ Aplicar reembolso automático se cancelada
+    if (status === "cancelada") {
+      const emailUsuario = reserva.usuario_email;
+      const valorReembolso = 10;
+
+      // Inserir transação de reembolso
+      const { error: transError } = await supabase.from("transacoes").insert([
+        {
+          usuario_email: emailUsuario,
+          valor: valorReembolso,
+          tipo: "Reembolso",
+          descricao: `Reembolso automático por cancelamento da reserva ${id}`,
+          data: new Date().toISOString()
+        }
+      ]);
+
+      if (transError) {
+        console.error("⚠️ Falha ao registrar reembolso:", transError.message);
+      } else {
+        console.log(`💸 Reembolso de R$${valorReembolso} aplicado a ${emailUsuario}`);
+      }
+    }
+
+    return res.json({ success: true, reserva: updated });
   } catch (err) {
     console.error("❌ Erro ao atualizar status:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // ==========================================
 // START SERVER 
