@@ -129,8 +129,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       const carregamento = carregamentoRaw === "" ? NaN : parseFloat(carregamentoRaw);
 
       if (!modelo) return mostrarMensagem("❌ O modelo do veículo é obrigatório.", "erro");
-      if (ano.length !== 4 || isNaN(ano)) return mostrarMensagem("❌ O ano deve ter 4 dígitos.", "erro");
-      if (!/^[A-Z]{3}-\d{4}$/.test(placa)) return mostrarMensagem("❌ A placa deve estar no formato AAA-0000.", "erro");
+      if (ano.length !== 4 || isNaN(ano)) return mostrarMensagem("❌ Formato do ano incorreto (Ex: 2020).", "erro");
+      if (!/^[A-Z]{3}-\d{4}$/.test(placa) && !/^[A-Z]{3}\d[A-Z]\d{2}$/.test(placa.replace("-", ""))) {
+        return mostrarMensagem("❌ A placa deve estar em formato compativel (Ex: AAA-0000).", "erro");
+      }
       if (isNaN(bateria)) return mostrarMensagem("❌ Informe a capacidade da bateria (em kWh).", "erro");
       if (isNaN(carregamento)) return mostrarMensagem("❌ Informe a potência de carregamento (em kW).", "erro");
 

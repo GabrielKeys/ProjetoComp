@@ -658,7 +658,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data && Object.keys(data).length) {
               const v = data;
               veiculoHtml = `
-              <p><strong>Usuário:</strong> ${usuarioEmailParaVeiculo}</p>
               <p><strong>Modelo:</strong> ${v.modelo || "N/D"} ${v.ano ? `(${v.ano})` : ""}</p>
               <p><strong>Placa:</strong> ${v.placa || "N/D"}</p>
               <p><strong>Bateria:</strong> ${v.bateria ? v.bateria + " kWh" : "N/D"}</p>

@@ -1,8 +1,8 @@
 // ====================================
-// reserva.js (estação) - versão final unificada (backend + styles preservados)
+// reserva.js (estação)
 // ====================================
 
-const API_BASE = "http://localhost:4000"; // ajuste se necessário
+const API_BASE = "http://localhost:4000"; 
 
 // ---------------------------
 // Util: Safe JSON parse
@@ -16,13 +16,12 @@ function safeJSON(key) {
 }
 
 // ---------------------------
-// Normaliza formatos vindos do backend/localStorage
-// Aceita objetos com campos variados (hora/inicio, inicio/hora_inicio, fim/hora_fim, etc.)
+// Normaliza formatos vindos do backend
 // ---------------------------
 function normalizeReserva(r) {
   if (!r) return null;
   return {
-    // identificador (se existir)
+    // identificador 
     id: r.id || r._id || r.reservaId || null,
 
     // usuário
@@ -33,7 +32,7 @@ function normalizeReserva(r) {
     estacao_email: r.estacao_email || r.estacaoEmail || r.estacao || "",
     estacao_nome: r.estacao_nome || r.estacaoNome || r.estacao || "",
 
-    // datas/horários (vários formatos)
+    // datas/horários 
     data: r.data || r.date || r.dataReserva || "",
     hora: r.hora || r.hora_inicio || r.inicio || r.start || "",
     inicio: r.inicio || r.hora || r.hora_inicio || r.start || "",
@@ -44,10 +43,9 @@ function normalizeReserva(r) {
     // status
     status: (r.status || r.situacao || "pendente").toString(),
 
-    // veiculo (obj ou campos soltos)
+    // veiculo 
     veiculo: (() => {
       if (r.veiculo && typeof r.veiculo === "object") {
-        // preserve existing object but ensure fields exist
         return {
           modelo: r.veiculo.modelo || r.veiculo.modelo || r.veiculo_modelo || "",
           ano: r.veiculo.ano || r.veiculo.ano || r.veiculo_ano || "",
@@ -75,44 +73,25 @@ function normalizeReserva(r) {
 
 // ---------------------------
 // Backend-aware carregar reservas
-// tenta backend e, se falhar, usa localStorage
 // ---------------------------
 async function carregarReservasEstacao() {
   const emailEstacao = (localStorage.getItem("usuarioEmail") || "").toLowerCase();
   if (!emailEstacao) return [];
-
-  // tenta backend primeiro
   try {
     const res = await fetch(`${API_BASE}/reservas/estacao/${encodeURIComponent(emailEstacao)}`);
     if (res.ok) {
       const data = await res.json();
       return (Array.isArray(data) ? data : []).map(normalizeReserva);
     }
-    // se não ok, fallback abaixo
   } catch (e) {
-    // backend indisponível -> fallback
     console.warn("Falha ao buscar reservas do backend:", e);
   }
 
-  // fallback: localStorage (compatibilidade)
-  const key = `reservasEstacao_${emailEstacao}`;
-  const arr = safeJSON(key) || [];
-  return arr.map(normalizeReserva);
+
 }
 
 // ---------------------------
-// Salva reservas na storage local (mantém compatibilidade)
-// NOTA: para backend persistente, use endpoints específicos no backend (não implementado aqui).
-// ---------------------------
-function salvarReservasEstacao(reservas) {
-  const emailEstacao = (localStorage.getItem("usuarioEmail") || "").toLowerCase();
-  if (!emailEstacao) return;
-  const key = `reservasEstacao_${emailEstacao}`;
-  localStorage.setItem(key, JSON.stringify(reservas));
-}
-
-// ---------------------------
-// Resolve nome do usuário (mantém comportamento antigo)
+// Exibição do Nome do Usuário
 // ---------------------------
 function resolveNomeUsuario(r) {
   if (!r) return "Usuário Desconhecido";
@@ -128,109 +107,12 @@ function resolveNomeUsuario(r) {
   return "Usuário Desconhecido";
 }
 
-// ---------------------------
-// Atualiza status no backend (se possível) e sincroniza localStorage
-// - estacaoEmail, usuarioEmail, data, hora, status
-// ---------------------------
-async function atualizarStatusReservaBackend(estacaoEmail, usuarioEmail, data, hora, status) {
-  try {
-    const body = { estacaoEmail, usuarioEmail, data, inicio: hora, status };
-    const res = await fetch(`${API_BASE}/reservas/atualizar-status`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) {
-      console.warn("Backend retornou erro ao atualizar status:", await res.text());
-      return false;
-    }
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
 
 // ---------------------------
-// Função robusta de sincronização (bidirecional)
-// ---------------------------
-function atualizarStatusReservaEstacao(estacaoEmail, usuarioEmail, data, hora, status) {
-  try {
-    if (estacaoEmail) {
-      const chaveEstacao = `reservasEstacao_${estacaoEmail}`;
-      const reservasEstacao = JSON.parse(localStorage.getItem(chaveEstacao)) || [];
-      let changedEstacao = false;
-
-      reservasEstacao.forEach(r => {
-        const matchUsuario =
-          usuarioEmail &&
-          ((r.usuarioEmail && r.usuarioEmail === usuarioEmail) ||
-            (r.usuario && r.usuario === usuarioEmail) ||
-            (r.usuario_email && r.usuario_email === usuarioEmail));
-        if (matchUsuario && (r.data === data || r.date === data) && (r.hora === hora || r.inicio === hora || r.hora_inicio === hora)) {
-          r.status = status;
-          changedEstacao = true;
-        }
-      });
-
-      if (changedEstacao) {
-        localStorage.setItem(chaveEstacao, JSON.stringify(reservasEstacao));
-      }
-    }
-
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key) continue;
-      if (key.startsWith("reservasEstacao_")) continue;
-      if (!key.startsWith("reservas")) continue;
-
-      try {
-        const arr = JSON.parse(localStorage.getItem(key));
-        if (!Array.isArray(arr)) continue;
-
-        let updated = false;
-        arr.forEach(item => {
-          if (!item) return;
-          const matchDataHora = (item.data === data || item.date === data) && (item.hora === hora || item.inicio === hora || item.hora_inicio === hora);
-
-          const matchUsuario =
-            usuarioEmail &&
-            ((item.usuarioEmail && item.usuarioEmail === usuarioEmail) ||
-              (item.usuario && item.usuario === usuarioEmail) ||
-              (item.usuario_email && item.usuario_email === usuarioEmail));
-
-          const matchEstacao =
-            estacaoEmail &&
-            ((item.estacaoEmail && item.estacaoEmail === estacaoEmail) ||
-              (item.estacao && item.estacao === estacaoEmail) ||
-              (item.estacao_email && item.estacao_email === estacaoEmail) ||
-              (item.estacao && item.estacao === (localStorage.getItem("usuario") || "")));
-
-          if (matchDataHora && (matchUsuario || matchEstacao)) {
-            item.status = status;
-            updated = true;
-          }
-        });
-
-        if (updated) {
-          localStorage.setItem(key, JSON.stringify(arr));
-        }
-      } catch (e) {
-        // ignora parse errors
-      }
-    }
-  } catch (e) {
-    console.error("Erro em atualizarStatusReservaEstacao:", e);
-  }
-}
-
-// ---------------------------
-// UTIL: tenta resolver dados do veículo para uma reserva (robusto)
-// - procura em r.veiculo, r.usuario_telefone, e localStorage por veiculoModelo_<id>
+// Exibição das informações do veiculo 
 // ---------------------------
 function getVeiculoForReservation(r) {
-  // 1) se r.veiculo já é objeto com dados
   if (r && r.veiculo && typeof r.veiculo === "object") {
-    // garantir keys mínimas
     return {
       modelo: r.veiculo.modelo || r.veiculo_modelo || "",
       ano: r.veiculo.ano || r.veiculo_ano || "",
@@ -241,7 +123,6 @@ function getVeiculoForReservation(r) {
     };
   }
 
-  // 2) tentar campos soltos na própria reserva
   if (r) {
     const possible = {
       modelo: r.veiculo_modelo || r.modelo || "",
@@ -254,39 +135,10 @@ function getVeiculoForReservation(r) {
     if (possible.modelo || possible.placa || possible.telefone) return possible;
   }
 
-  // 3) procurar no localStorage por chaves veiculoModelo_<id>
-  const ids = [];
-  if (r) {
-    if (r.usuario_email) ids.push(r.usuario_email);
-    if (r.usuarioEmail) ids.push(r.usuarioEmail);
-    if (r.usuario) ids.push(r.usuario);
-  }
-  const usuarioAtual = localStorage.getItem("usuario");
-  const usuarioEmailAtual = localStorage.getItem("usuarioEmail");
-  if (usuarioAtual) ids.push(usuarioAtual);
-  if (usuarioEmailAtual) ids.push(usuarioEmailAtual);
-
-  const uniqueIds = [...new Set(ids.filter(Boolean))];
-  for (const id of uniqueIds) {
-    const modelo = localStorage.getItem(`veiculoModelo_${id}`);
-    if (modelo && modelo.toString().trim() !== "") {
-      return {
-        modelo: modelo || "",
-        ano: localStorage.getItem(`veiculoAno_${id}`) || "",
-        placa: localStorage.getItem(`veiculoPlaca_${id}`) || "",
-        bateria: localStorage.getItem(`veiculoBateria_${id}`) || "",
-        carga: localStorage.getItem(`veiculoCarregamento_${id}`) || "",
-        telefone: localStorage.getItem(`veiculoTelefone_${id}`) || localStorage.getItem("usuarioTelefone") || ""
-      };
-    }
-  }
-
-  // nada encontrado
-  return null;
 }
 
 // ---------------------------
-// Renderiza reservas na dashboard da estação (mantendo classes antigas)
+// Renderiza reservas na dashboard da estação 
 // ---------------------------
 function renderizarReservasEstacao() {
   carregarReservasEstacao().then(reservas => {
@@ -340,192 +192,11 @@ function renderizarReservasEstacao() {
 }
 
 // ---------------------------
-// Criar nova reserva (tenta backend, senão salva localmente)
-// ---------------------------
-async function criarReservaEstacao() {
-  const emailEstacao = localStorage.getItem("usuarioEmail");
-  const nomeEstacao = localStorage.getItem("usuarioNome") || "Estação";
-  const telefoneEstacao = localStorage.getItem("usuarioTelefone") || "";
-
-  const usuarioEmail = prompt("Email do usuário:");
-  const usuarioNome = prompt("Nome do usuário:");
-  const usuarioTelefone = prompt("Telefone do usuário:");
-  const data = prompt("Data da reserva (AAAA-MM-DD):");
-  const inicio = prompt("Horário de início (HH:MM):");
-  const fim = prompt("Horário de fim (HH:MM):");
-
-  if (!usuarioEmail || !data || !inicio || !fim) {
-    alert("Campos obrigatórios faltando!");
-    return;
-  }
-
-  // buscar veículo do usuário no backend (se possível)
-  let veiculo = {};
-  try {
-    const v = await fetch(`${API_BASE}/veiculos/${encodeURIComponent(usuarioEmail)}`);
-    if (v.ok) veiculo = await v.json();
-  } catch (e) {
-    // ignore
-  }
-
-  const novaReserva = {
-    usuario_email: usuarioEmail,
-    usuario_nome: usuarioNome,
-    usuario_telefone: usuarioTelefone,
-    estacao_email: emailEstacao,
-    estacao_nome: nomeEstacao,
-    estacao_telefone: telefoneEstacao,
-    data,
-    inicio,
-    fim,
-    status: "pendente",
-    veiculo_modelo: veiculo.modelo || "",
-    veiculo_ano: veiculo.ano || "",
-    veiculo_placa: veiculo.placa || "",
-    veiculo_bateria: veiculo.bateria || "",
-    veiculo_carga: veiculo.carregamento || ""
-  };
-
-  // tenta criar no backend
-  try {
-    const res = await fetch(`${API_BASE}/reservas`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(novaReserva)
-    });
-    const dataRes = await res.json();
-    if (!res.ok) throw new Error(dataRes.error || "Erro ao criar reserva no backend");
-    console.log("✅ Reserva criada no backend:", dataRes);
-    alert("Reserva criada com sucesso!");
-    renderizarReservasEstacao();
-    return;
-  } catch (err) {
-    console.warn("backend indisponível ou erro ao criar reserva; salvando localmente:", err);
-  }
-
-  // fallback: salva no localStorage
-  try {
-    const email = (localStorage.getItem("usuarioEmail") || "").toLowerCase();
-    const key = `reservasEstacao_${email}`;
-    const arr = safeJSON(key) || [];
-    // adaptação do formato usado no seu código local antigo
-    arr.push({
-      usuario: usuarioNome || usuarioEmail,
-      usuarioEmail,
-      usuario_telefone: usuarioTelefone,
-      data,
-      hora: inicio,
-      inicio,
-      fim,
-      status: "pendente",
-      veiculo: {
-        modelo: novaReserva.veiculo_modelo,
-        ano: novaReserva.veiculo_ano,
-        placa: novaReserva.veiculo_placa,
-        bateria: novaReserva.veiculo_bateria,
-        carga: novaReserva.veiculo_carga,
-        telefone: usuarioTelefone
-      }
-    });
-    localStorage.setItem(key, JSON.stringify(arr));
-    renderizarReservasEstacao();
-    alert("Reserva criada (offline) e salva localmente.");
-  } catch (e) {
-    console.error("Erro ao salvar reserva localmente:", e);
-    alert("Falha ao criar reserva.");
-  }
-}
-
-// ---------------------------
-// DOMContentLoaded principal: modais, formulários e detalhes (mantendo classes e layout)
+// Modais, formulários e detalhes 
 // ---------------------------
 document.addEventListener("DOMContentLoaded", () => {
   // inicial render
   renderizarReservasEstacao();
-
-  // elementos do agendamento
-  const btnAgendar = document.getElementById("btnAgendar");
-  const modalAgendamento = document.getElementById("agendamentoModal");
-  const closeBtns = document.querySelectorAll("#agendamentoModal .close");
-  const formAgendamento = document.getElementById("formAgendamento");
-
-  if (btnAgendar && modalAgendamento && formAgendamento) {
-    btnAgendar.addEventListener("click", () => modalAgendamento.style.display = "block");
-    closeBtns.forEach(btn => btn.addEventListener("click", () => modalAgendamento.style.display = "none"));
-    window.addEventListener("click", (e) => { if (e.target === modalAgendamento) modalAgendamento.style.display = "none"; });
-
-    formAgendamento.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const data = document.getElementById("dataReserva").value;
-      const hora = document.getElementById("horaReserva").value;
-      const usuario = localStorage.getItem("usuarioNome") || localStorage.getItem("usuario") || "Usuário Desconhecido";
-      if (!data || !hora) { alert("Preencha todos os campos!"); return; }
-
-      function getUsuarioAtualEmail() {
-        return (
-          localStorage.getItem("usuarioEmail") ||
-          localStorage.getItem("usuario") ||
-          localStorage.getItem("usuarioNome") ||
-          ""
-        ).toLowerCase();
-      }
-
-      const usuarioAtual = getUsuarioAtualEmail();
-      const users = safeJSON("users") || [];
-      const usuarioDados = users.find(u => u.email === usuarioAtual);
-      const telefoneUsuario = usuarioDados?.phone || localStorage.getItem("usuarioTelefone") || "";
-
-      const veiculo = {
-        modelo: (localStorage.getItem(`veiculoModelo_${usuarioAtual}`) || "").trim(),
-        ano: (localStorage.getItem(`veiculoAno_${usuarioAtual}`) || "").trim(),
-        placa: (localStorage.getItem(`veiculoPlaca_${usuarioAtual}`) || "").trim(),
-        bateria: (localStorage.getItem(`veiculoBateria_${usuarioAtual}`) || "").trim(),
-        carga: (localStorage.getItem(`veiculoCarregamento_${usuarioAtual}`) || "").trim(),
-        telefone: telefoneUsuario
-      };
-
-      // salva localmente - mantém compatibilidade com UI antiga
-      const reservas = (safeJSON(`reservasEstacao_${localStorage.getItem("usuarioEmail")}`) || []);
-      reservas.push({
-        usuario,
-        usuarioEmail: usuarioAtual,
-        usuario_telefone: telefoneUsuario,
-        data,
-        hora,
-        status: "pendente",
-        veiculo
-      });
-      localStorage.setItem(`reservasEstacao_${localStorage.getItem("usuarioEmail")}`, JSON.stringify(reservas));
-
-      // tenta enviar ao backend (background attempt)
-      (async () => {
-        try {
-          const payload = {
-            usuario_email: usuarioAtual,
-            usuario_nome: usuario,
-            usuario_telefone: telefoneUsuario,
-            estacao_email: localStorage.getItem("usuarioEmail"),
-            estacao_nome: localStorage.getItem("usuarioNome"),
-            data, inicio: hora, fim: "", status: "pendente", veiculo_modelo: veiculo.modelo, veiculo_ano: veiculo.ano, veiculo_placa: veiculo.placa, veiculo_bateria: veiculo.bateria, veiculo_carga: veiculo.carga
-          };
-          const resp = await fetch(`${API_BASE}/reservas`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-          if (resp.ok) {
-            console.log("Reserva sincronizada com backend após criação local.");
-          }
-        } catch (e) {
-          // continue offline
-        }
-      })();
-
-      renderizarReservasEstacao();
-      modalAgendamento.style.display = "none";
-      formAgendamento.reset();
-    });
-  }
 
   // Detalhes/confirm modal - elementos
   const btnDetalhes = document.getElementById("btnDetalhesReserva");
@@ -538,10 +209,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRemoverCanceladas = document.getElementById("btnRemoverCanceladas");
   let reservaIndexParaCancelar = null;
 
+  // formatar telefone 
   function formatarTelefone(t) {
     if (!t) return "";
-    // formato simples (mantém compatibilidade)
-    // se quiser, adapte para máscara brasileira aqui
     return t.toString();
   }
 
@@ -551,7 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${h > 0 ? h + "h" : ""}${h > 0 && m > 0 ? " " : ""}${m > 0 ? m + "min" : ""}`.trim() || "0min";
   }
 
-  // render detalhes (AGORA usando carregarReservasEstacao e normalizeReserva)
+  // render detalhes 
   async function renderizarDetalhes() {
     try {
       const reservas = await carregarReservasEstacao();
@@ -630,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const detalhes = document.createElement("div");
         detalhes.className = "detalhes-reserva";
 
-        // formata horário/duração com robustez
+        // formata horário/duração 
         let horarioFormatado = "--";
         try {
           if (r.inicio && r.fim) {
@@ -661,11 +331,11 @@ document.addEventListener("DOMContentLoaded", () => {
           horarioFormatado = r.hora || r.inicio || "--";
         }
 
-        // tenta resolver veículo de forma robusta
+        // detalhes do veículo
         const veiculo = getVeiculoForReservation(r) || null;
 
         // telefone preferencial: veiculo.telefone -> usuario_telefone -> usuarioTelefone -> usuarioTelefone in localStorage
-        const telefoneExibir = (veiculo && veiculo.telefone) || r.usuario_telefone || r.usuarioTelefone || localStorage.getItem("usuarioTelefone") || "";
+        const telefoneExibir = (veiculo && veiculo.telefone) || r.usuario_telefone || r.usuarioTelefone || "";
 
         detalhes.innerHTML = `
           <p><strong>Data:</strong> ${r.data || "--"}</p>
