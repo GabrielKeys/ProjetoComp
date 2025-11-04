@@ -352,6 +352,38 @@ app.get("/reservas/estacao/:email", async (req, res) => {
   }
 });
 
+
+// ==========================================
+// PUT - Atualizar status da reserva
+// ==========================================
+app.put("/reservas/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  console.log(`📝 Atualizando status da reserva ${id} para: ${status}`);
+
+  if (!id || !status) {
+    return res.status(400).json({ error: "ID e status são obrigatórios." });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("reservas")
+      .update({ status })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    console.log("✅ Status atualizado com sucesso:", data);
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Erro ao atualizar status:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==========================================
 // START SERVER 
 // ==========================================

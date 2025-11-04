@@ -1,6 +1,7 @@
 // ====================================
 // reserva.js (usuário)
 // ====================================
+
 // ====================================
 // pequenos utilitários
 // ====================================
@@ -428,8 +429,9 @@ async function renderizarReservas() {
     document.getElementById("btnDetalhesReserva").style.display = "block";
 }
 
+
 // ====================================
-// Modal de Detalhes da Reserva + Cancelamento (integração GET básico)
+// Modal de Detalhes da Reserva + Cancelamento
 // ====================================
 document.addEventListener("DOMContentLoaded", () => {
   const btnDetalhes = document.getElementById("btnDetalhesReserva");
@@ -443,7 +445,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnFechar = document.getElementById("btnCancelarFechar");
   const btnRemoverCanceladas = document.getElementById("btnRemoverCanceladas");
 
-  let reservaIndexParaCancelar = null;
   // cache das reservas (normalizadas) vindas do backend
   let reservasCache = [];
 
@@ -525,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // 2) Normaliza o formato das reservas para uso no frontend
-      const reservasCache = (Array.isArray(fetched) ? fetched : []).map(item => ({
+      reservasCache = (Array.isArray(fetched) ? fetched : []).map(item => ({
         id: item.id || null,
         data: item.data || item.date || "",
         inicio: item.inicio || item.hora || "",
@@ -611,10 +612,12 @@ document.addEventListener("DOMContentLoaded", () => {
           btnCancelar.textContent = "Indisponível";
         } else {
           btnCancelar.addEventListener("click", () => {
-            reservaIndexParaCancelar = idx;
+            window.reservaIndexParaCancelar = idx;
+            console.log("🟢 Clique detectado no botão cancelar:", idx);
             if (confirmarModal) confirmarModal.style.display = "flex";
           });
         }
+
 
         linha.appendChild(nome);
         linha.appendChild(statusSpan);
@@ -734,49 +737,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ============================================================
+  // 🔧 Correção: variável global para controle de cancelamento
+  // ============================================================
+  window.reservaIndexParaCancelar = null;
+
+  // ============================================================
   // Confirmar cancelamento (status → cancelada)
+  // ============================================================
   if (btnConfirmar) {
     btnConfirmar.addEventListener("click", async () => {
-      if (reservaIndexParaCancelar !== null) {
+      if (window.reservaIndexParaCancelar !== null) {
         // usa o cache das reservas vindas do backend
-        const r = reservasCache[reservaIndexParaCancelar];
+        const r = reservasCache[window.reservaIndexParaCancelar];
 
         if (r) {
-          // atualiza status localmente (cache)
+          // Atualiza status localmente (cache)
           r.status = "cancelada";
 
-          // Tenta atualizar localStorage equivalente (mantendo compatibilidade)
+          // Atualiza o status no backend
           try {
-            const reservasLocais = (typeof carregarReservas === "function") ? carregarReservas() : [];
-            // tenta localizar por id primeiro
-            let idxLocal = -1;
             if (r.id) {
-              idxLocal = reservasLocais.findIndex(x => x.id === r.id);
-            }
-            // se não tiver id, tenta por combinação de campos (data+h/estacao)
-            if (idxLocal === -1) {
-              idxLocal = reservasLocais.findIndex(x =>
-                (x.data === r.data || x.date === r.data) &&
-                ((x.hora === r.hora) || (x.inicio === r.inicio) || (x.hora === r.inicio)) &&
-                ((x.estacaoEmail === r.estacaoEmail) || (x.estacao === r.estacao) || (x.estacaoEmail === r.estacao))
-              );
-            }
-            if (idxLocal !== -1) {
-              reservasLocais[idxLocal].status = "cancelada";
-              if (typeof salvarReservas === "function") {
-                salvarReservas(reservasLocais);
-              } else {
-                // fallback: sobrescreve chave padronizada
-                localStorage.setItem(`reservasUsuario_${localStorage.getItem("usuarioEmail")}`, JSON.stringify(reservasLocais));
+              const resposta = await fetch(`${API_BASE}/reservas/${r.id}/status`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: "cancelada" })
+              });
+
+              if (!resposta.ok) {
+                const erro = await resposta.json();
+                throw new Error(erro.error || "Falha ao atualizar status no backend");
               }
+
+              console.log("✅ Status da reserva atualizado para 'cancelada' no backend!");
+            } else {
+              console.warn("⚠️ Reserva sem ID — atualização no backend ignorada.");
             }
           } catch (e) {
-            console.warn("Falha ao atualizar reservas locais:", e);
+            console.error("❌ Erro ao atualizar status da reserva:", e);
           }
 
-          // Atualiza também nas reservas globais para liberar o horário (mantive sua lógica)
+          // Atualiza também nas reservas globais (libera horário)
           try {
-            const keyGlobais = `reservasGlobais_${r.estacaoEmail || r.estacao}`;
+            const keyGlobais = `reservasGlobais_${r.estacao_email || r.estacao}`;
             let reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
             reservasGlobais = reservasGlobais.map(g => {
               if ((g.data === r.data) && (g.hora === r.hora || g.inicio === r.inicio)) {
@@ -786,12 +789,12 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             localStorage.setItem(keyGlobais, JSON.stringify(reservasGlobais));
           } catch (e) {
-            console.warn("Falha ao atualizar reservas globais", e);
+            console.warn("⚠️ Falha ao atualizar reservas globais:", e);
           }
 
-          // Atualiza também na estação para liberar o horário
+          // Atualiza também na estação (libera horário)
           try {
-            const keyEstacao = `reservasEstacao_${r.estacaoEmail || r.estacao}`;
+            const keyEstacao = `reservasEstacao_${r.estacao_email || r.estacao}`;
             let reservasEstacao = JSON.parse(localStorage.getItem(keyEstacao) || "[]");
             reservasEstacao = reservasEstacao.map(g => {
               if ((g.data === r.data) && (g.hora === r.hora || g.inicio === r.inicio)) {
@@ -801,10 +804,12 @@ document.addEventListener("DOMContentLoaded", () => {
             });
             localStorage.setItem(keyEstacao, JSON.stringify(reservasEstacao));
           } catch (e) {
-            console.warn("Falha ao atualizar reservas da estação", e);
+            console.warn("⚠️ Falha ao atualizar reservas da estação:", e);
           }
 
-          // REEMBOLSO FIXO DE R$10 (via backend) 
+          // ============================================================
+          // REEMBOLSO FIXO DE R$10 (via backend)
+          // ============================================================
           try {
             const usuarioEmail = localStorage.getItem("usuarioEmail");
             if (!usuarioEmail) throw new Error("Usuário não autenticado.");
@@ -815,62 +820,75 @@ document.addEventListener("DOMContentLoaded", () => {
               body: JSON.stringify({
                 email: usuarioEmail,
                 amount: 10,
-                description: "Reembolso automático por cancelamento"
+                description: "Reembolso automático por cancelamento de reserva"
               }),
             });
 
             const data = await resposta.json();
-
             if (!resposta.ok) throw new Error(data.error || "Falha no reembolso");
-            console.log("💰 Reembolso de R$10 aplicado com sucesso:", data);
 
-            // Atualiza carteira em tempo real
+            console.log("💰 Reembolso de R$10 aplicado com sucesso:", data);
+            // Atualiza carteira em tempo real (caso a tela mostre saldo)
             window.dispatchEvent(new Event("carteiraAtualizada"));
           } catch (e) {
-            console.error("Falha ao processar reembolso:", e);
+            console.error("❌ Falha ao processar reembolso:", e);
           }
 
-          // Re-renderiza as telas (agora usando o backend para a lista)
-          if (typeof renderizarReservas === "function") renderizarReservas();
-          await renderizarDetalhes();
+          // ============================================================
+          // Atualiza interface e estado local
+          // ============================================================
+          if (typeof renderizarReservas === "function") await renderizarReservas();
+          if (typeof renderizarDetalhes === "function") await renderizarDetalhes();
 
           if (typeof atualizarHorarios === "function") {
             atualizarHorarios();
-          } else {
-            setTimeout(() => location.reload(), 300);
-          }
+          } //else { setTimeout(() => location.reload(), 300); }
         }
 
-        reservaIndexParaCancelar = null;
+        window.reservaIndexParaCancelar = null;
       }
 
       if (confirmarModal) confirmarModal.style.display = "none";
     });
   }
 
+  // ============================================================
   // Fechar modal de confirmação
+  // ============================================================
   if (btnFechar) {
     btnFechar.addEventListener("click", () => {
       if (confirmarModal) confirmarModal.style.display = "none";
-      reservaIndexParaCancelar = null;
+      window.reservaIndexParaCancelar = null;
     });
   }
 
-  // Remover apenas as reservas canceladas (mantive comportamento local)
+  // ============================================================
+  // Remover apenas as reservas canceladas (limpeza local)
+  // ============================================================
   if (btnRemoverCanceladas) {
     btnRemoverCanceladas.addEventListener("click", () => {
       let reservas = (typeof carregarReservas === "function") ? carregarReservas() : [];
       reservas = reservas.filter(r => r.status !== "cancelada");
+
       if (typeof salvarReservas === "function") salvarReservas(reservas);
-      else localStorage.setItem(`reservasUsuario_${localStorage.getItem("usuarioEmail")}`, JSON.stringify(reservas));
+      else localStorage.setItem(
+        `reservasUsuario_${localStorage.getItem("usuarioEmail")}`,
+        JSON.stringify(reservas)
+      );
+
       if (typeof renderizarReservas === "function") renderizarReservas();
-      renderizarDetalhes();
-      if (typeof mostrarMensagem === "function") mostrarMensagem("Reservas canceladas removidas.", "sucesso");
+      if (typeof renderizarDetalhes === "function") renderizarDetalhes();
+
+      if (typeof mostrarMensagem === "function")
+        mostrarMensagem("Reservas canceladas removidas.", "sucesso");
     });
   }
 
+  // ============================================================
+  // Abrir modal de detalhes
+  // ============================================================
   function abrirModal() {
-    renderizarDetalhes();
+    if (typeof renderizarDetalhes === "function") renderizarDetalhes();
     if (modalDetalhes) modalDetalhes.style.display = "flex";
   }
 
@@ -897,6 +915,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("click", (e) => {
     if (e.target === modalDetalhes) modalDetalhes.style.display = "none";
   });
+
 });
 
 
