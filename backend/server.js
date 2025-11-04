@@ -327,6 +327,31 @@ app.get("/reservas/:email", async (req, res) => {
   }
 });
 
+
+// ==========================================
+// GET - Buscar reservas por estação
+// ==========================================
+app.get("/reservas/estacao/:email", async (req, res) => {
+  const { email } = req.params;
+  console.log(`📦 Buscando reservas da estação: ${email}`);
+
+  try {
+    const { data, error } = await supabase
+      .from("reservas")
+      .select("*")
+      .eq("estacao_email", email)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    console.log("✅ Reservas da estação encontradas:", data.length);
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Erro ao buscar reservas da estação:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ==========================================
 // START SERVER 
 // ==========================================
