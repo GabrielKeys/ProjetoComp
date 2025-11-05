@@ -319,21 +319,35 @@ document.addEventListener("DOMContentLoaded", () => {
 // Funções de Reservas (Backend)
 // ====================================
 
-async function carregarReservas() {
+// ============================================================
+// Função para carregar reservas com cache local
+// ============================================================
+
+let reservasCache = []; // 🧠 cache global na memória
+
+async function carregarReservas(force = false) {
   const usuarioEmail = localStorage.getItem("usuarioEmail");
   if (!usuarioEmail) {
     console.warn("⚠️ Nenhum usuário logado.");
     return [];
   }
 
+  // 🔁 Usa cache se já existir e não for forçado o reload
+  if (reservasCache.length > 0 && !force) {
+    console.log("📦 Usando cache local de reservas:", reservasCache);
+    return reservasCache;
+  }
+
   try {
-    console.log("📦 Buscando reservas do backend...");
+    console.log("🌐 Buscando reservas do backend...");
     const res = await fetch(`${API_BASE}/reservas/${usuarioEmail}`);
     if (!res.ok) throw new Error("Erro ao buscar reservas");
 
     const reservas = await res.json();
-    console.log("✅ Reservas recebidas:", reservas);
-    return reservas;
+    reservasCache = Array.isArray(reservas) ? reservas : []; // 💾 salva no cache
+    console.log("✅ Reservas recebidas do backend:", reservasCache);
+
+    return reservasCache;
   } catch (erro) {
     console.error("❌ Erro ao carregar reservas:", erro);
     return [];
@@ -392,15 +406,26 @@ async function dadosVeiculoPreenchidos(usuarioEmail) {
 }
 
 async function renderizarReservas() {
-  const reservas = await carregarReservas(); // ⬅️ espera o backend
+  const usuarioEmail = localStorage.getItem("usuarioEmail");
+  const ocultarCanceladas = localStorage.getItem(`ocultarCanceladas_${usuarioEmail}`) === "true";
+
+  // carrega todas as reservas (do backend ou cache)
+  const reservas = await carregarReservas(); 
   console.log("🔍 Reservas carregadas:", reservas);
+
+  // aplica o filtro local (ocultar canceladas)
+  const reservasVisiveis = ocultarCanceladas
+    ? reservas.filter(r => r.status !== "cancelada")
+    : reservas;
+
+  console.log("🧹 Exibindo reservas (filtro ativo?):", ocultarCanceladas, reservasVisiveis);
 
   const textoReserva = document.getElementById("textoReserva");
   const lista = document.getElementById("listaReservas");
   const textoReservaMapa = document.getElementById("textoReservaMapa");
   const listaMapa = document.getElementById("listaReservasMapa");
 
-  if (!reservas || reservas.length === 0) {
+  if (!reservasVisiveis || reservasVisiveis.length === 0) {
     if (textoReserva) textoReserva.textContent = "Nenhuma reserva agendada.";
     if (lista) lista.innerHTML = "";
     if (textoReservaMapa) textoReservaMapa.textContent = "Nenhuma reserva agendada.";
@@ -408,9 +433,7 @@ async function renderizarReservas() {
     return;
   }
 
-  const primeira = reservas[0];
-  console.log("🧩 Primeira reserva:", primeira);
-
+  const primeira = reservasVisiveis[0];
   const estacaoNome = primeira?.estacao_nome || primeira?.estacao_email || "Estação desconhecida";
   const dataReserva = primeira?.data ? new Date(primeira.data).toLocaleDateString("pt-BR") : "--/--/----";
   const horarioInicio = primeira?.inicio ? primeira.inicio.slice(0, 5) : "--:--";
@@ -428,7 +451,6 @@ async function renderizarReservas() {
   if (document.getElementById("btnDetalhesReserva"))
     document.getElementById("btnDetalhesReserva").style.display = "block";
 }
-
 
 // ====================================
 // Modal de Detalhes da Reserva + Cancelamento
@@ -835,27 +857,32 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ============================================================
-  // Remover apenas as reservas canceladas (limpeza local)
-  // ============================================================
-  if (btnRemoverCanceladas) {
-    btnRemoverCanceladas.addEventListener("click", () => {
-      let reservas = (typeof carregarReservas === "function") ? carregarReservas() : [];
-      reservas = reservas.filter(r => r.status !== "cancelada");
+// ============================================================
+// Remover (ocultar) apenas as reservas canceladas localmente
+// ============================================================
+if (btnRemoverCanceladas) {
+  btnRemoverCanceladas.addEventListener("click", async () => {
+    const usuarioEmail = localStorage.getItem("usuarioEmail");
+    if (!usuarioEmail) return;
 
-      if (typeof salvarReservas === "function") salvarReservas(reservas);
-      else localStorage.setItem(
-        `reservasUsuario_${localStorage.getItem("usuarioEmail")}`,
-        JSON.stringify(reservas)
-      );
+    // Ativa o filtro "ocultar canceladas"
+    localStorage.setItem(`ocultarCanceladas_${usuarioEmail}`, "true");
 
-      if (typeof renderizarReservas === "function") renderizarReservas();
-      if (typeof renderizarDetalhes === "function") renderizarDetalhes();
+    // Filtra o cache local (sem alterar o backend)
+    reservasCache = reservasCache.filter(r => r.status !== "cancelada");
 
-      if (typeof mostrarMensagem === "function")
-        mostrarMensagem("Reservas canceladas removidas.", "sucesso");
-    });
-  }
+    console.log("🧹 Canceladas ocultadas localmente:", reservasCache);
+
+    // Re-renderiza a lista
+    await renderizarReservas();
+
+    if (typeof mostrarMensagem === "function") {
+      mostrarMensagem("Reservas canceladas ocultadas com sucesso.", "sucesso");
+    } else {
+      alert("Reservas canceladas ocultadas com sucesso.");
+    }
+  });
+}
 
   // ============================================================
   // Abrir modal de detalhes

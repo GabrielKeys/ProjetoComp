@@ -56,7 +56,7 @@ function atualizarSidebar() {
   document.querySelectorAll(".nomeUsuario").forEach((el) => {
     el.innerHTML = `
     <span class="user-photo">
-      <img src="${foto}" alt="Foto do usuário" />
+      <img src="${foto.startsWith('data:image') ? foto : `${foto}?t=${Date.now()}`}" alt="Foto do usuário" />
     </span>
     ${usuario}
     <button id="gearBtn" class="settings-icon" title="Configurações">

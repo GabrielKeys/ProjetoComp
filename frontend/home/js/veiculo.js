@@ -2,8 +2,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const usuarioAtual = localStorage.getItem("usuarioEmail");
   if (!usuarioAtual) return;
 
+  // ✅ Checa se a página tem os elementos necessários
   const detalhes = document.getElementById("veiculoDetalhes");
   const btnEditar = document.getElementById("btnEditarVeiculo");
+  if (!detalhes || !btnEditar) return; // Se não tiver, não faz nada
 
   // =====================================================
   //  BUSCAR VEÍCULO DO BANCO
@@ -13,7 +15,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const resp = await fetch(`http://localhost:4000/veiculos/${usuarioAtual}`);
       if (!resp.ok) throw new Error("Erro ao buscar veículo");
       const data = await resp.json();
-      // Garante retorno null caso não exista veículo
       return data && Object.keys(data).length ? data : null;
     } catch (err) {
       console.error("Erro ao buscar veículo:", err);
