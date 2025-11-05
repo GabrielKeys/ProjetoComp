@@ -170,6 +170,52 @@ app.post("/stations", async (req, res) => {
 
 
 // ==========================================
+// Buscar estação por email
+// ==========================================
+app.get("/stations/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { data, error } = await supabase
+      .from("stations")
+      .select("*")
+      .eq("email", email)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: "Estação não encontrada" });
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Erro ao buscar estação:", err);
+    res.status(500).json({ error: "Erro ao buscar dados" });
+  }
+});
+
+// ==========================================
+// Atualizar dados da estação
+// ==========================================
+app.put("/stations/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const updates = req.body;
+
+    const { data, error } = await supabase
+      .from("stations")
+      .update(updates)
+      .eq("email", email)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Erro ao atualizar estação:", err);
+    res.status(500).json({ error: "Erro ao atualizar estação" });
+  }
+});
+
+// ==========================================
 // LISTAR ESTAÇÕES
 // ==========================================
 app.get("/stations", async (req, res) => {
