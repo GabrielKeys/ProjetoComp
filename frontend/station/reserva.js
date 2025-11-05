@@ -74,23 +74,35 @@ function normalizeReserva(r) {
 }
 
 // ---------------------------
-// Backend-aware carregar reservas
+// Backend-aware carregar reservas (agora atualiza reservasCache)
 // ---------------------------
-async function carregarReservasEstacao() {
+async function carregarReservasEstacao(force = false) {
   const emailEstacao = (localStorage.getItem("usuarioEmail") || "").toLowerCase();
   if (!emailEstacao) return [];
-  try {
-    const res = await fetch(`${API_BASE}/reservas/estacao/${encodeURIComponent(emailEstacao)}`);
-    if (res.ok) {
-      const data = await res.json();
-      return (Array.isArray(data) ? data : []).map(normalizeReserva);
-    }
-  } catch (e) {
-    console.warn("Falha ao buscar reservas do backend:", e);
+
+  // usa cache se já tiver e não pediu force
+  if (reservasCache.length > 0 && !force) {
+    console.log("📦 Usando reservasEstacao cache:", reservasCache.length);
+    return reservasCache;
   }
 
-
+  try {
+    const res = await fetch(`${API_BASE}/reservas/estacao/${encodeURIComponent(emailEstacao)}`);
+    if (!res.ok) {
+      console.warn("Falha buscando reservas do backend:", res.status);
+      return reservasCache; // devolve o que tiver
+    }
+    const data = await res.json();
+    const mapped = (Array.isArray(data) ? data : []).map(normalizeReserva);
+    reservasCache = mapped; // <- atualiza cache global
+    console.log("✅ reservasCache atualizado via carregarReservasEstacao:", reservasCache.length);
+    return reservasCache;
+  } catch (e) {
+    console.warn("Falha ao buscar reservas do backend:", e);
+    return reservasCache;
+  }
 }
+
 
 // ---------------------------
 // Exibição do Nome do Usuário
@@ -589,17 +601,79 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (btnRemoverCanceladas) {
-    btnRemoverCanceladas.addEventListener("click", () => {
-      let reservas = JSON.parse(localStorage.getItem(`reservasEstacao_${localStorage.getItem("usuarioEmail")}`)) || [];
-      reservas = reservas.filter(r => r.status !== "cancelada");
-      localStorage.setItem(`reservasEstacao_${localStorage.getItem("usuarioEmail")}`, JSON.stringify(reservas));
-      renderizarReservasEstacao();
-      renderizarDetalhes();
-      if (typeof mostrarMensagem === "function") mostrarMensagem("🗑️ Reservas canceladas removidas.", "sucesso");
-    });
-  }
+// ============================================================
+// Remover reservas canceladas (banco + local) — lado da estação
+// ============================================================
+if (btnRemoverCanceladas) {
+  btnRemoverCanceladas.addEventListener("click", async () => {
+    const estacaoEmail = localStorage.getItem("usuarioEmail");
+    if (!estacaoEmail) {
+      console.error("⚠️ Nenhum e-mail de estação encontrado.");
+      return;
+    }
 
+    btnRemoverCanceladas.disabled = true;
+
+    try {
+      // 1️⃣ Remover no backend
+      const resp = await fetch(`${API_BASE}/reservas/estacao/limpar-canceladas/${encodeURIComponent(estacaoEmail)}`, {
+        method: "DELETE",
+      });
+
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data.error || data.message || "Erro ao remover no backend");
+
+      console.log("🗑️ Canceladas removidas no banco:", data);
+
+      // 2️⃣ Atualizar cache local
+      if (Array.isArray(window.reservasEstacaoCache)) {
+        window.reservasEstacaoCache = window.reservasEstacaoCache.filter(
+          (r) => (r.status || "").toLowerCase() !== "cancelada"
+        );
+      } else {
+        window.reservasEstacaoCache = [];
+      }
+
+      localStorage.setItem(
+        `reservasEstacao_${estacaoEmail}`,
+        JSON.stringify(window.reservasEstacaoCache || [])
+      );
+
+      // 3️⃣ Recarregar reservas atualizadas do backend
+      async function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+      let attempts = 0;
+      let backendReservas = [];
+      while (attempts < 5) {
+        attempts++;
+        backendReservas = await carregarReservasEstacao(true).catch(() => []);
+        const temCanceladas = (backendReservas || []).some(r => (r.status || "").toLowerCase() === "cancelada");
+        if (!temCanceladas) break;
+        await sleep(250);
+      }
+
+      window.reservasEstacaoCache = Array.isArray(backendReservas) && backendReservas.length
+        ? backendReservas
+        : (window.reservasEstacaoCache || []);
+
+      // 4️⃣ Atualizar visualização
+      if (typeof renderizarReservasEstacao === "function") await renderizarReservasEstacao();
+      if (typeof renderizarDetalhes === "function") await renderizarDetalhes();
+
+      if (typeof mostrarMensagem === "function")
+        mostrarMensagem("Reservas canceladas removidas com sucesso.", "sucesso");
+
+    } catch (err) {
+      console.error("❌ Falha ao remover reservas canceladas (estação):", err);
+      if (typeof mostrarMensagem === "function")
+        mostrarMensagem("Erro ao remover canceladas.", "erro");
+    } finally {
+      btnRemoverCanceladas.disabled = false;
+    }
+  });
+}
+
+
+  // abrir modal detalhes
   function abrirModal() {
     renderizarDetalhes();
     if (modalDetalhes) modalDetalhes.style.display = "flex";

@@ -406,26 +406,15 @@ async function dadosVeiculoPreenchidos(usuarioEmail) {
 }
 
 async function renderizarReservas() {
-  const usuarioEmail = localStorage.getItem("usuarioEmail");
-  const ocultarCanceladas = localStorage.getItem(`ocultarCanceladas_${usuarioEmail}`) === "true";
-
-  // carrega todas as reservas (do backend ou cache)
-  const reservas = await carregarReservas(); 
+  const reservas = await carregarReservas();
   console.log("🔍 Reservas carregadas:", reservas);
-
-  // aplica o filtro local (ocultar canceladas)
-  const reservasVisiveis = ocultarCanceladas
-    ? reservas.filter(r => r.status !== "cancelada")
-    : reservas;
-
-  console.log("🧹 Exibindo reservas (filtro ativo?):", ocultarCanceladas, reservasVisiveis);
 
   const textoReserva = document.getElementById("textoReserva");
   const lista = document.getElementById("listaReservas");
   const textoReservaMapa = document.getElementById("textoReservaMapa");
   const listaMapa = document.getElementById("listaReservasMapa");
 
-  if (!reservasVisiveis || reservasVisiveis.length === 0) {
+  if (!reservas || reservas.length === 0) {
     if (textoReserva) textoReserva.textContent = "Nenhuma reserva agendada.";
     if (lista) lista.innerHTML = "";
     if (textoReservaMapa) textoReservaMapa.textContent = "Nenhuma reserva agendada.";
@@ -433,7 +422,9 @@ async function renderizarReservas() {
     return;
   }
 
-  const primeira = reservasVisiveis[0];
+  const primeira = reservas[0];
+  console.log("🧩 Primeira reserva:", primeira);
+
   const estacaoNome = primeira?.estacao_nome || primeira?.estacao_email || "Estação desconhecida";
   const dataReserva = primeira?.data ? new Date(primeira.data).toLocaleDateString("pt-BR") : "--/--/----";
   const horarioInicio = primeira?.inicio ? primeira.inicio.slice(0, 5) : "--:--";
@@ -616,64 +607,76 @@ document.addEventListener("DOMContentLoaded", () => {
         const linha = document.createElement("div");
         linha.className = "reserva-linha";
 
+        // --- botão/seta de expandir (visível e clicável) ---
+        const btnExpandir = document.createElement("button");
+        btnExpandir.type = "button";
+        btnExpandir.className = "reserva-seta";
+        btnExpandir.setAttribute("aria-expanded", "false");
+        btnExpandir.innerHTML = "&#9662;"; // ▼
+
+        // nome da estação
         const nome = document.createElement("span");
         nome.className = "reserva-nome";
         nome.textContent = r.estacao || (r.__raw && (r.__raw.estacao || r.__raw.estacao_name)) || "Estação desconhecida";
 
+        // status
         const statusSpan = document.createElement("span");
         statusSpan.className = "reserva-status";
         statusSpan.textContent = r.status || "pendente";
 
+        // botão cancelar
         const btnCancelar = document.createElement("button");
         btnCancelar.className = "btn-cancelar-reserva";
         btnCancelar.textContent = "Cancelar";
         btnCancelar.dataset.index = idx;
 
+        // evita que clicar no botão cancelar também expanda a linha
+        btnCancelar.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          // fluxo existente de cancelamento (mantém seu comportamento)
+          window.reservaIndexParaCancelar = idx;
+          console.log("🟢 Clique detectado no botão cancelar:", idx);
+          if (confirmarModal) confirmarModal.style.display = "flex";
+        });
+
+        // desabilita condicionalmente
         if (r.status && r.status !== "pendente" && r.status !== "confirmada") {
           btnCancelar.disabled = true;
           btnCancelar.textContent = "Indisponível";
-        } else {
-          btnCancelar.addEventListener("click", () => {
-            window.reservaIndexParaCancelar = idx;
-            console.log("🟢 Clique detectado no botão cancelar:", idx);
-            if (confirmarModal) confirmarModal.style.display = "flex";
-          });
         }
 
+        // monta a linha (nome => status => cancelar => seta)
+        const acoes = document.createElement("div");
+        acoes.className = "reserva-acoes";
+        acoes.appendChild(statusSpan);
+        acoes.appendChild(btnCancelar);
+        acoes.appendChild(btnExpandir); // seta no final
 
         linha.appendChild(nome);
-        linha.appendChild(statusSpan);
-        linha.appendChild(btnCancelar);
+        linha.appendChild(acoes);
 
         // 5) Resolve dados da estação (prioriza email -> nome -> payload bruto -> favoritos)
         let estacaoDados = {};
         const raw = r.__raw || {};
 
-        // procura por email se disponível
         const estacaoEmailDaReserva = r.estacaoEmail || raw.estacao_email || raw.estacaoEmail || null;
-        if (estacaoEmailDaReserva) {
+        if (estacaoEmailDaReserva && Array.isArray(stations)) {
           estacaoDados = stations.find(s => {
             const sEmail = (s.email || s.estacaoEmail || s.user_email || "").toString().toLowerCase();
             return sEmail && sEmail === estacaoEmailDaReserva.toString().toLowerCase();
           }) || {};
         }
 
-        // fallback por nome (namesEqual)
         if (!estacaoDados || Object.keys(estacaoDados).length === 0) {
           const nomeReserva = r.estacao || raw.estacao || raw.estacao_name || "";
           if (nomeReserva) {
-            estacaoDados = stations.find(s => namesEqual(s.nome || s.name || s.full_name, nomeReserva)) ||
-              favoritos.find(f => namesEqual(f.nome, nomeReserva)) ||
-              {};
+            estacaoDados = (Array.isArray(stations) ? stations.find(s => namesEqual(s.nome || s.name || s.full_name, nomeReserva)) : null)
+              || favoritos.find(f => namesEqual(f.nome, nomeReserva)) || {};
           }
         }
-
-        // Garante que sempre haja um objeto mesmo se nada vier
         estacaoDados = estacaoDados || {};
 
-        console.log("🔎 estacaoDados resolvida:", { reserva: r, estacaoDados });
-
-        // 6) Busca dados do veículo do backend
+        // 6) Busca dados do veículo do backend (mantém seu código, só gera html)
         let veiculoHtml = "";
         try {
           const usuarioEmailParaVeiculo = r.usuarioEmail || localStorage.getItem("usuarioEmail");
@@ -683,11 +686,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data && Object.keys(data).length) {
               const v = data;
               veiculoHtml = `
-              <p><strong>Modelo:</strong> ${v.modelo || "N/D"} ${v.ano ? `(${v.ano})` : ""}</p>
-              <p><strong>Placa:</strong> ${v.placa || "N/D"}</p>
-              <p><strong>Bateria:</strong> ${v.bateria ? v.bateria + " kWh" : "N/D"}</p>
-              <p><strong>Carga:</strong> ${v.carregamento ? v.carregamento + " kW" : "N/D"}</p>
-            `;
+          <p><strong>Modelo:</strong> ${v.modelo || "N/D"} ${v.ano ? `(${v.ano})` : ""}</p>
+          <p><strong>Placa:</strong> ${v.placa || "N/D"}</p>
+          <p><strong>Bateria:</strong> ${v.bateria ? v.bateria + " kWh" : "N/D"}</p>
+          <p><strong>Carga:</strong> ${v.carregamento ? v.carregamento + " kW" : "N/D"}</p>
+        `;
             } else {
               veiculoHtml = `<p><em>Veículo não cadastrado.</em></p>`;
             }
@@ -699,7 +702,7 @@ document.addEventListener("DOMContentLoaded", () => {
           veiculoHtml = `<p><em>Erro ao carregar informações do veículo.</em></p>`;
         }
 
-        // 7) Formata horário/duração
+        // 7) Formata horário/duração (seu código)
         let horarioFormatado = r.hora || r.inicio || "";
         if (r.inicio && r.fim) {
           let dur = horaParaMinutos(r.fim) - horaParaMinutos(r.inicio);
@@ -716,43 +719,66 @@ document.addEventListener("DOMContentLoaded", () => {
           horarioFormatado = `${r.hora} - ${fimHora} (${horas}h${minutos ? " " + minutos + "min" : ""})`;
         }
 
-        // 8) Monta HTML final
-        detalhes = document.createElement("div");
+        // 8) Monta HTML final dos detalhes (inicia oculto)
+        const detalhes = document.createElement("div");
         detalhes.className = "detalhes-reserva";
-
         detalhes.innerHTML = `
-        <p><strong>Data:</strong> ${r.data || "--/--/----"}</p>
-        <p><strong>Horário:</strong> ${horarioFormatado || "--:--"}</p>
-        <p><strong>Status:</strong> ${r.status || "pendente"}</p>
-        <p><strong>Endereço:</strong><br>
-        ${estacaoDados?.address || estacaoDados?.rua || "N/D"}
-        ${estacaoDados?.number || estacaoDados?.numero ? " " + (estacaoDados.number || estacaoDados.numero) : ""}<br>
-        ${estacaoDados?.district || estacaoDados?.bairro || "N/D"} - 
-        ${estacaoDados?.city || estacaoDados?.cidade || "N/D"} / 
-        ${estacaoDados?.state || estacaoDados?.estado || ""}
-        </p>
-        <p><strong>Telefone da Estação:</strong> ${r.estacao_telefone || estacaoDados?.telefone || "N/D"}</p>
-        <p><strong>Potência Máx:</strong> ${(estacaoDados?.potencia ?? estacaoDados?.power)
+    <p><strong>Data:</strong> ${r.data || "--/--/----"}</p>
+    <p><strong>Horário:</strong> ${horarioFormatado || "--:--"}</p>
+    <p><strong>Status:</strong> ${r.status || "pendente"}</p>
+    <p><strong>Endereço:</strong><br>
+      ${estacaoDados?.address || estacaoDados?.rua || "N/D"}
+      ${estacaoDados?.number || estacaoDados?.numero ? " " + (estacaoDados.number || estacaoDados.numero) : ""}<br>
+      ${estacaoDados?.district || estacaoDados?.bairro || "N/D"} - 
+      ${estacaoDados?.city || estacaoDados?.cidade || "N/D"} / 
+      ${estacaoDados?.state || estacaoDados?.estado || ""}
+    </p>
+    <p><strong>Telefone da Estação:</strong> ${r.estacao_telefone || estacaoDados?.telefone || "N/D"}</p>
+    <p><strong>Potência Máx:</strong> ${(estacaoDados?.potencia ?? estacaoDados?.power)
             ? ((estacaoDados.potencia ?? estacaoDados.power) + " kW")
             : "N/D"}</p>
-
-        <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || estacaoDados?.open_time || "?"} - ${estacaoDados?.fechamento || estacaoDados?.close_time || "?"}</p>
-
-        <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ?? estacaoDados?.wait_time
+    <p><strong>Disponibilidade:</strong> ${estacaoDados?.abertura || estacaoDados?.open_time || "?"} - ${estacaoDados?.fechamento || estacaoDados?.close_time || "?"}</p>
+    <p><strong>Tempo de Espera:</strong> ${estacaoDados?.tempoEspera ?? estacaoDados?.wait_time
             ? (estacaoDados.tempoEspera ?? estacaoDados.wait_time) + " min"
             : "--"}</p>
-
-        <p><strong>Preço:</strong> ${(estacaoDados?.preco != null)
+    <p><strong>Preço:</strong> ${(estacaoDados?.preco != null)
             ? (estacaoDados.preco + " R$/kWh")
             : (estacaoDados?.price != null ? (Number(estacaoDados.price).toFixed(2) + " R$/kWh") : "--")}</p>
+    ${veiculoHtml}
+  `;
+        detalhes.style.display = "none"; // inicia oculto
 
-          ${veiculoHtml}
-        `;
+        // --- comportamento de expandir/ocultar ---
+        function abrirDetalhes() {
+          const aberto = detalhes.style.display === "block";
+          if (aberto) {
+            detalhes.style.display = "none";
+            btnExpandir.classList.remove("aberto");
+            btnExpandir.setAttribute("aria-expanded", "false");
+          } else {
+            detalhes.style.display = "block";
+            btnExpandir.classList.add("aberto");
+            btnExpandir.setAttribute("aria-expanded", "true");
+          }
+        }
 
+        // clicar na seta/linha abre ou fecha (seta tem prioridade)
+        btnExpandir.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          abrirDetalhes();
+        });
+
+        linha.addEventListener("click", (ev) => {
+          // já prevenimos propagação onde necessário; aqui abrimos/fechamos
+          abrirDetalhes();
+        });
+
+        // adiciona ao DOM
         li.appendChild(linha);
         li.appendChild(detalhes);
         listaDetalhes.appendChild(li);
       }
+
     } catch (err) {
       console.error("Erro em renderizarDetalhes:", err);
       if (listaDetalhes) listaDetalhes.innerHTML = "<li>Erro ao carregar detalhes.</li>";
@@ -857,32 +883,80 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-// ============================================================
-// Remover (ocultar) apenas as reservas canceladas localmente
-// ============================================================
-if (btnRemoverCanceladas) {
-  btnRemoverCanceladas.addEventListener("click", async () => {
-    const usuarioEmail = localStorage.getItem("usuarioEmail");
-    if (!usuarioEmail) return;
+  // ============================================================
+  // Remover reservas canceladas (banco + local) — versão robusta
+  // ============================================================
+  if (btnRemoverCanceladas) {
+    btnRemoverCanceladas.addEventListener("click", async () => {
+      const usuarioEmail = localStorage.getItem("usuarioEmail");
+      if (!usuarioEmail) {
+        console.error("⚠️ Nenhum usuário logado.");
+        return;
+      }
 
-    // Ativa o filtro "ocultar canceladas"
-    localStorage.setItem(`ocultarCanceladas_${usuarioEmail}`, "true");
+      // desabilita botão enquanto processa
+      btnRemoverCanceladas.disabled = true;
 
-    // Filtra o cache local (sem alterar o backend)
-    reservasCache = reservasCache.filter(r => r.status !== "cancelada");
+      try {
+        // remove no backend
+        const resp = await fetch(`${API_BASE}/reservas/limpar-canceladas/${encodeURIComponent(usuarioEmail)}`, {
+          method: "DELETE",
+        });
 
-    console.log("🧹 Canceladas ocultadas localmente:", reservasCache);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.error || data.message || "Erro ao remover no backend");
 
-    // Re-renderiza a lista
-    await renderizarReservas();
+        console.log("🗑️ Canceladas removidas no banco:", data);
 
-    if (typeof mostrarMensagem === "function") {
-      mostrarMensagem("Reservas canceladas ocultadas com sucesso.", "sucesso");
-    } else {
-      alert("Reservas canceladas ocultadas com sucesso.");
-    }
-  });
-}
+        // atualiza o cache local imediatamente filtrando o que já temos (se existir)
+        if (Array.isArray(window.reservasCache)) {
+          window.reservasCache = window.reservasCache.filter((r) => (r.status || "").toLowerCase() !== "cancelada");
+        } else {
+          window.reservasCache = [];
+        }
+
+        // grava cache no localStorage (opcional)
+        localStorage.setItem(
+          `reservasUsuario_${usuarioEmail}`,
+          JSON.stringify(window.reservasCache || [])
+        );
+
+        // força recarregar do backend (usa o parâmetro force = true)
+        // adiciona pequeno retry para garantir consistência se o backend demorar
+        async function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+        let attempts = 0;
+        let backendReservas = [];
+        while (attempts < 5) {
+          attempts++;
+          // chamar com force=true para forçar fetch do servidor
+          backendReservas = await carregarReservas(true).catch(() => []);
+          // verifica se não há mais reservas com status "cancelada"
+          const temCanceladas = (backendReservas || []).some(r => (r.status || "").toLowerCase() === "cancelada");
+          if (!temCanceladas) break;
+          // espera um pouco e tenta de novo
+          await sleep(250);
+        }
+
+        // garante que o cache global reflita o backend final
+        window.reservasCache = Array.isArray(backendReservas) && backendReservas.length ? backendReservas : (window.reservasCache || []);
+
+        // finalmente re-renderiza as listas
+        if (typeof renderizarReservas === "function") await renderizarReservas();
+        if (typeof renderizarDetalhes === "function") await renderizarDetalhes();
+
+        if (typeof mostrarMensagem === "function")
+          mostrarMensagem("Reservas canceladas removidas com sucesso.", "sucesso");
+
+      } catch (err) {
+        console.error("❌ Falha ao remover reservas canceladas:", err);
+        if (typeof mostrarMensagem === "function")
+          mostrarMensagem("Erro ao remover canceladas.", "erro");
+      } finally {
+        btnRemoverCanceladas.disabled = false;
+      }
+    });
+  }
+
 
   // ============================================================
   // Abrir modal de detalhes

@@ -511,3 +511,69 @@
 #btnCancelarFechar:hover {
   background: #5a6268;
 }
+
+
+.reserva-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9fafb;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.reserva-linha:hover {
+  background: #f1f5f9;
+}
+
+.reserva-acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-cancelar-reserva {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-cancelar-reserva:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reserva-seta {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #333;
+  transition: transform 0.2s ease;
+  margin-left: 4px;
+}
+
+.reserva-seta.aberto {
+  transform: rotate(-180deg);
+}
+
+.detalhes-reserva {
+  display: none;
+  padding: 10px 12px;
+  margin-top: 4px;
+  background: #f7f7f8;
+  border-left: 3px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #333;
+}
+
+.detalhes-reserva p {
+  margin: 4px 0;
+}

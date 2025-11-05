@@ -448,6 +448,46 @@ app.get("/reservas/estacao/:email", async (req, res) => {
   }
 });
 
+// ==========================================
+// DELETE reservas canceladas de um usuário
+// ==========================================
+app.delete("/reservas/limpar-canceladas/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { error } = await supabase
+      .from("reservas")
+      .delete()
+      .eq("usuario_email", email)
+      .eq("status", "cancelada");
+
+    if (error) throw error;
+    res.json({ success: true, message: "Reservas canceladas removidas do banco." });
+  } catch (err) {
+    console.error("Erro ao limpar canceladas:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==========================================
+// DELETE reservas canceladas de uma estação
+// ==========================================
+app.delete("/reservas/estacao/limpar-canceladas/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { error } = await supabase
+      .from("reservas")
+      .delete()
+      .eq("estacao_email", email)
+      .eq("status", "cancelada");
+
+    if (error) throw error;
+    res.json({ success: true, message: "Reservas canceladas da estação removidas do banco." });
+  } catch (err) {
+    console.error("Erro ao limpar canceladas da estação:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 // ==========================================
 // PUT - Atualizar status da reserva + reembolso
@@ -515,6 +555,8 @@ app.put("/reservas/:id/status", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
 
 
 // ==========================================
