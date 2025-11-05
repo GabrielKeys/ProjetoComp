@@ -183,6 +183,8 @@ function renderizarReservasEstacao() {
       const div = document.createElement("div");
       div.classList.add("reserva-item");
 
+  if (r.id) div.setAttribute("data-reserva-id", r.id);
+
       const nome = resolveNomeUsuario(r);
       const data = r.data || r.date || "--";
       const inicio = r.inicio || r.hora || r.hora_inicio || "--:--";
@@ -254,18 +256,43 @@ async function atualizarStatusReservaBackend(estacaoEmail, usuarioEmail, data, h
 // ================================================
 async function atualizarStatusReservaEstacao(idReserva, novoStatus) {
   try {
+    if (!idReserva) {
+      console.warn("⚠️ atualizarStatusReservaEstacao: idReserva inválido");
+      return false;
+    }
+
     console.log("📤 Enviando atualização de status para o backend...");
-    const resp = await fetch(`${API_BASE}/reservas/${idReserva}`, {
+    const resp = await fetch(`${API_BASE}/reservas/${idReserva}/status`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: novoStatus }),
     });
 
-    console.log("🌐 PUT /reservas status:", resp.status);
+    console.log("🌐 PUT /reservas/:id/status =>", resp.status);
+
     if (!resp.ok) throw new Error("Falha ao atualizar reserva no backend");
 
     const data = await resp.json();
     console.log("✅ Status atualizado com sucesso no backend:", data);
+
+    // 🔁 Atualiza cache local (se existir)
+    if (Array.isArray(reservasCache)) {
+      const item = reservasCache.find(r => String(r.id) === String(idReserva));
+      if (item) item.status = novoStatus;
+    }
+
+    // 🎨 Atualiza o status visual na tela
+    const statusEls = document.querySelectorAll(`[data-reserva-id="${idReserva}"] .reserva-status`);
+    statusEls.forEach(el => {
+      el.textContent = novoStatus;
+      el.classList.remove("pendente", "confirmada", "cancelada");
+      el.classList.add(novoStatus);
+      el.style.transition = "background-color 0.3s";
+      el.style.backgroundColor = "#c8f7c5"; // verde claro
+      setTimeout(() => (el.style.backgroundColor = ""), 400);
+    });
+
+    console.log("🖥️ UI atualizada automaticamente.");
 
     return true;
   } catch (error) {
@@ -273,6 +300,7 @@ async function atualizarStatusReservaEstacao(idReserva, novoStatus) {
     return false;
   }
 }
+
 
 // ---------------------------
 // Modais, formulários e detalhes 

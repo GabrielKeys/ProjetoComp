@@ -994,7 +994,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // ====================================
-// Confirmar Nova Reserva (corrigido)
+// Confirmar Nova Reserva (corrigido + telefone)
 // ====================================
 document.addEventListener("DOMContentLoaded", () => {
   const formAgendamento = document.getElementById("formAgendamento");
@@ -1015,15 +1015,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Carrega estações do localStorage ou do global
       const stations = JSON.parse(localStorage.getItem("stations")) || [];
       const estacao = stations.find(s => namesEqual(s.nome, estacaoSel.nome))
         || (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome))
         || estacaoSel;
 
-      // Busca reservas existentes para validação
       const reservas = await carregarReservas?.() || [];
-
       if (typeof validarDisponibilidade === "function") {
         const resultado = validarDisponibilidade(estacao, data, hora, reservas);
         if (!resultado.disponivel) {
@@ -1032,68 +1029,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // 🔍 Buscar dados do veículo direto do backend
+      // 🔍 Buscar dados do veículo
       const veiculoRes = await fetch(`${API_BASE}/veiculos/${usuarioEmail}`);
       const veiculo = veiculoRes.ok ? await veiculoRes.json() : null;
-
       if (!veiculo || !veiculo.modelo || !veiculo.placa) {
         mostrarMensagem?.("❌ Preencha as informações do veículo antes de reservar!", "erro");
         return;
       }
 
-      // ===========================
-      // DÉBITO FIXO: R$10,00 (Reserva)
-      // ===========================
+      // 💰 Verifica saldo e debita R$10,00
       const custoReserva = 10.00;
-
-      async function atualizarCarteiraUI() {
-        try {
-          const res = await fetch(`${API_BASE}/wallet/${usuarioEmail}`);
-          const data = await res.json();
-          if (!res.ok || !data.wallet) throw new Error();
-
-          const saldoEl = document.getElementById("saldoCarteira");
-          const listaTransacoes = document.getElementById("listaTransacoes");
-
-          if (saldoEl) saldoEl.innerText = `R$${Number(data.wallet.balance).toFixed(2)}`;
-
-          if (listaTransacoes) {
-            const transacoes = data.transactions || [];
-            listaTransacoes.innerHTML = transacoes.length
-              ? transacoes
-                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                .map(t => `
-                  <p class="${Number(t.amount) >= 0 ? 'pos' : 'neg'}">
-                    ${Number(t.amount) >= 0 ? '+' : '-'} R$${Math.abs(Number(t.amount)).toFixed(2)} (${t.type})
-                  </p>`).join("")
-              : "<p>Nenhuma transação ainda.</p>";
-          }
-        } catch (e) {
-          console.warn("⚠ Falha ao atualizar carteira:", e);
-        }
-      }
-
-      async function debitarReserva(email, valor) {
-        try {
-          const res = await fetch(`${API_BASE}/wallet/debit`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, amount: valor, type: "Reserva" }),
-          });
-          const data = await res.json();
-
-          if (!res.ok || !data.success) throw new Error(data.message);
-          mostrarMensagem?.(`R$${valor.toFixed(2)} debitados da carteira.`, "aviso");
-          await atualizarCarteiraUI();
-          return true;
-        } catch (err) {
-          console.error("❌ Erro ao debitar:", err);
-          mostrarMensagem?.("❌ Falha ao debitar a reserva. Tente novamente.", "erro");
-          return false;
-        }
-      }
-
-      // 💰 Verifica saldo
       const resSaldo = await fetch(`${API_BASE}/wallet/${usuarioEmail}`);
       const dataSaldo = await resSaldo.json();
       if (!resSaldo.ok || !dataSaldo.wallet) {
@@ -1107,23 +1052,37 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const debitoOK = await debitarReserva(usuarioEmail, custoReserva);
-      if (!debitoOK) return;
+      const debitoOK = await fetch(`${API_BASE}/wallet/debit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: usuarioEmail, amount: custoReserva, type: "Reserva" }),
+      });
 
-      // Capturar telefone
-      let telefoneUsuario = "";
-      try {
-        const users = JSON.parse(localStorage.getItem("users")) || [];
-        const dadosUser = users.find(u => (u.email || "").toLowerCase() === usuarioEmail.toLowerCase());
-        telefoneUsuario = dadosUser?.phone || localStorage.getItem("usuarioTelefone") || "";
-      } catch (e) {
-        console.warn("Telefone não encontrado.");
+      const debitoData = await debitoOK.json();
+      if (!debitoOK.ok || !debitoData.success) {
+        mostrarMensagem?.("❌ Falha ao debitar a reserva. Tente novamente.", "erro");
+        return;
       }
 
-      // Cálculo horário fim
+      // 📞 Buscar telefone do usuário
+      let telefoneUsuario = null;
+      try {
+        const respUser = await fetch(`${API_BASE}/users/${encodeURIComponent(usuarioEmail)}`);
+        if (respUser.ok) {
+          const userData = await respUser.json();
+          telefoneUsuario = userData.phone || userData.telefone || null;
+        }
+      } catch (err) {
+        console.warn("⚠️ Erro ao buscar telefone do usuário no backend:", err);
+      }
+
+      if (!telefoneUsuario) {
+        telefoneUsuario = localStorage.getItem("usuarioTelefone") || null;
+      }
+
+      // 🕒 Cálculo horário final
       const durH = parseInt(document.getElementById("duracaoHoras")?.value || 1);
       const durM = parseInt(document.getElementById("duracaoMinutos")?.value || 0);
-
       function addMinutesToHora(hora, minutes) {
         const [h, m] = hora.split(":").map(Number);
         const total = h * 60 + m + minutes;
@@ -1135,8 +1094,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const inicio = hora;
       const fim = addMinutesToHora(hora, durH * 60 + durM);
 
-      console.log("🧩 Estação selecionada:", estacao);
-
       const estacaoEmail =
         estacao?.email ||
         estacao?.user_email ||
@@ -1147,47 +1104,40 @@ document.addEventListener("DOMContentLoaded", () => {
         null;
 
       if (!estacaoEmail) {
-        console.warn("⚠️ Nenhum e-mail encontrado na estação:", estacao);
         mostrarMensagem?.("❌ Esta estação não possui e-mail cadastrado. Contate o suporte.", "erro");
         return;
       }
 
-      // Envia reserva ao backend
-      console.log("🛰️ Enviando reserva:", {
+      // 🛰️ Enviar reserva ao backend
+      const payload = {
         usuario_email: usuarioEmail,
-        usuario_nome: usuarioAtual, // 🆕 nome do usuário (pode vir do localStorage)
+        usuario_nome: usuarioAtual,
+        usuario_telefone: telefoneUsuario,
         estacao_email: estacaoEmail,
-        estacao_nome: estacao?.nome || estacaoSel?.nome || "Sem nome", // 🆕 nome da estação
-        veiculo
-      });
+        estacao_nome: estacao?.nome || estacaoSel?.nome || "Sem nome",
+        estacao_telefone: estacao?.telefone || null,
+        data,
+        inicio,
+        fim,
+        duracao_horas: durH,
+        duracao_minutos: durM,
+        status: "pendente",
+        veiculo_modelo: veiculo.modelo,
+        veiculo_ano: parseInt(veiculo.ano) || null,
+        veiculo_placa: veiculo.placa,
+        veiculo_bateria: parseFloat(veiculo.bateria) || null,
+        veiculo_carga: parseFloat(veiculo.carregamento) || null,
+      };
+
+      console.log("🛰️ Enviando reserva:", payload);
 
       const resposta = await fetch(`${API_BASE}/reservas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          usuario_email: usuarioEmail,
-          usuario_nome: usuarioAtual,
-          usuario_telefone: telefoneUsuario || null,
-          estacao_email: estacaoEmail,
-          estacao_nome: estacao?.nome || "Sem nome",
-          estacao_telefone: estacao?.telefone || null,
-          data,
-          inicio,
-          fim,
-          duracao_horas: durH,
-          duracao_minutos: durM,
-          status: "pendente",
-          veiculo_modelo: veiculo.modelo,
-          veiculo_ano: parseInt(veiculo.ano) || null,
-          veiculo_placa: veiculo.placa,
-          veiculo_bateria: parseFloat(veiculo.bateria) || null,
-          veiculo_carga: parseFloat(veiculo.carregamento) || null
-        })
+        body: JSON.stringify(payload)
       });
 
-
-
-      if (!resposta.ok) throw new Error("Erro ao salvar reserva no backend.");
+      if (!resposta.ok) throw new Error(await resposta.text());
 
       mostrarMensagem?.("✅ Reserva criada com sucesso!", "sucesso");
       renderizarReservas?.();
@@ -1201,6 +1151,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
 
 
 // ===================================

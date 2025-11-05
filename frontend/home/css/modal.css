@@ -563,6 +563,11 @@
   transform: rotate(-180deg);
 }
 
+.detalhes-reserva p {
+  margin: 4px 0;
+}
+
+/* Esconder detalhes da reserva
 .detalhes-reserva {
   display: none;
   padding: 10px 12px;
@@ -573,7 +578,4 @@
   font-size: 13px;
   color: #333;
 }
-
-.detalhes-reserva p {
-  margin: 4px 0;
-}
+*/
