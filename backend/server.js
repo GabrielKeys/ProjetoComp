@@ -168,6 +168,28 @@ app.post("/stations", async (req, res) => {
   }
 });
 
+// ==========================================
+// Buscar usuário por email
+// ==========================================
+app.get("/users/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    res.json(data);
+  } catch (err) {
+    console.error("❌ Erro ao buscar usuário:", err);
+    res.status(500).json({ error: "Erro ao buscar usuário" });
+  }
+});
 
 // ==========================================
 // Buscar estação por email

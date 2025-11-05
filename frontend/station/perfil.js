@@ -405,6 +405,39 @@ async function salvarFotoEstacao(file) {
   };
   reader.readAsDataURL(file);
 }
+// ------------------------------------------
+// Carregar estação do backend (com foto)
+// ------------------------------------------
+async function carregarEstacao() {
+  const email = localStorage.getItem("usuarioEmail");
+  if (!email) return showMessage("Nenhuma estação logada", "erro");
+
+  try {
+    const res = await fetch(`${API_BASE}/stations/${email}`);
+    if (!res.ok) throw new Error("Erro ao buscar dados da estação");
+
+    const estacao = await res.json();
+
+    // Atualiza os campos dinâmicos
+    renderCampos(estacao);
+
+    // 📸 Atualiza a foto
+    const fotoElement = document.getElementById("fotoEstacao");
+    if (fotoElement) {
+      if (estacao.photo_url) {
+        fotoElement.src = estacao.photo_url.startsWith("data:image")
+          ? estacao.photo_url
+          : `${estacao.photo_url}?t=${Date.now()}`;
+      } else {
+        fotoElement.src = "../assets/foto.png";
+      }
+    }
+
+  } catch (err) {
+    console.error("❌ Erro ao carregar:", err);
+    showMessage("Erro ao carregar dados da estação", "erro");
+  }
+}
 
 // ------------------------------------------
 // Inicialização
@@ -427,7 +460,10 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photo_url: null }),
       });
-      document.getElementById("fotoEstacao").src = "../assets/foto.png";
+      document.getElementById("fotoEstacao").src = "../assets/foto-estacao.png";
       showMessage("✅ Foto removida!", "sucesso");
     });
+
+    document.addEventListener("DOMContentLoaded", carregarEstacao);
+
 });

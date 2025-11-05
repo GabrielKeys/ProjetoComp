@@ -1,3 +1,35 @@
+// ====================================
+// Atualizar Sidebar diretamente do banco
+// ====================================
+async function atualizarSidebar(tipoConta, email) {
+  const url = tipoConta === "estacao"
+    ? `http://localhost:4000/stations/${email}`
+    : `http://localhost:4000/users/${email}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Erro ao buscar dados do banco");
+
+    const dados = await res.json();
+    const nome = dados.full_name || dados.name || dados.email;
+    const foto = dados.photo_url || "../assets/foto.png";
+
+    document.querySelectorAll(".nomeUsuario").forEach((el) => {
+      el.innerHTML = `
+        <span class="user-photo">
+          <img src="${foto.startsWith('data:image') ? foto : `${foto}?t=${Date.now()}`}" alt="Foto do usuário" />
+        </span>
+        ${nome}
+        <button id="gearBtn" class="settings-icon" title="Configurações">
+          <img src="../assets/engrenagem.png" alt="Configurações" />
+        </button>
+      `;
+    });
+  } catch (err) {
+    console.error("Erro ao atualizar sidebar:", err);
+  }
+}
+
 // ===============================
 // Troca entre Login e Registro
 // ===============================
@@ -62,9 +94,12 @@ if (loginForm) {
       if (response.ok) {
         // Login de usuário bem-sucedido
         localStorage.setItem("logado", "true");
-        localStorage.setItem("logado_como", data.role || "usuario");
-        localStorage.setItem("usuario", data.name || data.email);
+        localStorage.setItem("logado_como", "usuario");
         localStorage.setItem("usuarioEmail", data.email);
+
+        // Atualiza sidebar com dados do banco (sem usar localStorage para nome/foto)
+        await atualizarSidebar("usuario", data.email);
+
         window.location.href = "../home/home.html";
         return;
       }
@@ -79,15 +114,17 @@ if (loginForm) {
       data = await response.json();
 
       if (response.ok) {
-        // Login de estação bem-sucedido
         localStorage.setItem("logado", "true");
         localStorage.setItem("logado_como", "estacao");
-        localStorage.setItem("usuario", data.name || data.email);
         localStorage.setItem("usuarioEmail", data.email);
-        localStorage.setItem("estacaoSelecionada", JSON.stringify(data));
+
+        // Atualiza sidebar com dados do banco
+        await atualizarSidebar("estacao", data.email);
+
         window.location.href = "../station/home.html";
         return;
       }
+
 
       // Se chegou aqui, nenhum dos dois logins funcionou
       errorMsg.innerText = "Email ou senha incorretos!";
@@ -564,7 +601,7 @@ if (registerStationForm) {
       const geocodeURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
         enderecoCompleto
       )}&key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY`;
-      
+
       const geoRes = await fetch(geocodeURL);
       const geoData = await geoRes.json();
 

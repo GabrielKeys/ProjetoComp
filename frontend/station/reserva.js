@@ -620,17 +620,63 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnNova) btnNova.addEventListener("click", criarReservaEstacao);
 });
 
-// ------------------------------
-// Informações da estação na página inicial (mantive como antes)
-// ------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  const estacao = JSON.parse(localStorage.getItem("estacaoSelecionada")) || null;
-  if (!estacao) return;
+// ====================================
+// 🔄 Buscar informações da estação no backend
+// ====================================
+document.addEventListener("DOMContentLoaded", async () => {
+  const email = localStorage.getItem("usuarioEmail");
+  if (!email) return console.warn("⚠️ Nenhum email de estação encontrado.");
 
-  if (document.getElementById("stationTitle")) document.getElementById("stationTitle").innerText = estacao.nome || "Minha Estação";
-  if (document.getElementById("stationMsg")) document.getElementById("stationMsg").innerText = (estacao.cidade && estacao.estado) ? `${estacao.cidade} - ${estacao.estado}` : "Estação de Carregamento";
-  if (document.getElementById("statPotencia")) document.getElementById("statPotencia").innerText = estacao.potencia ? estacao.potencia + "" : "--";
-  if (document.getElementById("statDisponibilidade")) document.getElementById("statDisponibilidade").innerText = `${estacao.abertura || "00:00"} - ${estacao.fechamento || "23:59"}`;
-  if (document.getElementById("statPreco")) document.getElementById("statPreco").innerText = estacao.preco ? ` ${estacao.preco}` : "--";
-  if (document.getElementById("statTelefone")) document.getElementById("statTelefone").innerText = (typeof formatarTelefone === "function") ? formatarTelefone(estacao.telefone) : (estacao.telefone || "--");
+  try {
+    const res = await fetch(`${API_BASE}/stations/${encodeURIComponent(email)}`);
+    if (!res.ok) throw new Error("Erro ao buscar estação no backend.");
+
+    const estacao = await res.json();
+    console.log("✅ Dados da estação recebidos do backend:", estacao);
+
+    // Nome e localização
+    if (document.getElementById("stationTitle"))
+      document.getElementById("stationTitle").innerText = estacao.nome || "Minha Estação";
+
+    if (document.getElementById("stationMsg"))
+      document.getElementById("stationMsg").innerText =
+        estacao.cidade && estacao.estado
+          ? `${estacao.cidade} - ${estacao.estado}`
+          : "Estação de Carregamento";
+
+    // Potência
+    if (document.getElementById("statPotencia"))
+      document.getElementById("statPotencia").innerText =
+        estacao.potencia || estacao.power ? `${estacao.potencia || estacao.power} kW` : "--";
+
+    // 🕓 Disponibilidade (com base em open_time e close_time)
+    if (document.getElementById("statDisponibilidade")) {
+      const abertura = estacao.open_time || estacao.abertura;
+      const fechamento = estacao.close_time || estacao.fechamento;
+
+      if (abertura && fechamento) {
+        document.getElementById("statDisponibilidade").innerText =
+          `${abertura.slice(0, 5)} - ${fechamento.slice(0, 5)}`;
+      } else {
+        document.getElementById("statDisponibilidade").innerText = "--";
+      }
+    }
+
+    // Preço
+    if (document.getElementById("statPreco"))
+      document.getElementById("statPreco").innerText =
+        estacao.preco || estacao.price
+          ? `R$ ${(estacao.preco || estacao.price).toFixed(2)}`
+          : "--";
+
+    // Telefone
+    if (document.getElementById("statTelefone"))
+      document.getElementById("statTelefone").innerText =
+        estacao.telefone || estacao.phone
+          ? formatarTelefone(estacao.telefone || estacao.phone)
+          : "--";
+
+  } catch (err) {
+    console.error("❌ Erro ao carregar informações da estação:", err);
+  }
 });

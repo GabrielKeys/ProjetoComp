@@ -46,26 +46,41 @@ function mostrarMensagem(texto, tipo = "aviso") {
 }
 
 // ====================================
-// Função para atualizar a Sidebar
+// Função global para atualizar Sidebar direto do banco
 // ====================================
-function atualizarSidebar() {
-  const usuario = localStorage.getItem("usuario") || "Usuário";
-  const usuarioEmail = localStorage.getItem("usuarioEmail");
-  const foto = localStorage.getItem("usuarioFoto") || "../assets/foto.png";
+async function atualizarSidebar() {
+  const tipoConta = localStorage.getItem("logado_como"); // 'usuario' ou 'estacao'
+  const email = localStorage.getItem("usuarioEmail");
+  if (!tipoConta || !email) return;
 
-  document.querySelectorAll(".nomeUsuario").forEach((el) => {
-    el.innerHTML = `
-    <span class="user-photo">
-      <img src="${foto.startsWith('data:image') ? foto : `${foto}?t=${Date.now()}`}" alt="Foto do usuário" />
-    </span>
-    ${usuario}
-    <button id="gearBtn" class="settings-icon" title="Configurações">
-      <img src="../assets/engrenagem.png" alt="Configurações" />
-    </button>
-  `;
-  });
+  const url = tipoConta === "estacao"
+    ? `${API_BASE}/stations/${email}`
+    : `${API_BASE}/users/${email}`;
 
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Erro ao buscar dados do banco");
+
+    const dados = await res.json();
+    const nome = dados.full_name || dados.name || dados.email || "Usuário";
+    const foto = dados.photo_url || "../assets/foto.png";
+
+    document.querySelectorAll(".nomeUsuario").forEach((el) => {
+      el.innerHTML = `
+        <span class="user-photo">
+          <img src="${foto.startsWith('data:image') ? foto : `${foto}?t=${Date.now()}`}" alt="Foto do usuário" />
+        </span>
+        ${nome}
+        <button id="gearBtn" class="settings-icon" title="Configurações">
+          <img src="../assets/engrenagem.png" alt="Configurações" />
+        </button>
+      `;
+    });
+  } catch (err) {
+    console.error("❌ Erro ao atualizar sidebar:", err);
+  }
 }
+
 
 // ====================================
 // Verificação de login e inicialização
