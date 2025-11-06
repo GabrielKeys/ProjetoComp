@@ -104,27 +104,29 @@
     <form id="registerStationForm" class="form" autocomplete="off">
       <h2>Registrar Estação</h2>
 
-      <label for="stationFullName">Nome de Usuário</label>
-      <input type="text" id="stationFullName" name="fullName" required placeholder="Seu nome" autocomplete="off">
+      <label for="stationFullName">Usuário</label>
+      <input type="text" id="stationFullName" name="fullName" required maxlength="10" required placeholder="Nome do Usuário" autocomplete="off">
 
       <div class="input-group">
         <label for="stationName">Nome da Localidade</label>
-        <input type="text" id="stationName" name="stationName" required>
+        <input type="text" id="stationName" name="stationName" required maxlength="15" required placeholder="Nome do Local">
       </div>
 
       <div class="input-group">
         <label for="stationEmail">Email</label>
-        <input type="email" id="stationEmail" name="stationEmail" required>
+        <input type="email" id="stationEmail" name="stationEmail" required placeholder="exemplo@email.com" autocomplete="off">
       </div>
 
       <div class="input-group">
         <label for="stationPass">Senha</label>
-        <input type="password" id="stationPass" name="stationPass" required>
+        <input type="password" id="stationPass" name="stationPass" required placeholder="Mínimo 8 caracteres"
+        autocomplete="new-password">
       </div>
 
       <div class="input-group">
         <label for="confirmStationPass">Confirmar Senha</label>
-        <input type="password" id="confirmStationPass" name="confirmStationPass" required>
+        <input type="password" id="confirmStationPass" name="confirmStationPass" required placeholder="Repita sua senha"
+        autocomplete="off">
       </div>
 
       <div class="input-group">
@@ -132,36 +134,46 @@
         <input type="tel" id="stationPhone" name="stationPhone" placeholder="(99) 99999-9999">
       </div>
 
-      <div class="input-group">
-        <label for="stationCep">CEP</label>
-        <input type="text" id="stationCep" name="stationCep" required>
+
+      <!-- Adicionar Endereço -->
+      <div class="linha-endereco">
+        <div class="input-group half cep-group">
+          <label for="stationCep">CEP</label>
+          <input type="text" id="stationCep" name="stationCep" required maxlength="8" placeholder="Digite o CEP">
+          <span id="cepErro" class="cep-erro"></span> 
+        </div>
+
+        <div class="input-group half">
+          <label for="stationNumber">Número</label>
+          <input type="text" id="stationNumber" name="stationNumber" required placeholder="Número do Endereço">
+        </div>
       </div>
 
-      <div class="input-group">
-        <label for="stationAddress">Endereço</label>
-        <input type="text" id="stationAddress" name="stationAddress" required>
+      <button type="button" class="add-vehicle-btn" id="toggleEndereco">
+        + Informações do Endereço
+      </button>
+
+      <div id="enderecoGaveta" class="endereco-gaveta">
+        <div class="linha-endereco">
+          <label for="stationAddress">Endereço:</label>
+          <input type="text" id="stationAddress" readonly />
+        </div>
+        <div class="linha-endereco">
+          <label for="stationDistrict">Bairro:</label>
+          <input type="text" id="stationDistrict" readonly />
+        </div>
+        <div class="linha-endereco">
+          <label for="stationCity">Cidade:</label>
+          <input type="text" id="stationCity" readonly />
+        </div>
+        <div class="linha-endereco">
+          <label for="stationState">Estado:</label>
+          <input type="text" id="stationState" readonly />
+        </div>
       </div>
 
-      <div class="input-group">
-        <label for="stationDistrict">Bairro</label>
-        <input type="text" id="stationDistrict" name="stationDistrict" required>
-      </div>
 
-      <div class="input-group">
-        <label for="stationNumber">Número</label>
-        <input type="text" id="stationNumber" name="stationNumber" required>
-      </div>
-
-      <div class="input-group">
-        <label for="stationCity">Cidade</label>
-        <input type="text" id="stationCity" name="stationCity" required>
-      </div>
-
-      <div class="input-group">
-        <label for="stationState">Estado</label>
-        <input type="text" id="stationState" name="stationState" required>
-      </div>
-
+      <!-- Informações de carregamento -->
       <div class="input-group">
         <label for="stationPower">Potência de Carregamento</label>
         <input type="text" id="stationPower" name="stationPower" placeholder="Ex: 150 kW" required>
@@ -177,16 +189,15 @@
         <input type="time" id="stationClose" name="stationClose" required>
       </div>
 
-      <!-- Extras -->
       <div class="input-group">
         <label for="stationPrice">Preço (R$/kWh):</label>
         <input type="text" id="stationPrice" placeholder="Ex: R$ 1.50" />
       </div>
 
-      <div class="input-group">
+    <!--<div class="input-group">
         <label for="stationWait">Tempo de espera:</label>
         <input type="text" id="stationWait" placeholder="Ex: 15 min" />
-      </div>
+      </div>-->
 
       <p id="stationMsg" class="msg"></p>
       <button type="submit" class="btn">Registrar Estação</button>
@@ -200,6 +211,7 @@
   </div>
 
   <script src="login.js"></script>
+
 
 </body>
 
