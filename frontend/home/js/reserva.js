@@ -1023,6 +1023,14 @@ document.addEventListener("DOMContentLoaded", () => {
   formAgendamento.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+
+    const btnConfirmar = formAgendamento.querySelector('button[type="submit"]');
+    if (btnConfirmar) {
+      btnConfirmar.disabled = true;
+      btnConfirmar.innerText = "Processando...";
+    }
+
+
     try {
       const data = document.getElementById("dataReserva").value;
       const hora = document.getElementById("horaReserva").value;
@@ -1057,7 +1065,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-          // ===========================
+      // ===========================
       // DÉBITO FIXO: R$10,00 (Reserva)
       // ===========================
       const custoReserva = 10.00;
@@ -1209,7 +1217,14 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       console.error("❌ Erro no submit de agendamento:", err);
       mostrarMensagem?.("❌ Erro ao processar a reserva.", "erro");
+    }finally {
+    // ✅ Reativar o botão mesmo se der erro
+    if (btnConfirmar) {
+      btnConfirmar.disabled = false;
+      btnConfirmar.innerText = "Confirmar";
     }
+  }
+  
   });
 });
 

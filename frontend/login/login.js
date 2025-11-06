@@ -1,3 +1,18 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const logado = localStorage.getItem("logado");
+  const tipo = localStorage.getItem("logado_como");
+
+  if (logado === "true") {
+    if (tipo === "usuario") {
+      // Usuário comum
+      window.location.href = "../home/home.html";
+    } else if (tipo === "estacao") {
+      // Estação cadastrada
+      window.location.href = "../station/home.html";
+    }
+  }
+});
+
 // ====================================
 // Mensages de aviso, erro ou sucesso
 // ====================================
@@ -191,13 +206,27 @@ if (loginForm) {
 
 
 // ===============================
-// REGISTRO DE USUÁRIO (com banco de dados)
+// REGISTRO DE USUÁRIO (com verificação global de email)
 // ===============================
 const registerForm = document.getElementById("registerForm");
 
 if (registerForm) {
+
+  const btnSubmit = registerForm.querySelector('button[type="submit"]');
+
+  // 🔹 Função centralizada para mostrar erro e reativar o botão
+  function mostrarErroBloqueandoBotao(msg) {
+    mostrarMensagem(msg, "erro");
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Registrar";
+    }
+  }
+
   registerForm.addEventListener("submit", async function (event) {
     event.preventDefault();
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = "Registrando...";
 
     const fullName = document.getElementById("fullName").value.trim();
     const newEmail = document.getElementById("newEmail").value.trim();
@@ -216,35 +245,42 @@ if (registerForm) {
     // Validações básicas
     // ===============================
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
-      msg.innerText = "Digite um email válido!";
-      msg.style.color = "red";
-      return;
+      return mostrarErroBloqueandoBotao("Digite um email válido!", "erro");
     }
 
     if (newPass.length < 8) {
-      msg.innerText = "A senha deve ter pelo menos 8 caracteres!";
-      msg.style.color = "red";
-      return;
+      return mostrarErroBloqueandoBotao("A senha deve ter pelo menos 8 caracteres!", "erro");
     }
 
     if (newPass !== confirmPass) {
-      msg.innerText = "As senhas não coincidem!";
-      msg.style.color = "red";
-      return;
+      return mostrarErroBloqueandoBotao("As senhas não coincidem!", "erro");
     }
 
-    // ===============================
-    // Envia para o backend
-    // ===============================
-    const novoUsuario = {
-      full_name: fullName,
-      email: newEmail,
-      password: newPass,
-      phone,
-      role: "user", // define que é um usuário normal
-    };
-
     try {
+      // ===============================
+      // 1️⃣ Checa se o email já existe em usuários ou estações
+      // ===============================
+      const [userCheck, stationCheck] = await Promise.all([
+        fetch(`${API_BASE}/users/${encodeURIComponent(newEmail)}`),
+        fetch(`${API_BASE}/stations/${encodeURIComponent(newEmail)}`)
+      ]);
+
+      if (userCheck.ok || stationCheck.ok) {
+        mostrarErroBloqueandoBotao("❌ Este e-mail já está em uso! Tente outro.", "erro");
+        return;
+      }
+
+      // ===============================
+      // 2️⃣ Cria o novo usuário
+      // ===============================
+      const novoUsuario = {
+        full_name: fullName,
+        email: newEmail,
+        password: newPass,
+        phone,
+        role: "user",
+      };
+
       const response = await fetch(`${API_BASE}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -262,7 +298,7 @@ if (registerForm) {
       console.log("Usuário criado:", data);
 
       // ===============================
-      // (Opcional) Salva veículo, se informado
+      // 3️⃣ Salva veículo (opcional)
       // ===============================
       if (carModel || carYear || carPlate || carBattery || carPower) {
         await fetch(`${API_BASE}/vehicles`, {
@@ -280,18 +316,17 @@ if (registerForm) {
       }
 
       // ===============================
-      // Mensagem de sucesso + login automático
+      // 4️⃣ Mensagem de sucesso + login automático
       // ===============================
+      mostrarMensagem("Conta criada com sucesso.", "sucesso");
       msg.innerText = "✅ Conta criada com sucesso!";
       msg.style.color = "green";
 
-      // Salva login local para manter sessão
       localStorage.setItem("logado", "true");
       localStorage.setItem("logado_como", "usuario");
       localStorage.setItem("usuario", fullName || newEmail);
       localStorage.setItem("usuarioEmail", newEmail);
 
-      // Redireciona após 2 segundos
       setTimeout(() => {
         window.location.href = "../home/home.html";
       }, 2000);
@@ -300,10 +335,15 @@ if (registerForm) {
       console.error("Erro ao criar usuário:", error);
       msg.innerText = "Erro ao conectar com o servidor!";
       msg.style.color = "red";
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Registrar Estação";
+      }
+
     }
   });
 }
-
 
 
 // ===============================
@@ -604,264 +644,304 @@ if (registerStationForm) {
     });
   }
 
-// ===============================
-// Preenche e formata o campo de preço mantendo "R$ " visível durante a digitação
-// ===============================
-(function initPrecoComPrefixo() {
-  const input = document.getElementById("stationPrice");
-  if (!input) return;
+  // ===============================
+  // Preenche e formata o campo de preço mantendo "R$ " visível durante a digitação
+  // ===============================
+  (function initPrecoComPrefixo() {
+    const input = document.getElementById("stationPrice");
+    if (!input) return;
 
-  const PREFIX = "R$ ";
+    const PREFIX = "R$ ";
 
-  function formatBRLFromDigits(digits) {
-    if (!digits) return "0,00";
-    digits = digits.replace(/^0+/, "");
-    if (!digits) digits = "0";
-    while (digits.length < 3) digits = "0" + digits;
-    const cents = digits.slice(-2);
-    let integer = digits.slice(0, -2);
-    integer = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return integer + "," + cents;
-  }
-  function onlyDigitsFrom(str) {
-    return (str || "").replace(/\D/g, "");
-  }
-
-  function setFormattedValueFromDigits(digits) {
-    const formatted = formatBRLFromDigits(digits);
-    input.value = PREFIX + formatted;
-    try {
-      input.setSelectionRange(input.value.length, input.value.length);
-    } catch (e) { }
-  }
-
-  if (!input.value || !onlyDigitsFrom(input.value)) {
-    setFormattedValueFromDigits("0");
-  } else {
-    setFormattedValueFromDigits(onlyDigitsFrom(input.value));
-  }
-
-  input.addEventListener("keydown", (ev) => {
-    const selStart = input.selectionStart;
-    const selEnd = input.selectionEnd;
-    if (selStart <= PREFIX.length - 1 && (ev.key === "Backspace" || ev.key === "Delete")) {
-      ev.preventDefault();
-      try { input.setSelectionRange(PREFIX.length, PREFIX.length); } catch (e) {}
-      return;
+    function formatBRLFromDigits(digits) {
+      if (!digits) return "0,00";
+      digits = digits.replace(/^0+/, "");
+      if (!digits) digits = "0";
+      while (digits.length < 3) digits = "0" + digits;
+      const cents = digits.slice(-2);
+      let integer = digits.slice(0, -2);
+      integer = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      return integer + "," + cents;
     }
-    const allowed = [
-      "ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Tab","Backspace","Delete","Home","End"
-    ];
-    if (allowed.includes(ev.key)) return;
-    if (/^[0-9]$/.test(ev.key)) return;
-    if (ev.ctrlKey || ev.metaKey) return;
-    ev.preventDefault();
-  });
+    function onlyDigitsFrom(str) {
+      return (str || "").replace(/\D/g, "");
+    }
 
-  input.addEventListener("focus", () => {
-    if (!input.value.startsWith(PREFIX)) {
-      const digits = onlyDigitsFrom(input.value);
-      setFormattedValueFromDigits(digits || "0");
+    function setFormattedValueFromDigits(digits) {
+      const formatted = formatBRLFromDigits(digits);
+      input.value = PREFIX + formatted;
+      try {
+        input.setSelectionRange(input.value.length, input.value.length);
+      } catch (e) { }
+    }
+
+    if (!input.value || !onlyDigitsFrom(input.value)) {
+      setFormattedValueFromDigits("0");
     } else {
-      try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
+      setFormattedValueFromDigits(onlyDigitsFrom(input.value));
     }
-  });
 
-  input.addEventListener("input", () => {
-    let digits = onlyDigitsFrom(input.value);
-    if (!digits) digits = "0";
-    digits = digits.replace(/^0+/, "");
-    if (!digits) digits = "0";
-    setFormattedValueFromDigits(digits);
-  });
+    input.addEventListener("keydown", (ev) => {
+      const selStart = input.selectionStart;
+      const selEnd = input.selectionEnd;
+      if (selStart <= PREFIX.length - 1 && (ev.key === "Backspace" || ev.key === "Delete")) {
+        ev.preventDefault();
+        try { input.setSelectionRange(PREFIX.length, PREFIX.length); } catch (e) { }
+        return;
+      }
+      const allowed = [
+        "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "Backspace", "Delete", "Home", "End"
+      ];
+      if (allowed.includes(ev.key)) return;
+      if (/^[0-9]$/.test(ev.key)) return;
+      if (ev.ctrlKey || ev.metaKey) return;
+      ev.preventDefault();
+    });
 
-  input.addEventListener("blur", () => {
-    if (!input.value.startsWith(PREFIX)) {
-      const digits = onlyDigitsFrom(input.value) || "0";
+    input.addEventListener("focus", () => {
+      if (!input.value.startsWith(PREFIX)) {
+        const digits = onlyDigitsFrom(input.value);
+        setFormattedValueFromDigits(digits || "0");
+      } else {
+        try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) { }
+      }
+    });
+
+    input.addEventListener("input", () => {
+      let digits = onlyDigitsFrom(input.value);
+      if (!digits) digits = "0";
+      digits = digits.replace(/^0+/, "");
+      if (!digits) digits = "0";
       setFormattedValueFromDigits(digits);
+    });
+
+    input.addEventListener("blur", () => {
+      if (!input.value.startsWith(PREFIX)) {
+        const digits = onlyDigitsFrom(input.value) || "0";
+        setFormattedValueFromDigits(digits);
+      }
+    });
+
+    input.getNumericValue = function () {
+      const digits = onlyDigitsFrom(input.value);
+      if (!digits) return 0;
+      const n = parseInt(digits, 10);
+      return n / 100;
+    };
+  })();
+
+
+
+  const btnSubmit = registerStationForm.querySelector('button[type="submit"]');
+
+  // Função centralizada para exibir mensagem e reativar o botão
+  function mostrarErroBloqueandoBotao(msg) {
+    mostrarMensagem(msg, "erro");
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Registrar Estação";
     }
-  });
-
-  input.getNumericValue = function() {
-    const digits = onlyDigitsFrom(input.value);
-    if (!digits) return 0;
-    const n = parseInt(digits, 10);
-    return n / 100;
-  };
-})();
-
-
-
-registerStationForm.addEventListener("submit", async function (event) {
-  event.preventDefault();
-
-  // ===============================
-  // CAPTURA DOS CAMPOS
-  // ===============================
-  const cepInput = document.getElementById("stationCep");
-  const cep = cepInput.value.replace(/\D/g, "");
-
-  const full_name = document.getElementById("stationFullName")?.value.trim() || "";
-  const name = document.getElementById("stationName").value.trim();
-  const email = document.getElementById("stationEmail").value.trim();
-  const password = document.getElementById("stationPass").value.trim();
-  const confirmPass = document.getElementById("confirmStationPass").value.trim();
-  const phone = document.getElementById("stationPhone").value.trim();
-  const address = document.getElementById("stationAddress").value.trim();
-  const number = document.getElementById("stationNumber").value.trim();
-  const district = document.getElementById("stationDistrict").value.trim();
-  const city = document.getElementById("stationCity").value.trim();
-  const state = document.getElementById("stationState").value.trim();
-
-  const powerRaw = document.getElementById("stationPower")?.value || "";
-  const priceRaw = document.getElementById("stationPrice")?.value || "";
-  const waitRaw = document.getElementById("stationWait")?.value || "";
-  const open_time = document.getElementById("stationOpen")?.value || "";
-  const close_time = document.getElementById("stationClose")?.value || "";
-
-  // ===============================
-  // VALIDAÇÃO DE CEP
-  // ===============================
-  if (!cep || cep.length !== 8) {
-    mostrarMensagem("Digite um CEP válido antes de continuar!", "erro");
-    cepInput.focus();
-    return;
   }
 
-  try {
-    const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    const data = await resp.json();
 
-    if (data.erro) {
-      mostrarMensagem("CEP não encontrado. Verifique e tente novamente!", "erro");
+  registerStationForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+
+    const btnSubmit = registerStationForm.querySelector('button[type="submit"]');
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Registrando...";
+    }
+
+    // ===============================
+    // CAPTURA DOS CAMPOS
+    // ===============================
+    const cepInput = document.getElementById("stationCep");
+    const cep = cepInput.value.replace(/\D/g, "");
+
+    const full_name = document.getElementById("stationFullName")?.value.trim() || "";
+    const name = document.getElementById("stationName").value.trim();
+    const email = document.getElementById("stationEmail").value.trim();
+    const password = document.getElementById("stationPass").value.trim();
+    const confirmPass = document.getElementById("confirmStationPass").value.trim();
+    const phone = document.getElementById("stationPhone").value.trim();
+    const address = document.getElementById("stationAddress").value.trim();
+    const number = document.getElementById("stationNumber").value.trim();
+    const district = document.getElementById("stationDistrict").value.trim();
+    const city = document.getElementById("stationCity").value.trim();
+    const state = document.getElementById("stationState").value.trim();
+
+    const powerRaw = document.getElementById("stationPower")?.value || "";
+    const priceRaw = document.getElementById("stationPrice")?.value || "";
+    const waitRaw = document.getElementById("stationWait")?.value || "";
+    const open_time = document.getElementById("stationOpen")?.value || "";
+    const close_time = document.getElementById("stationClose")?.value || "";
+
+    // ===============================
+    // VALIDAÇÃO DE CEP
+    // ===============================
+    if (!cep || cep.length !== 8) {
+      mostrarErroBloqueandoBotao("Digite um CEP válido antes de continuar!", "erro");
       cepInput.focus();
       return;
     }
-  } catch (err) {
-    console.error("❌ Erro ao validar CEP:", err);
-    mostrarMensagem("Erro ao validar o CEP. Tente novamente mais tarde.", "erro");
-    return;
-  }
 
-  // ===============================
-  // OUTRAS VALIDAÇÕES
-  // ===============================
-  if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
-    return mostrarMensagem("Digite um email válido!", "erro");
+    try {
+      const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await resp.json();
 
-  if (password.length < 8)
-    return mostrarMensagem("A senha deve ter pelo menos 8 caracteres!", "erro");
-
-  if (password !== confirmPass)
-    return mostrarMensagem("As senhas não coincidem!", "erro");
-
-  // ✅ Número
-  if (!number)
-    return mostrarMensagem("O campo número é obrigatório!", "erro");
-
-  if (!/^\d+$/.test(number))
-    return mostrarMensagem("Digite apenas números no campo número!", "erro");
-
-  if (parseInt(number) <= 0)
-    return mostrarMensagem("Digite um número válido para o endereço!", "erro");
-
- // Preço 
-let valorStr = priceRaw.replace(/[^\d,]/g, "").replace(",", ".");
-let price = parseFloat(valorStr);
-
-// Se o usuário não digitou nada, assume 0.00
-if (isNaN(price)) price = 0.0;;
-
-  // Outros valores opcionais
-  const power = parseFloat(powerRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
-  const wait_time = parseInt(waitRaw.replace(/[^\d]/g, "") || "0");
-
-  // ===============================
-  // GEOLOCALIZAÇÃO
-  // ===============================
-  const enderecoCompleto = `${address}, ${number}, ${district}, ${city} - ${state}, ${cep}`;
-  let lat = null, lng = null;
-
-  try {
-    const geocodeURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-      enderecoCompleto
-    )}&key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY`;
-
-    const geoRes = await fetch(geocodeURL);
-    const geoData = await geoRes.json();
-
-    if (geoData.status === "OK" && geoData.results.length > 0) {
-      lat = geoData.results[0].geometry.location.lat;
-      lng = geoData.results[0].geometry.location.lng;
-      console.log(`📍 Coordenadas obtidas: (${lat}, ${lng})`);
-    } else {
-      console.warn("⚠️ Geocoding falhou:", geoData.status);
-    }
-  } catch (err) {
-    console.error("❌ Erro no geocoding:", err);
-  }
-
-  // ===============================
-  // MONTAGEM E ENVIO
-  // ===============================
-  const novaEstacao = {
-    full_name,
-    name,
-    email,
-    password,
-    phone,
-    cep,
-    address,
-    number,
-    district,
-    city,
-    state,
-    power,
-    price,
-    wait_time,
-    open_time,
-    close_time,
-    lat,
-    lng,
-  };
-
-  try {
-    const response = await fetch(`${API_BASE}/stations`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(novaEstacao),
-    });
-
-    if (!response.ok) {
-      const erro = await response.text();
-      console.error("Erro do servidor:", erro);
-      mostrarMensagem(`Erro ao registrar estação: ${erro}`, "erro");
+      if (data.erro) {
+        mostrarErroBloqueandoBotao("CEP não encontrado. Verifique e tente novamente!", "erro");
+        cepInput.focus();
+        return;
+      }
+    } catch (err) {
+      console.error("❌ Erro ao validar CEP:", err);
+      mostrarErroBloqueandoBotao("Erro ao validar o CEP. Tente novamente mais tarde.", "erro");
       return;
     }
 
-    const data = await response.json();
-    console.log("✅ Estação registrada:", data);
-    mostrarMensagem("✅ Estação registrada com sucesso!", "sucesso");
+    // ===============================
+    // OUTRAS VALIDAÇÕES
+    // ===============================
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
+      return mostrarErroBloqueandoBotao("Digite um email válido!", "erro");
 
-    // Armazenamento local
-    localStorage.setItem("logado", "true");
-    localStorage.setItem("logado_como", "estacao");
-    localStorage.setItem("usuario", data.name || data.email);
-    localStorage.setItem("usuarioEmail", data.email);
-    localStorage.setItem("estacaoSelecionada", JSON.stringify(data));
+    if (password.length < 8)
+      return mostrarErroBloqueandoBotao("A senha deve ter pelo menos 8 caracteres!", "erro");
 
-    registerStationForm.reset();
-    localStorage.removeItem("googleCadastro");
+    if (password !== confirmPass)
+      return mostrarErroBloqueandoBotao("As senhas não coincidem!", "erro");
 
-    setTimeout(() => {
-      window.location.href = "../station/home.html";
-    }, 1200);
+    // ✅ Número
+    if (!number)
+      return mostrarErroBloqueandoBotao("O campo número é obrigatório!", "erro");
 
-  } catch (error) {
-    console.error("❌ Erro ao conectar com o servidor:", error);
-    mostrarMensagem("Erro ao conectar com o servidor!", "erro");
-  }
-});
+    if (!/^\d+$/.test(number))
+      return mostrarErroBloqueandoBotao("Digite apenas números no campo número!", "erro");
+
+    if (parseInt(number) <= 0)
+      return mostrarErroBloqueandoBotao("Digite um número válido para o endereço!", "erro");
+
+    // Preço 
+    let valorStr = priceRaw.replace(/[^\d,]/g, "").replace(",", ".");
+    let price = parseFloat(valorStr);
+
+    // Se o usuário não digitou nada, assume 0.00
+    if (isNaN(price)) price = 0.0;;
+
+    // Outros valores opcionais
+    const power = parseFloat(powerRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
+    const wait_time = parseInt(waitRaw.replace(/[^\d]/g, "") || "0");
+
+    // ===============================
+    // GEOLOCALIZAÇÃO
+    // ===============================
+    const enderecoCompleto = `${address}, ${number}, ${district}, ${city} - ${state}, ${cep}`;
+    let lat = null, lng = null;
+
+    try {
+      const geocodeURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        enderecoCompleto
+      )}&key=AIzaSyDOJogDJ0oT8YsjTuQXx4k1Rkgbtw6WsxY`;
+
+      const geoRes = await fetch(geocodeURL);
+      const geoData = await geoRes.json();
+
+      if (geoData.status === "OK" && geoData.results.length > 0) {
+        lat = geoData.results[0].geometry.location.lat;
+        lng = geoData.results[0].geometry.location.lng;
+        console.log(`📍 Coordenadas obtidas: (${lat}, ${lng})`);
+      } else {
+        console.warn("⚠️ Geocoding falhou:", geoData.status);
+      }
+    } catch (err) {
+      console.error("❌ Erro no geocoding:", err);
+    }
+
+
+    // ===============================
+    // CHECA SE EMAIL JÁ EXISTE (em usuário OU estação)
+    // ===============================
+    try {
+      const [userCheck, stationCheck] = await Promise.all([
+        fetch(`${API_BASE}/users/${encodeURIComponent(email)}`),
+        fetch(`${API_BASE}/stations/${encodeURIComponent(email)}`)
+      ]);
+
+      if (userCheck.ok || stationCheck.ok) {
+        mostrarErroBloqueandoBotao("❌ Este e-mail já está em uso! Tente outro.", "erro");
+        return;
+      }
+    } catch (err) {
+      console.error("❌ Erro ao verificar e-mail:", err);
+      mostrarErroBloqueandoBotao("Erro ao verificar disponibilidade do e-mail.", "erro");
+      return;
+    }
+
+
+    // ===============================
+    // MONTAGEM E ENVIO
+    // ===============================
+    const novaEstacao = {
+      full_name,
+      name,
+      email,
+      password,
+      phone,
+      cep,
+      address,
+      number,
+      district,
+      city,
+      state,
+      power,
+      price,
+      wait_time,
+      open_time,
+      close_time,
+      lat,
+      lng,
+    };
+
+    try {
+      const response = await fetch(`${API_BASE}/stations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(novaEstacao),
+      });
+
+      if (!response.ok) {
+        const erro = await response.text();
+        console.error("Erro do servidor:", erro);
+        mostrarErroBloqueandoBotao(`Erro ao registrar estação: ${erro}`, "erro");
+        return;
+      }
+
+      const data = await response.json();
+      console.log("✅ Estação registrada:", data);
+      mostrarMensagem("✅ Estação registrada com sucesso!", "sucesso");
+
+      // Armazenamento local
+      localStorage.setItem("logado", "true");
+      localStorage.setItem("logado_como", "estacao");
+      localStorage.setItem("usuario", data.name || data.email);
+      localStorage.setItem("usuarioEmail", data.email);
+      localStorage.setItem("estacaoSelecionada", JSON.stringify(data));
+
+      registerStationForm.reset();
+      localStorage.removeItem("googleCadastro");
+
+      setTimeout(() => {
+        window.location.href = "../station/home.html";
+      }, 1200);
+
+    } catch (error) {
+      console.error("❌ Erro ao conectar com o servidor:", error);
+      mostrarMensagem("Erro ao conectar com o servidor!", "erro");
+    }
+  });
 
 }
 
