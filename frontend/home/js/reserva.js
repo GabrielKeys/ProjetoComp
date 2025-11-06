@@ -1057,8 +1057,59 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // 💰 Verifica saldo e debita R$10,00
+          // ===========================
+      // DÉBITO FIXO: R$10,00 (Reserva)
+      // ===========================
       const custoReserva = 10.00;
+
+      async function atualizarCarteiraUI() {
+        try {
+          const res = await fetch(`${API_BASE}/wallet/${usuarioEmail}`);
+          const data = await res.json();
+          if (!res.ok || !data.wallet) throw new Error();
+
+          const saldoEl = document.getElementById("saldoCarteira");
+          const listaTransacoes = document.getElementById("listaTransacoes");
+
+          if (saldoEl) saldoEl.innerText = `R$${Number(data.wallet.balance).toFixed(2)}`;
+
+          if (listaTransacoes) {
+            const transacoes = data.transactions || [];
+            listaTransacoes.innerHTML = transacoes.length
+              ? transacoes
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .map(t => `
+                  <p class="${Number(t.amount) >= 0 ? 'pos' : 'neg'}">
+                    ${Number(t.amount) >= 0 ? '+' : '-'} R$${Math.abs(Number(t.amount)).toFixed(2)} (${t.type})
+                  </p>`).join("")
+              : "<p>Nenhuma transação ainda.</p>";
+          }
+        } catch (e) {
+          console.warn("⚠ Falha ao atualizar carteira:", e);
+        }
+      }
+
+      async function debitarReserva(email, valor) {
+        try {
+          const res = await fetch(`${API_BASE}/wallet/debit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, amount: valor, type: "Reserva" }),
+          });
+          const data = await res.json();
+
+          if (!res.ok || !data.success) throw new Error(data.message);
+          mostrarMensagem?.(`R$${valor.toFixed(2)} debitados da carteira.`, "aviso");
+          await atualizarCarteiraUI();
+          return true;
+        } catch (err) {
+          console.error("❌ Erro ao debitar:", err);
+          mostrarMensagem?.("❌ Falha ao debitar a reserva. Tente novamente.", "erro");
+          return false;
+        }
+      }
+
+      // 💰 Verifica saldo
       const resSaldo = await fetch(`${API_BASE}/wallet/${usuarioEmail}`);
       const dataSaldo = await resSaldo.json();
       if (!resSaldo.ok || !dataSaldo.wallet) {
@@ -1072,18 +1123,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const debitoOK = await fetch(`${API_BASE}/wallet/debit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: usuarioEmail, amount: custoReserva, type: "Reserva" }),
-      });
-
-      const debitoData = await debitoOK.json();
-      if (!debitoOK.ok || !debitoData.success) {
-        mostrarMensagem?.("❌ Falha ao debitar a reserva. Tente novamente.", "erro");
-        return;
-      }
-
+      const debitoOK = await debitarReserva(usuarioEmail, custoReserva);
+      if (!debitoOK) return;
       // 📞 Buscar telefone do usuário
       let telefoneUsuario = null;
       try {
