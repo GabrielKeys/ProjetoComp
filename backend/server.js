@@ -559,11 +559,9 @@ app.put("/reservas/:id/status", async (req, res) => {
 });
 
 
-
-
 // ==========================================
-// START SERVER 
+// START SERVER
 // ==========================================
 app.listen(PORT, () => {
-  console.log(`⚡ VoltWay backend rodando em http://localhost:${PORT}`);
+  console.log(`⚡ VoltWay backend rodando na porta ${PORT}`);
 });
