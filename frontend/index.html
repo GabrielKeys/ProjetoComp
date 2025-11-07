@@ -6,33 +6,57 @@
   <title>VoltWay</title>
 
   <!-- Redireciona imediatamente para a tela de login -->
-  <meta http-equiv="refresh" content="0; url=login/login.html">
+  <meta http-equiv="refresh" content="0; url=./login/login.html">
 
   <!-- Alternativa: link para navegar caso o redirecionamento falhe -->
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:#f6f8fb; color:#0a2a66; }
-    .box { text-align:center; max-width:420px; padding:24px; border-radius:12px; box-shadow:0 8px 30px rgba(10,42,102,0.08); background:#fff; }
-    a.button { display:inline-block; margin-top:12px; padding:10px 14px; background:#007bff; color:#fff; border-radius:8px; text-decoration:none; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: #f6f8fb;
+      color: #0a2a66;
+    }
+    .box {
+      text-align: center;
+      max-width: 420px;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(10,42,102,0.08);
+      background: #fff;
+    }
+    a.button {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #007bff;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+    }
   </style>
 
-  <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#00aaff">
+  <!-- Caminhos relativos corrigidos -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#00aaff">
 
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(() => console.log('✅ Service Worker registrado'))
-      .catch(err => console.error('❌ Erro SW:', err));
-  }
-</script>
-
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(() => console.log('✅ Service Worker registrado'))
+        .catch(err => console.error('❌ Erro SW:', err));
+    }
+  </script>
 </head>
 <body>
   <div class="box">
     <h1>VoltWay</h1>
     <p>Redirecionando para o login…</p>
     <p>Se nada acontecer, clique no botão abaixo:</p>
-    <a class="button" href="/frontend/login/login.html">Ir para Login</a>
+    <a class="button" href="./login/login.html">Ir para Login</a>
   </div>
 </body>
 </html>
