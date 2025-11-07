@@ -2,7 +2,6 @@
 // reserva.js (estação)
 // ====================================
 
-const API_BASE = "http://localhost:4000";
 let reservasCache = []; // cache global de reservas
 let reservaIndexParaCancelar = null; // índice global da reserva a cancelar
 

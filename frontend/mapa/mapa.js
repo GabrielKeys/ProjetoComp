@@ -6,8 +6,7 @@ let carregadores = [];
 let ficticios = [];
 let infowindowAtual = null;
 
-// URL base do backend
-const API_BASE = "http://localhost:4000";
+
 
 /* ===============================
    Inicializar mapa

@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // =====================================================
   async function buscarVeiculo() {
     try {
-      const resp = await fetch(`http://localhost:4000/veiculos/${usuarioAtual}`);
+      const resp = await fetch(`${API_BASE}/veiculos/${usuarioAtual}`);
       if (!resp.ok) throw new Error("Erro ao buscar veículo");
       const data = await resp.json();
       return data && Object.keys(data).length ? data : null;
@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const payload = { usuario_email: usuarioAtual, modelo, ano: parseInt(ano), placa, bateria, carregamento };
 
       try {
-        const resp = await fetch("http://localhost:4000/veiculos", {
+        const resp = await fetch(`${API_BASE}/veiculos`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

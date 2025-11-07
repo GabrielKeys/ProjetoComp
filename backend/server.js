@@ -21,6 +21,8 @@ app.use(express.urlencoded({ limit: '20mb', extended: true }));
 // ==========================================
 app.get('/', (req, res) => res.json({ ok: true, version: 'voltway-backend-1' }));
 
+app.get('/health', (req, res) => res.send('OK'));
+
 // ==========================================
 // USERS
 // ==========================================

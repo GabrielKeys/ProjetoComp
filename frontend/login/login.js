@@ -69,8 +69,8 @@ function mostrarMensagem(texto, tipo = "aviso") {
 // ====================================
 async function atualizarSidebar(tipoConta, email) {
   const url = tipoConta === "estacao"
-    ? `http://localhost:4000/stations/${email}`
-    : `http://localhost:4000/users/${email}`;
+    ? `${API_BASE}/stations/${email}`
+    : `${API_BASE}/users/${email}`;
 
   try {
     const res = await fetch(url);
@@ -126,7 +126,6 @@ document.getElementById("goToLoginFromStation")?.addEventListener("click", (e) =
   document.getElementById("loginForm").classList.add("active");
 });
 
-const API_BASE = "http://localhost:4000"; // ajuste se seu backend estiver hospedado em outro endereço
 
 /// ===============================
 // LOGIN VIA BACKEND (USUÁRIOS E ESTAÇÕES)
@@ -149,7 +148,7 @@ if (loginForm) {
 
     try {
       // Tenta login de usuário
-      let response = await fetch("http://localhost:4000/users/login", {
+      let response = await fetch(`${API_BASE}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -171,7 +170,7 @@ if (loginForm) {
       }
 
       // Se não achou usuário, tenta estação
-      response = await fetch("http://localhost:4000/stations/login", {
+      response = await fetch(`${API_BASE}/stations/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })

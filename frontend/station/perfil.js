@@ -1,7 +1,6 @@
 // ==========================================
 // PERFIL ESTAÇÃO - integração com backend
 // ==========================================
-const API_BASE = "http://localhost:4000";
 
 // ------------------------------------------
 // Mensagens flutuantes reutilizáveis

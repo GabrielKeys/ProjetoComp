@@ -402,7 +402,7 @@ async function dadosVeiculoPreenchidos(usuarioEmail) {
   if (!usuarioEmail) return false;
 
   try {
-    const resp = await fetch(`http://localhost:4000/veiculos/${usuarioEmail}`);
+    const resp = await fetch(`${API_BASE}/veiculos/${usuarioEmail}`);
     if (!resp.ok) {
       console.warn("⚠️ Erro ao buscar veículo:", resp.status);
       return false;
@@ -1224,7 +1224,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btnConfirmar.innerText = "Confirmar";
     }
   }
-  
+
   });
 });
 
