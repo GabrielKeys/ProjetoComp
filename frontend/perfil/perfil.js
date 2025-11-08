@@ -1,3 +1,5 @@
+const API_BASE = "https://voltway-backend.onrender.com";
+
 // ======================================
 // perfil.js (versão integrada com backend)
 // ======================================

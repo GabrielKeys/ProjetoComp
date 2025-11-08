@@ -6,8 +6,6 @@ let carregadores = [];
 let ficticios = [];
 let infowindowAtual = null;
 
-
-
 /* ===============================
    Inicializar mapa
 =============================== */

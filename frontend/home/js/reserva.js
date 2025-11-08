@@ -1,6 +1,7 @@
 // ====================================
 // reserva.js (usuário)
 // ====================================
+const API_BASE = "https://voltway-backend.onrender.com";
 
 // ====================================
 // pequenos utilitários

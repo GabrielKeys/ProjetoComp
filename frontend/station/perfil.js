@@ -1,3 +1,4 @@
+const API_BASE = "https://voltway-backend.onrender.com";
 // ==========================================
 // PERFIL ESTAÇÃO - integração com backend
 // ==========================================

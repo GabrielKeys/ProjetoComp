@@ -1,3 +1,6 @@
+const API_BASE = "https://voltway-backend.onrender.com";
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const logado = localStorage.getItem("logado");
   const tipo = localStorage.getItem("logado_como");
