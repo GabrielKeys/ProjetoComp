@@ -1,8 +1,8 @@
 [{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.voltwayweb",
-        "sha256_cert_fingerprints": ["BB:F8:D2:D4:1A:37:1F:14:5C:7C:C8:BD:6E:15:98:BC:E2:17:48:0A:2A:D2:2A:BE:27:5F:D8:E9:D9:87:AE:63"]
-      }
-    }]
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.netlify.voltwayweb.twa",
+    "sha256_cert_fingerprints": ["BB:F8:D2:D4:1A:37:1F:14:5C:7C:C8:BD:6E:15:98:BC:E2:17:48:0A:2A:D2:2A:BE:27:5F:D8:E9:D9:87:AE:63"]
+  }
+}]
