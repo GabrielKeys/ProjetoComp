@@ -1,6 +1,7 @@
-// ---- Sistema de mensagens customizadas ----
+// ====================================
+// Sistema de mensagens customizadas
+// ====================================
 function mostrarMensagem(texto, tipo = "aviso") {
-  // cria container se não existir
   let container = document.getElementById("mensagensContainer");
   if (!container) {
     container = document.createElement("div");
@@ -49,7 +50,7 @@ function mostrarMensagem(texto, tipo = "aviso") {
 // Função global para atualizar Sidebar direto do banco
 // ====================================
 async function atualizarSidebar() {
-  const tipoConta = localStorage.getItem("logado_como"); // 'usuario' ou 'estacao'
+  const tipoConta = localStorage.getItem("logado_como");
   const email = localStorage.getItem("usuarioEmail");
   if (!tipoConta || !email) return;
 
@@ -87,8 +88,8 @@ async function atualizarSidebar() {
 // ====================================
 document.addEventListener("DOMContentLoaded", () => {
   const logado = localStorage.getItem("logado");
-  const tipo = localStorage.getItem("logado_como"); // "usuario" ou "estacao"
-  const path = window.location.pathname; // Caminho atual
+  const tipo = localStorage.getItem("logado_como");
+  const path = window.location.pathname;
 
   // SE NÃO ESTÁ LOGADO → REDIRECIONA
   if (!logado || !tipo) {
@@ -96,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // ===== BLOQUEAR ESTAÇÃO EM PÁGINAS DE USUÁRIO =====
+  // BLOQUEAR ESTAÇÃO EM PÁGINAS DE USUÁRIO 
   if (tipo === "estacao" && (
     path.includes("/home/") ||
     path.includes("/mapa/") ||
@@ -107,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // ===== BLOQUEAR USUÁRIO EM PÁGINAS DE ESTAÇÃO =====
+  //BLOQUEAR USUÁRIO EM PÁGINAS DE ESTAÇÃO
   if (tipo === "usuario" && (
     path.includes("/station/home") ||
     path.includes("/station/perfil")
@@ -121,20 +122,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // =====================================================
-// Ação do botão da engrenagem (gearBtn)
+// Ação do botão da engrenagem 
 // =====================================================
 document.addEventListener("click", (e) => {
   if (e.target.closest("#gearBtn")) {
     if (window.location.pathname.includes("perfil.html")) {
-      // já estamos no perfil → rola direto
       const ultimaSecao = document.querySelector(".perfil-container:last-of-type");
       if (ultimaSecao) {
         smoothScrollTo(ultimaSecao, 1200);
       }
     } else {
-      // salva intenção de rolar para o histórico
       localStorage.setItem("scrollToPerfilSection", "historicoReservas");
-      // redireciona para perfil
       window.location.href = "../perfil/perfil.html";
     }
   }
@@ -166,7 +164,7 @@ function smoothScrollTo(element, duration = 800) {
   requestAnimationFrame(animation);
 }
 
-// ---- Função de logout ----
+//Função de logout
 function logout() {
   localStorage.removeItem("logado");
   localStorage.removeItem("usuario");
@@ -178,7 +176,7 @@ const sidebar = document.getElementById("sidebar");
 const overlay = document.querySelector(".sidebar-overlay");
 const toggleBtn = document.getElementById("toggleSidebar");
 
-// 🔹 Abre/fecha no botão
+// Abre/fecha no botão
 toggleBtn.addEventListener("click", () => {
   sidebar.classList.toggle("open");
   overlay.classList.toggle("show");
@@ -187,17 +185,17 @@ toggleBtn.addEventListener("click", () => {
   localStorage.setItem("sidebarOpen", sidebar.classList.contains("open"));
 });
 
-// 🔹 Fecha se clicar no overlay
+// Fecha se clicar no overlay
 overlay.addEventListener("click", () => {
   sidebar.classList.remove("open");
   overlay.classList.remove("show");
 
-  // Atualiza o estado salvo
   localStorage.setItem("sidebarOpen", "false");
 });
 
-// ✅ Verifica automaticamente se há reservas canceladas pela estação (com modal customizado)
-// ✅ Função que abre o modal customizado de cancelamento
+// =====================================================
+// Verifica automaticamente se há reservas canceladas pela estação 
+// =====================================================
 function mostrarCancelamentoCustomizado(mensagem) {
   const modal = document.getElementById("cancelamentoAvisoModal");
   const msgEl = document.getElementById("cancelamentoMensagem");
@@ -211,8 +209,6 @@ function mostrarCancelamentoCustomizado(mensagem) {
   };
 }
 
-// ✅ Verifica automaticamente se há reservas canceladas pela estação (com modal customizado)
-// Substituir pela versão abaixo para consultar o backend quando possível.
 async function verificarCancelamentosPendentes() {
   const usuarioEmail = localStorage.getItem("usuarioEmail");
   const usuarioNome = localStorage.getItem("usuario");
@@ -222,7 +218,7 @@ async function verificarCancelamentosPendentes() {
   // carrega notificações já mostradas
   const jaNotificados = JSON.parse(localStorage.getItem("cancelamentosNotificados")) || [];
 
-  // 1) tenta buscar reservas do backend (se tiver email)
+  // 1) tenta buscar reservas do backend 
   let reservasBackend = [];
   if (usuarioEmail && typeof API_BASE !== "undefined") {
     try {
@@ -231,7 +227,6 @@ async function verificarCancelamentosPendentes() {
         const data = await resp.json();
         if (Array.isArray(data)) reservasBackend = data;
       } else {
-        // não depoe erro, só loga (fallback para localStorage)
         console.warn("verificarCancelamentosPendentes: fetch reservas devolveu", resp.status);
       }
     } catch (e) {
@@ -239,7 +234,7 @@ async function verificarCancelamentosPendentes() {
     }
   }
 
-  // 2) ler reservas antigas do localStorage (mantém compatibilidade)
+  // 2) ler reservas antigas do localStorage 
   const reservasEmailLocal = JSON.parse(localStorage.getItem(`reservas_${usuarioEmail}`) || "[]");
   const reservasNomeLocal = JSON.parse(localStorage.getItem(`reservas_${usuarioNome}`) || "[]");
   const reservasLocal = [...reservasEmailLocal, ...reservasNomeLocal];
@@ -270,11 +265,9 @@ async function verificarCancelamentosPendentes() {
   for (const r of todasReservas) {
     const idReserva = r.id || `${r.data || ""}_${(r.hora || r.inicio) || ""}`;
 
-    // normaliza status (alguns registros podem ter campos diferentes)
     const status = (r.status || r.status_reserva || "").toString().toLowerCase();
 
     if (status === "cancelada" && !jaNotificados.includes(idReserva)) {
-      // monta mensagem amigável (usa campos alternativos)
       const nomeEstacao =
         r.estacao ||
         r.estacao_nome ||
@@ -285,13 +278,12 @@ async function verificarCancelamentosPendentes() {
       const data = r.data || r.date || "--/--/----";
       const hora = r.hora || r.inicio || r.time || "--:--";
 
-      // mostra aviso visual
       mostrarCancelamentoCustomizado(
         `⚠️ Sua reserva na ${nomeEstacao} para ${data} às ${hora} foi cancelada. Um reembolso de R$10 foi aplicado.`
       );
 
       // ============================================================
-      // REEMBOLSO FIXO DE R$10 (caso a estação tenha cancelado)
+      // REEMBOLSO FIXO DE R$10 
       // ============================================================
       try {
         const usuarioEmail = localStorage.getItem("usuarioEmail");
@@ -310,13 +302,12 @@ async function verificarCancelamentosPendentes() {
         const dataResp = await resposta.json();
         if (!resposta.ok) throw new Error(dataResp.error || "Falha no reembolso");
 
-        console.log("💰 Reembolso automático aplicado:", dataResp);
+        console.log("Reembolso automático aplicado:", dataResp);
 
-        // ✅ Atualiza a carteira visualmente imediatamente
+        // Atualiza a carteira  imediatamente
         if (window.atualizarCarteira) {
-          await window.atualizarCarteira(); // chama a função que recarrega a carteira
+          await window.atualizarCarteira();
         } else {
-          // fallback caso a função não esteja no escopo global
           window.dispatchEvent(new Event("carteiraAtualizada"));
         }
 
@@ -339,7 +330,11 @@ document.addEventListener("DOMContentLoaded", verificarCancelamentosPendentes);
 setInterval(verificarCancelamentosPendentes, 3000);
 
 
-//formatar numero de telefone
+
+// ============================================================
+// Função para formatar telefone
+// ============================================================
+
 function formatarTelefone(telefone) {
   if (!telefone) return "--";
   let valor = telefone.replace(/\D/g, "");
@@ -349,15 +344,12 @@ function formatarTelefone(telefone) {
     return `(${valor.slice(0, 2)}) ${valor.slice(2, 7)}-${valor.slice(7)}`;
   }
 }
-
-
-
-
-/* Global theme toggle logic (default = light)*/
+// ============================================================
+// Função para alternar modo claro/escuro 
+// ============================================================
 (function () {
   const LS_KEY = "siteTheme";
 
-  // Apply theme consistently
   function applyTheme(theme) {
     if (theme === "dark") {
       document.documentElement.setAttribute("data-theme", "dark");
@@ -366,47 +358,39 @@ function formatarTelefone(telefone) {
       document.documentElement.removeAttribute("data-theme");
       document.body.classList.remove("dark-mode");
     }
-    // keep all toggles in sync (checked when dark)
     const toggles = document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch');
     toggles.forEach(t => {
       t.checked = (theme === "dark");
     });
   }
 
-  // Read saved preference (only "dark" triggers dark mode); default = light
   function getSavedTheme() {
     try {
       const v = localStorage.getItem(LS_KEY);
       if (v === "dark") return "dark";
     } catch (e) {
-      // ignore storage errors (e.g. private mode)
     }
     return "light";
   }
 
-  // Save preference
   function saveTheme(theme) {
     try {
       localStorage.setItem(LS_KEY, theme);
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
   }
 
-  // Toggle handler
   function onToggleChange(e) {
     const theme = e.target.checked ? "dark" : "light";
     applyTheme(theme);
     saveTheme(theme);
   }
 
-  // Init after DOM ready
   function initThemeToggle() {
-    const initial = getSavedTheme(); // default will be 'light' if nothing saved
+    const initial = getSavedTheme(); // modo claro como padrãode
     applyTheme(initial);
 
-    // Find toggles (both id and data attribute)
     const toggles = Array.from(document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch'));
 
-    // Attach listeners if found, else observe for future additions
     if (toggles.length === 0) {
       const mo = new MutationObserver((mutations, obs) => {
         const found = Array.from(document.querySelectorAll('input[type="checkbox"][data-theme-toggle], input[type="checkbox"]#darkModeSwitch'));
@@ -427,13 +411,13 @@ function formatarTelefone(telefone) {
     }
   }
 
-  // Wait DOMContentLoaded to ensure inputs exist
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initThemeToggle);
   } else {
     initThemeToggle();
   }
 })();
+
 // Icone do modo escuro/claro na sidebar
 document.addEventListener("DOMContentLoaded", () => {
   const themeLabel = document.getElementById("themeLabel");
@@ -452,13 +436,14 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-
-// Tela de Loading
+// ============================================================
+// Tela de carregamento 
+// ============================================================
 window.addEventListener('load', () => {
   const preloader = document.getElementById('preloader');
   if (preloader) {
     preloader.classList.add('hidden');
-    setTimeout(() => preloader.remove(), 500); // Remove após o fade-out
+    setTimeout(() => preloader.remove(), 500); 
   }
 });
 

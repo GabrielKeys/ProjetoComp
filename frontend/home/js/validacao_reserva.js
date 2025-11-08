@@ -434,9 +434,3 @@ function verificarConflito() {
     selectHora.setCustomValidity("");
   }
 }
-
-// 🧲 Adicionar listeners reativos
-inputData.addEventListener("change", verificarConflito);
-selectHora.addEventListener("change", verificarConflito);
-durHoras.addEventListener("change", verificarConflito);
-durMin.addEventListener("change", verificarConflito);

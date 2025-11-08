@@ -513,26 +513,47 @@
 }
 
 
+/* ==============================
+   Linhas de Reservas
+============================== */
 .reserva-linha {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #f9fafb;
+  background: #ffffff8d;
   padding: 10px 12px;
   margin-bottom: 6px;
   border-radius: 8px;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
+  color: #111827;
+  box-shadow: 0 4px 12px rgba(156, 156, 156, 0.45);
 }
 
 .reserva-linha:hover {
-  background: #f1f5f9;
+  background: #c6c6c6;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(1.01);
+
+}
+/* ==============================
+   Modo Escuro - Linhas de Reservas
+============================== */
+html[data-theme="dark"] .reserva-linha {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
 }
 
+html[data-theme="dark"] .reserva-linha:hover {
+  background: rgba(255, 255, 255, 0.10) !important;
+}
 .reserva-acoes {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 
 .btn-cancelar-reserva {
   background: #ef4444;
@@ -549,19 +570,32 @@
   cursor: not-allowed;
 }
 
+/* ==============================
+   Ícone / Botão de Seta (Reserva)
+============================== */
 .reserva-seta {
   background: none;
   border: none;
   cursor: pointer;
   font-size: 16px;
   color: #333;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, color 0.2s ease;
   margin-left: 4px;
 }
+
 
 .reserva-seta.aberto {
   transform: rotate(-180deg);
 }
+
+/* ==============================
+   Modo Escuro - Ícone / Botão de Seta
+============================== */
+html[data-theme="dark"] .reserva-seta {
+  color: #e5e7eb !important; 
+  background-color: transparent !important;
+}
+
 
 .detalhes-reserva p {
   margin: 4px 0;
