@@ -1184,7 +1184,7 @@ document.addEventListener("DOMContentLoaded", () => {
         usuario_nome: usuarioAtual,
         usuario_telefone: telefoneUsuario,
         estacao_email: estacaoEmail,
-        estacao_nome: estacao?.nome || estacaoSel?.nome || "Sem nome",
+        estacao_nome: estacao?.nome || estacao?.name || estacaoSel?.nome || estacaoSel?.name || "Sem nome",
         estacao_telefone: estacao?.telefone || null,
         data,
         inicio,

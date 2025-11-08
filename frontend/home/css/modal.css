@@ -262,6 +262,15 @@
   box-sizing: border-box;
 }
 
+#stationModal .modal-content li {
+  background: #f3f5f7;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 10px 0;
+  display: block;
+  box-sizing: border-box;
+}
+
 /* ================================
    Linha principal (nome + ações)
 ================================ */
@@ -432,6 +441,69 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
+/*Linhas de Reservas */
+.reserva-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff8d;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  transition: background 0.2s ease, color 0.2s ease;
+  color: #111827;
+  box-shadow: 0 4px 12px rgba(156, 156, 156, 0.45);
+}
+
+.reserva-linha:hover {
+  background: #c6c6c6;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(1.01);
+
+}
+
+.reserva-acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+.btn-cancelar-reserva {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-cancelar-reserva:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Ícone / Botão de Seta */
+.reserva-seta {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #333;
+  transition: transform 0.2s ease, color 0.2s ease;
+  margin-left: 4px;
+}
+
+.reserva-seta.aberto {
+  transform: rotate(-180deg);
+}
+
+.detalhes-reserva p {
+  margin: 4px 0;
+}
+
+
 /* Pequenos ajustes responsivos */
 @media (max-width: 480px) {
   #stationModal .modal-content,
@@ -440,8 +512,28 @@
     padding: 14px;
   }
 }
+@media (max-width: 600px) {
+  #listaDetalhesReservas li .reserva-linha {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0px !important;
+    text-align: right;
+    line-height: 1 !important;
+  }
 
-/* 🔹 Modal de confirmação de cancelamento */
+
+  #listaDetalhesReservas li .reserva-nome {
+    text-align: left;
+    word-break: break-word;
+  }
+
+  #listaDetalhesReservas li .reserva-linha > :not(.reserva-nome) {
+    align-self: flex-end; /* mantém botão e status à direita */
+  }
+}
+
+
+/* Modal de confirmação de cancelamento */
 #confirmarCancelamentoModal {
   display: none;
   position: fixed;
@@ -480,7 +572,7 @@
   gap: 10px;
 }
 
-/* Botão cancelar (vermelho) */
+/* Botão cancelar */
 #btnCancelarConfirmar {
   flex: 1;
   background: #dc3545;
@@ -496,7 +588,7 @@
   background: #b52a37;
 }
 
-/* Botão fechar (cinza/azul claro) */
+/* Botão fechar*/
 #btnCancelarFechar {
   flex: 1;
   background: #6c757d;
@@ -511,105 +603,3 @@
 #btnCancelarFechar:hover {
   background: #5a6268;
 }
-
-
-/* ==============================
-   Linhas de Reservas
-============================== */
-.reserva-linha {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #ffffff8d;
-  padding: 10px 12px;
-  margin-bottom: 6px;
-  border-radius: 8px;
-  transition: background 0.2s ease, color 0.2s ease;
-  color: #111827;
-  box-shadow: 0 4px 12px rgba(156, 156, 156, 0.45);
-}
-
-.reserva-linha:hover {
-  background: #c6c6c6;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  transform: scale(1.01);
-
-}
-/* ==============================
-   Modo Escuro - Linhas de Reservas
-============================== */
-html[data-theme="dark"] .reserva-linha {
-  background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
-}
-
-html[data-theme="dark"] .reserva-linha:hover {
-  background: rgba(255, 255, 255, 0.10) !important;
-}
-.reserva-acoes {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-
-.btn-cancelar-reserva {
-  background: #ef4444;
-  border: none;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.btn-cancelar-reserva:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ==============================
-   Ícone / Botão de Seta (Reserva)
-============================== */
-.reserva-seta {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: #333;
-  transition: transform 0.2s ease, color 0.2s ease;
-  margin-left: 4px;
-}
-
-
-.reserva-seta.aberto {
-  transform: rotate(-180deg);
-}
-
-/* ==============================
-   Modo Escuro - Ícone / Botão de Seta
-============================== */
-html[data-theme="dark"] .reserva-seta {
-  color: #e5e7eb !important; 
-  background-color: transparent !important;
-}
-
-
-.detalhes-reserva p {
-  margin: 4px 0;
-}
-
-/* Esconder detalhes da reserva
-.detalhes-reserva {
-  display: none;
-  padding: 10px 12px;
-  margin-top: 4px;
-  background: #f7f7f8;
-  border-left: 3px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #333;
-}
-*/
