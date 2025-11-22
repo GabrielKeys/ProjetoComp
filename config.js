@@ -49,6 +49,11 @@ function getApiUrl() {
     return 'https://projetocomp.onrender.com/api';
   }
   
+  // Se estiver em file:// (arquivo local), usar localhost
+  if (window.location.protocol === 'file:') {
+    return 'http://localhost:3000/api';
+  }
+  
   // Se estiver em localhost, usar URL local
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:3000/api';
