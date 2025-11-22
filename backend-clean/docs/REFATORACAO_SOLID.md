@@ -280,3 +280,4 @@ Use `server.refactored.js` para desenvolvimento e mantenha `server.js` como back
 - [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 - [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
 
+
