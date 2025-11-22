@@ -11,6 +11,7 @@
     "test": "node test-deploy.js",
     "test:db": "node test-connection.js",
     "test:integration": "node tests/test-integration.js",
+    "test:e2e": "node tests/test-ponta-a-ponta.js",
     "populate:stations": "node scripts/populate-google-stations.js",
     "postinstall": "npm run migrate && npm run seed",
     "railway:deploy": "npm run migrate && npm run seed && npm start"
