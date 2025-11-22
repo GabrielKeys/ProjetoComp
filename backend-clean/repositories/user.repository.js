@@ -22,14 +22,15 @@ class UserRepository {
 
   async create(userData) {
     const result = await query(
-      'INSERT INTO users (full_name, email, password_hash, phone, google_id, is_google_user) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, full_name, email, phone',
+      'INSERT INTO users (full_name, email, password_hash, phone, google_id, is_google_user, photo_url) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, full_name, email, phone, photo_url, google_id, is_google_user',
       [
         userData.full_name,
         userData.email,
         userData.password_hash,
         userData.phone || null,
         userData.google_id || null,
-        userData.is_google_user || false
+        userData.is_google_user || false,
+        userData.photo_url || null
       ]
     );
     return result.rows[0];
