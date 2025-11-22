@@ -1,9 +1,17 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// Render e outros serviços cloud requerem SSL para conexões externas
+const requiresSSL = process.env.DATABASE_URL && (
+  process.env.DATABASE_URL.includes('render.com') ||
+  process.env.DATABASE_URL.includes('railway.app') ||
+  process.env.DATABASE_URL.includes('supabase.co') ||
+  process.env.NODE_ENV === 'production'
+);
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: requiresSSL ? { rejectUnauthorized: false } : false,
   connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
 });
