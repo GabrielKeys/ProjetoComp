@@ -1,7 +1,14 @@
 // Script para popular banco com estações reais do Google Places API
 require('dotenv').config();
 const { query } = require('../db');
-const axios = require('axios');
+
+// Axios só é necessário se tiver chave da API
+let axios = null;
+try {
+  axios = require('axios');
+} catch (e) {
+  // Axios não instalado, mas não é necessário se não tiver chave da API
+}
 
 // Coordenadas de São Paulo (centro)
 const SAO_PAULO_CENTER = {
@@ -16,8 +23,8 @@ async function fetchGoogleStations(location, radius = 15000) {
     // Você precisará configurar GOOGLE_PLACES_API_KEY no .env
     const apiKey = process.env.GOOGLE_PLACES_API_KEY;
     
-    if (!apiKey) {
-      console.warn('⚠️ GOOGLE_PLACES_API_KEY não configurada. Usando dados de exemplo.');
+    if (!apiKey || !axios) {
+      console.warn('⚠️ GOOGLE_PLACES_API_KEY não configurada ou axios não instalado. Usando dados de exemplo.');
       return getExampleStations();
     }
 
