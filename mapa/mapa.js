@@ -395,11 +395,42 @@ async function carregarEstacoesReais(location) {
       return;
     }
 
+    // Preparar dados para sincronizar com o backend
+    const stationsToSync = places.map(place => ({
+      name: place.displayName?.text || place.displayName || 'Estação de Carregamento',
+      address: place.formattedAddress || '',
+      latitude: place.location?.latitude || place.location?.lat(),
+      longitude: place.location?.longitude || place.location?.lng(),
+      formattedAddress: place.formattedAddress || ''
+    }));
+
+    // Sincronizar com o backend (salvar no banco automaticamente)
+    if (window.api && window.api.syncGoogleStations) {
+      try {
+        console.log(`🔄 Sincronizando ${stationsToSync.length} estações do Google Places com o banco...`);
+        const syncResponse = await window.api.syncGoogleStations(stationsToSync);
+        
+        if (syncResponse.success) {
+          console.log(`✅ ${syncResponse.data.inserted} estações novas adicionadas ao banco`);
+          console.log(`⏭️  ${syncResponse.data.skipped} estações já existiam`);
+          
+          // Recarregar estações do banco para mostrar as que foram salvas
+          if (window.mapaAPI && window.mapaAPI.loadStations) {
+            await window.mapaAPI.loadStations();
+          }
+        }
+      } catch (syncError) {
+        console.error('Erro ao sincronizar estações:', syncError);
+        // Continuar mesmo se a sincronização falhar
+      }
+    }
+
+    // Mostrar estações no mapa (mesmo que já estejam no banco, mostra como referência)
     places.forEach((place) => {
       const marker = new google.maps.Marker({
         position: place.location,
         map,
-        title: place.displayName,
+        title: place.displayName?.text || place.displayName,
         icon: {
           url: "../assets/bateria-cinza.png",
           scaledSize: new google.maps.Size(26, 26),
@@ -409,12 +440,12 @@ async function carregarEstacoesReais(location) {
       const contentString = `
         <div class="popup-estacao">
           <div class="popup-conteudo">
-            <b>${place.displayName}</b>
+            <b>${place.displayName?.text || place.displayName}</b>
             ${place.formattedAddress || ""}<br>
-            <span style="color:#666;font-size:12px">(Não registrada no app)</span>
+            <span style="color:#666;font-size:12px">(Sincronizada com o banco)</span>
           </div>
           <div class="popup-footer">
-            <span class="estrela" data-estacao="${place.displayName}"></span>
+            <span class="estrela" data-estacao="${place.displayName?.text || place.displayName}"></span>
           </div>
         </div>
       `;
@@ -426,13 +457,12 @@ async function carregarEstacoesReais(location) {
         infowindow.open(map, marker);
         infowindowAtual = infowindow;
 
-
         google.maps.event.addListenerOnce(infowindow, "domready", () => {
           const estrela = document.querySelector(".estrela");
           if (estrela) {
             const handler = (e) => {
               e.stopPropagation();
-              toggleFavorito(place.displayName, estrela);
+              toggleFavorito(place.displayName?.text || place.displayName, estrela);
             };
             estrela.addEventListener("click", handler);
             estrela.addEventListener("touchstart", (e) => {
@@ -446,7 +476,7 @@ async function carregarEstacoesReais(location) {
       carregadores.push(marker);
     });
 
-    mostrarMensagem(`${places.length} estações não registradas carregadas.`, "aviso", true);
+    mostrarMensagem(`${places.length} estações do Google Places encontradas e sincronizadas.`, "sucesso", true);
     aplicarFiltro(document.getElementById("filtroRecarga")?.checked ?? true);
 
   } catch (err) {
