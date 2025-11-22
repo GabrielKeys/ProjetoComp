@@ -71,9 +71,18 @@ class VoltWayAPI {
   // ===============================
   
   async register(userData) {
+    // Converter fullName para full_name se necessário
+    const dataToSend = {
+      ...userData,
+      full_name: userData.full_name || userData.fullName
+    };
+    if (userData.fullName && !userData.full_name) {
+      delete dataToSend.fullName;
+    }
+    
     const response = await this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(userData)
+      body: JSON.stringify(dataToSend)
     });
 
     if (response.success) {

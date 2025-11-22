@@ -2,17 +2,16 @@
 // VoltWay Login com API - Substitui localStorage
 // ===============================
 
-// Incluir o serviço de API
-const script = document.createElement('script');
-script.src = '../api-service.js';
-document.head.appendChild(script);
-
-// Aguardar API carregar
-script.onload = function() {
-  initializeLoginAPI();
-};
-
+// Aguardar DOM e scripts carregarem
 function initializeLoginAPI() {
+  // Verificar se api está disponível
+  if (typeof api === 'undefined') {
+    console.error('❌ API não está disponível. Verifique se api-service.js foi carregado.');
+    // Tentar novamente após um delay
+    setTimeout(initializeLoginAPI, 100);
+    return;
+  }
+  
   console.log('🔌 VoltWay Login API inicializado');
 
   // ===============================
@@ -447,3 +446,14 @@ function aplicarRegrasInputs() {
 
 // Aplicar regras quando a página carregar
 document.addEventListener("DOMContentLoaded", aplicarRegrasInputs);
+
+// Inicializar quando tudo estiver pronto
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    // Aguardar um pouco para garantir que os scripts carregaram
+    setTimeout(initializeLoginAPI, 100);
+  });
+} else {
+  // DOM já carregado, aguardar scripts
+  setTimeout(initializeLoginAPI, 100);
+}
