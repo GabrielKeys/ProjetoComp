@@ -36,7 +36,10 @@ const errorHandler = (error, req, res, next) => {
   res.status(500).json({
     success: false,
     message: 'Erro interno do servidor',
-    ...(process.env.DEBUG === 'true' && { error: error.message })
+    ...(process.env.DEBUG === 'true' && { 
+      error: error.message,
+      stack: error.stack 
+    })
   });
 };
 
@@ -51,4 +54,5 @@ module.exports = {
   errorHandler,
   notFoundHandler
 };
+
 

@@ -24,12 +24,21 @@ class VehicleService {
       throw new Error('Dados incompletos');
     }
 
-    const vehicle = await vehicleRepository.create({
-      userId,
-      ...vehicleData
-    });
+    try {
+      const vehicle = await vehicleRepository.create({
+        userId,
+        model: vehicleData.model,
+        year: vehicleData.year,
+        plate: vehicleData.plate,
+        batteryCapacity: vehicleData.batteryCapacity,
+        chargingPower: vehicleData.chargingPower
+      });
 
-    return this.transformVehicle(vehicle);
+      return this.transformVehicle(vehicle);
+    } catch (error) {
+      console.error('Erro ao criar veículo no repository:', error);
+      throw new Error(`Erro ao criar veículo: ${error.message}`);
+    }
   }
 
   async updateVehicle(id, vehicleData) {
@@ -64,4 +73,5 @@ class VehicleService {
 }
 
 module.exports = new VehicleService();
+
 
