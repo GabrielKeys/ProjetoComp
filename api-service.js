@@ -167,6 +167,14 @@ class VoltWayAPI {
     return response;
   }
 
+  async syncGoogleStations(stations) {
+    const response = await this.request('/stations/sync', {
+      method: 'POST',
+      body: JSON.stringify({ stations })
+    });
+    return response;
+  }
+
   // ===============================
   // VEÍCULOS
   // ===============================
