@@ -48,9 +48,17 @@ class UserRepository {
       fields.push(`phone = $${paramCount++}`);
       values.push(userData.phone);
     }
-    if (userData.photo_url) {
+    if (userData.photo_url !== undefined) {
       fields.push(`photo_url = $${paramCount++}`);
       values.push(userData.photo_url);
+    }
+    if (userData.google_id) {
+      fields.push(`google_id = $${paramCount++}`);
+      values.push(userData.google_id);
+    }
+    if (userData.is_google_user !== undefined) {
+      fields.push(`is_google_user = $${paramCount++}`);
+      values.push(userData.is_google_user);
     }
 
     if (fields.length === 0) {
@@ -61,7 +69,7 @@ class UserRepository {
     values.push(id);
 
     const result = await query(
-      `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING id, full_name, email, phone, photo_url`,
+      `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING id, full_name, email, phone, photo_url, google_id, is_google_user`,
       values
     );
     return result.rows[0] || null;
@@ -69,4 +77,5 @@ class UserRepository {
 }
 
 module.exports = new UserRepository();
+
 

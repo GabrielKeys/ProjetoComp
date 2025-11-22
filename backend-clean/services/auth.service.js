@@ -96,6 +96,59 @@ class AuthService {
     );
   }
 
+  async loginWithGoogle(googleData) {
+    const { googleId, email, name, picture } = googleData;
+
+    if (!googleId || !email) {
+      throw new Error('Dados do Google incompletos');
+    }
+
+    // Buscar ou criar usuário
+    let user = await userRepository.findByEmail(email);
+
+    if (!user) {
+      // Criar novo usuário Google
+      user = await userRepository.create({
+        full_name: name || 'Usuário Google',
+        email,
+        password_hash: null,
+        phone: null,
+        google_id: googleId,
+        is_google_user: true,
+        photo_url: picture || null
+      });
+
+      // Criar carteira
+      await walletRepository.create(user.id, 0.00);
+    } else {
+      // Atualizar dados do Google se necessário
+      if (!user.google_id) {
+        const updated = await userRepository.update(user.id, {
+          google_id: googleId,
+          is_google_user: true,
+          photo_url: picture || user.photo_url
+        });
+        if (updated) {
+          user = updated;
+        }
+      }
+    }
+
+    // Gerar token
+    const token = this.generateToken(user.id, user.email);
+
+    return {
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        phone: user.phone,
+        photo_url: user.photo_url
+      },
+      token
+    };
+  }
+
   verifyToken(token) {
     try {
       return jwt.verify(token, process.env.JWT_SECRET || 'voltway-secret');
@@ -106,4 +159,5 @@ class AuthService {
 }
 
 module.exports = new AuthService();
+
 

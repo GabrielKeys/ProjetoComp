@@ -207,8 +207,8 @@ function initializeLoginAPI() {
       const response = await api.loginWithGoogle({
         googleId: data.sub,
         email,
-        fullName: name,
-        photoUrl: picture
+        name: name,
+        picture: picture
       });
 
       if (response.success) {

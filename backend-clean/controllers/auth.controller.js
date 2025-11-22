@@ -41,7 +41,20 @@ class AuthController {
       next(error);
     }
   }
+
+  async loginWithGoogle(req, res, next) {
+    try {
+      const result = await authService.loginWithGoogle(req.body);
+      res.json({
+        success: true,
+        data: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new AuthController();
+
 

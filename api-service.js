@@ -22,12 +22,16 @@ class VoltWayAPI {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const config = {
+      method: options.method || 'GET',
       headers: {
         'Content-Type': 'application/json',
         ...options.headers
-      },
-      ...options
+      }
     };
+
+    if (options.body) {
+      config.body = options.body;
+    }
 
     if (this.token) {
       config.headers.Authorization = `Bearer ${this.token}`;
@@ -35,14 +39,28 @@ class VoltWayAPI {
 
     try {
       const response = await fetch(url, config);
-      const data = await response.json();
+      
+      // Verificar se a resposta é JSON
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(`Resposta inválida do servidor: ${text}`);
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Erro na requisição');
+        throw new Error(data.message || `Erro ${response.status}: ${response.statusText}`);
       }
 
       return data;
     } catch (error) {
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        console.error('❌ Erro de conexão:', `Não foi possível conectar ao servidor em ${url}`);
+        console.error('   Verifique se o servidor está rodando: npm start ou node server.refactored.js');
+        throw new Error('Servidor não está respondendo. Verifique se o backend está rodando na porta 3000.');
+      }
       console.error('Erro na API:', error);
       throw error;
     }

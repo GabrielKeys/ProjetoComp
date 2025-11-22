@@ -28,9 +28,15 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS
+// CORS - Permitir todas as origens em desenvolvimento (incluindo file://)
 const corsOptions = {
   origin: function (origin, callback) {
+    // Em desenvolvimento, permitir todas as origens (incluindo file:// e null)
+    if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+      return callback(null, true);
+    }
+    
+    // Em produção, verificar origens permitidas
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
@@ -38,11 +44,10 @@ const corsOptions = {
       'http://localhost:8080',
       'http://localhost:3000',
       'http://127.0.0.1:8080',
-      'http://127.0.0.1:3000',
-      'file://'
+      'http://127.0.0.1:3000'
     ].filter(Boolean);
     
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Não permitido pelo CORS'));
@@ -96,4 +101,5 @@ app.listen(PORT, async () => {
 });
 
 module.exports = app;
+
 

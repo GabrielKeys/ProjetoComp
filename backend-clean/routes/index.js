@@ -23,6 +23,7 @@ const {
 // Rotas de Autenticação
 router.post('/auth/register', validateRegister, authController.register.bind(authController));
 router.post('/auth/login', validateLogin, authController.login.bind(authController));
+router.post('/auth/google', authController.loginWithGoogle.bind(authController));
 router.get('/auth/me', authenticateToken, authController.getCurrentUser.bind(authController));
 
 // Rotas de Estações (públicas)
@@ -48,4 +49,5 @@ router.post('/reservations', authenticateToken, validateReservation, reservation
 router.put('/reservations/:id/cancel', authenticateToken, reservationController.cancelReservation.bind(reservationController));
 
 module.exports = router;
+
 
