@@ -13,6 +13,7 @@
     "test:integration": "node tests/test-integration.js",
     "test:e2e": "node tests/test-ponta-a-ponta.js",
     "populate:stations": "node scripts/populate-google-stations.js",
+    "view:db": "node scripts/view-database.js",
     "postinstall": "npm run migrate && npm run seed",
     "railway:deploy": "npm run migrate && npm run seed && npm start"
   },
