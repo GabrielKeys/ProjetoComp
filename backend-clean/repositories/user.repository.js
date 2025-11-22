@@ -14,7 +14,7 @@ class UserRepository {
 
   async findById(id) {
     const result = await query(
-      'SELECT id, full_name, email, phone, photo_url FROM users WHERE id = $1',
+      'SELECT id, full_name, email, phone, photo_url, google_id, is_google_user FROM users WHERE id = $1',
       [id]
     );
     return result.rows[0] || null;
