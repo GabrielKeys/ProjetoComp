@@ -129,3 +129,5 @@ Thumbs.db
 # Deploy files
 .vercel
 .netlify
+
+*/docs

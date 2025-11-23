@@ -14,6 +14,50 @@ const { errorHandler, notFoundHandler } = require('./middlewares/error.middlewar
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+
+// ROTA: Toggle favorito (adicionar / remover)
+app.post("/favorites/toggle", async (req, res) => {
+  try {
+    const { userEmail, stationEmail } = req.body;
+    if (!userEmail || !stationEmail) return res.status(400).json({ error: "userEmail e stationEmail são obrigatórios" });
+
+    // tenta encontrar favorito existente
+    const { data: existing, error: selErr } = await supabase
+      .from("favorites")
+      .select("*")
+      .eq("user_email", userEmail)
+      .eq("station_email", stationEmail)
+      .maybeSingle();
+
+    if (selErr) throw selErr;
+
+    if (existing) {
+      // remove favorito
+      const { error: delErr } = await supabase
+        .from("favorites")
+        .delete()
+        .eq("id", existing.id);
+      if (delErr) throw delErr;
+      return res.json({ success: true, action: "removed" });
+    } else {
+      // insere favorito
+      const payload = { user_email: userEmail, station_email: stationEmail, created_at: new Date().toISOString() };
+      const { data: inserted, error: insErr } = await supabase
+        .from("favorites")
+        .insert([payload])
+        .select()
+        .single();
+      if (insErr) throw insErr;
+      return res.json({ success: true, action: "added", favorite: inserted });
+    }
+  } catch (err) {
+    console.error("❌ Erro em /favorites/toggle:", err);
+    res.status(500).json({ error: err.message || "Erro interno" });
+  }
+});
+
+// ...existing code...
+
 // Middlewares de segurança
 app.use(helmet());
 
