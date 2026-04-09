@@ -1,3 +1,69 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const logado = localStorage.getItem("logado");
+  const tipo = localStorage.getItem("logado_como");
+
+  if (logado === "true") {
+    if (tipo === "usuario") {
+      // Usuário comum
+      window.location.href = "../home/home.html";
+    } else if (tipo === "estacao") {
+      // Estação cadastrada
+      window.location.href = "../station/home.html";
+    }
+  }
+});
+
+// ====================================
+// Mensages de aviso, erro ou sucesso
+// ====================================
+function mostrarMensagem(texto, tipo = "aviso") {
+  // cria container se não existir
+  let container = document.getElementById("mensagensContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "mensagensContainer";
+    container.style.position = "fixed";
+    container.style.top = "20px";
+    container.style.right = "20px";
+    container.style.zIndex = "9999";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.gap = "10px";
+    document.body.appendChild(container);
+  }
+
+  // cria mensagem
+  const msg = document.createElement("div");
+  msg.textContent = texto;
+  msg.style.padding = "12px 18px";
+  msg.style.borderRadius = "8px";
+  msg.style.color = "#fff";
+  msg.style.fontWeight = "bold";
+  msg.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+  msg.style.opacity = "0";
+  msg.style.transition = "opacity 0.3s ease";
+
+  // cores por tipo
+  if (tipo === "erro") msg.style.background = "#e74c3c";
+  else if (tipo === "sucesso") msg.style.background = "#27ae60";
+  else msg.style.background = "#f39c12";
+
+  container.appendChild(msg);
+
+  // animação de entrada
+  setTimeout(() => {
+    msg.style.opacity = "1";
+  }, 50);
+
+  // remove após 3s
+  setTimeout(() => {
+    msg.style.opacity = "0";
+    setTimeout(() => msg.remove(), 300);
+  }, 3000);
+}
+
+
+
 // ====================================
 // Atualizar Sidebar diretamente do banco
 // ====================================
@@ -140,13 +206,27 @@ if (loginForm) {
 
 
 // ===============================
-// REGISTRO DE USUÁRIO (com banco de dados)
+// REGISTRO DE USUÁRIO (com verificação global de email)
 // ===============================
 const registerForm = document.getElementById("registerForm");
 
 if (registerForm) {
+
+  const btnSubmit = registerForm.querySelector('button[type="submit"]');
+
+  // 🔹 Função centralizada para mostrar erro e reativar o botão
+  function mostrarErroBloqueandoBotao(msg) {
+    mostrarMensagem(msg, "erro");
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Registrar";
+    }
+  }
+
   registerForm.addEventListener("submit", async function (event) {
     event.preventDefault();
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = "Registrando...";
 
     const fullName = document.getElementById("fullName").value.trim();
     const newEmail = document.getElementById("newEmail").value.trim();
@@ -165,35 +245,42 @@ if (registerForm) {
     // Validações básicas
     // ===============================
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
-      msg.innerText = "Digite um email válido!";
-      msg.style.color = "red";
-      return;
+      return mostrarErroBloqueandoBotao("Digite um email válido!", "erro");
     }
 
     if (newPass.length < 8) {
-      msg.innerText = "A senha deve ter pelo menos 8 caracteres!";
-      msg.style.color = "red";
-      return;
+      return mostrarErroBloqueandoBotao("A senha deve ter pelo menos 8 caracteres!", "erro");
     }
 
     if (newPass !== confirmPass) {
-      msg.innerText = "As senhas não coincidem!";
-      msg.style.color = "red";
-      return;
+      return mostrarErroBloqueandoBotao("As senhas não coincidem!", "erro");
     }
 
-    // ===============================
-    // Envia para o backend
-    // ===============================
-    const novoUsuario = {
-      full_name: fullName,
-      email: newEmail,
-      password: newPass,
-      phone,
-      role: "user", // define que é um usuário normal
-    };
-
     try {
+      // ===============================
+      // 1️⃣ Checa se o email já existe em usuários ou estações
+      // ===============================
+      const [userCheck, stationCheck] = await Promise.all([
+        fetch(`${API_BASE}/users/${encodeURIComponent(newEmail)}`),
+        fetch(`${API_BASE}/stations/${encodeURIComponent(newEmail)}`)
+      ]);
+
+      if (userCheck.ok || stationCheck.ok) {
+        mostrarErroBloqueandoBotao("❌ Este e-mail já está em uso! Tente outro.", "erro");
+        return;
+      }
+
+      // ===============================
+      // 2️⃣ Cria o novo usuário
+      // ===============================
+      const novoUsuario = {
+        full_name: fullName,
+        email: newEmail,
+        password: newPass,
+        phone,
+        role: "user",
+      };
+
       const response = await fetch(`${API_BASE}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -211,7 +298,7 @@ if (registerForm) {
       console.log("Usuário criado:", data);
 
       // ===============================
-      // (Opcional) Salva veículo, se informado
+      // 3️⃣ Salva veículo (opcional)
       // ===============================
       if (carModel || carYear || carPlate || carBattery || carPower) {
         await fetch(`${API_BASE}/vehicles`, {
@@ -229,18 +316,17 @@ if (registerForm) {
       }
 
       // ===============================
-      // Mensagem de sucesso + login automático
+      // 4️⃣ Mensagem de sucesso + login automático
       // ===============================
+      mostrarMensagem("Conta criada com sucesso.", "sucesso");
       msg.innerText = "✅ Conta criada com sucesso!";
       msg.style.color = "green";
 
-      // Salva login local para manter sessão
       localStorage.setItem("logado", "true");
       localStorage.setItem("logado_como", "usuario");
       localStorage.setItem("usuario", fullName || newEmail);
       localStorage.setItem("usuarioEmail", newEmail);
 
-      // Redireciona após 2 segundos
       setTimeout(() => {
         window.location.href = "../home/home.html";
       }, 2000);
@@ -249,10 +335,15 @@ if (registerForm) {
       console.error("Erro ao criar usuário:", error);
       msg.innerText = "Erro ao conectar com o servidor!";
       msg.style.color = "red";
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Registrar Estação";
+      }
+
     }
   });
 }
-
 
 
 // ===============================
@@ -535,67 +626,220 @@ document.getElementById("goToLoginFromStation")?.addEventListener("click", (e) =
 });
 
 // ===============================
-// REGISTRO DE ESTAÇÃO (com Geocoding automático)
+// REGISTRO DE ESTAÇÃO (com validação de número e preço formatado)
 // ===============================
 
 const registerStationForm = document.getElementById("registerStationForm");
 
 if (registerStationForm) {
+  // ===============================
+  // BLOQUEIOS DE ENTRADA
+  // ===============================
+
+  // Permitir apenas números no campo "Número"
+  const numberInput = document.getElementById("stationNumber");
+  if (numberInput) {
+    numberInput.addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/\D/g, "");
+    });
+  }
+
+  // ===============================
+  // Preenche e formata o campo de preço mantendo "R$ " visível durante a digitação
+  // ===============================
+  (function initPrecoComPrefixo() {
+    const input = document.getElementById("stationPrice");
+    if (!input) return;
+
+    const PREFIX = "R$ ";
+
+    function formatBRLFromDigits(digits) {
+      if (!digits) return "0,00";
+      digits = digits.replace(/^0+/, "");
+      if (!digits) digits = "0";
+      while (digits.length < 3) digits = "0" + digits;
+      const cents = digits.slice(-2);
+      let integer = digits.slice(0, -2);
+      integer = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      return integer + "," + cents;
+    }
+    function onlyDigitsFrom(str) {
+      return (str || "").replace(/\D/g, "");
+    }
+
+    function setFormattedValueFromDigits(digits) {
+      const formatted = formatBRLFromDigits(digits);
+      input.value = PREFIX + formatted;
+      try {
+        input.setSelectionRange(input.value.length, input.value.length);
+      } catch (e) { }
+    }
+
+    if (!input.value || !onlyDigitsFrom(input.value)) {
+      setFormattedValueFromDigits("0");
+    } else {
+      setFormattedValueFromDigits(onlyDigitsFrom(input.value));
+    }
+
+    input.addEventListener("keydown", (ev) => {
+      const selStart = input.selectionStart;
+      const selEnd = input.selectionEnd;
+      if (selStart <= PREFIX.length - 1 && (ev.key === "Backspace" || ev.key === "Delete")) {
+        ev.preventDefault();
+        try { input.setSelectionRange(PREFIX.length, PREFIX.length); } catch (e) { }
+        return;
+      }
+      const allowed = [
+        "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Tab", "Backspace", "Delete", "Home", "End"
+      ];
+      if (allowed.includes(ev.key)) return;
+      if (/^[0-9]$/.test(ev.key)) return;
+      if (ev.ctrlKey || ev.metaKey) return;
+      ev.preventDefault();
+    });
+
+    input.addEventListener("focus", () => {
+      if (!input.value.startsWith(PREFIX)) {
+        const digits = onlyDigitsFrom(input.value);
+        setFormattedValueFromDigits(digits || "0");
+      } else {
+        try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) { }
+      }
+    });
+
+    input.addEventListener("input", () => {
+      let digits = onlyDigitsFrom(input.value);
+      if (!digits) digits = "0";
+      digits = digits.replace(/^0+/, "");
+      if (!digits) digits = "0";
+      setFormattedValueFromDigits(digits);
+    });
+
+    input.addEventListener("blur", () => {
+      if (!input.value.startsWith(PREFIX)) {
+        const digits = onlyDigitsFrom(input.value) || "0";
+        setFormattedValueFromDigits(digits);
+      }
+    });
+
+    input.getNumericValue = function () {
+      const digits = onlyDigitsFrom(input.value);
+      if (!digits) return 0;
+      const n = parseInt(digits, 10);
+      return n / 100;
+    };
+  })();
+
+
+
+  const btnSubmit = registerStationForm.querySelector('button[type="submit"]');
+
+  // Função centralizada para exibir mensagem e reativar o botão
+  function mostrarErroBloqueandoBotao(msg) {
+    mostrarMensagem(msg, "erro");
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Registrar Estação";
+    }
+  }
+
+
   registerStationForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
-    const msg = document.getElementById("stationMsg");
 
-    // Dados do formulário
+    const btnSubmit = registerStationForm.querySelector('button[type="submit"]');
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Registrando...";
+    }
+
+    // ===============================
+    // CAPTURA DOS CAMPOS
+    // ===============================
+    const cepInput = document.getElementById("stationCep");
+    const cep = cepInput.value.replace(/\D/g, "");
+
     const full_name = document.getElementById("stationFullName")?.value.trim() || "";
     const name = document.getElementById("stationName").value.trim();
     const email = document.getElementById("stationEmail").value.trim();
     const password = document.getElementById("stationPass").value.trim();
     const confirmPass = document.getElementById("confirmStationPass").value.trim();
     const phone = document.getElementById("stationPhone").value.trim();
-    const cep = document.getElementById("stationCep").value.trim();
     const address = document.getElementById("stationAddress").value.trim();
     const number = document.getElementById("stationNumber").value.trim();
     const district = document.getElementById("stationDistrict").value.trim();
     const city = document.getElementById("stationCity").value.trim();
     const state = document.getElementById("stationState").value.trim();
 
-    const powerRaw = document.getElementById("stationPower").value.trim();
-    const priceRaw = document.getElementById("stationPrice")?.value.trim() || "";
-    const waitRaw = document.getElementById("stationWait")?.value.trim() || "";
-    const open_time = document.getElementById("stationOpen").value.trim();
-    const close_time = document.getElementById("stationClose").value.trim();
+    const powerRaw = document.getElementById("stationPower")?.value || "";
+    const priceRaw = document.getElementById("stationPrice")?.value || "";
+    const waitRaw = document.getElementById("stationWait")?.value || "";
+    const open_time = document.getElementById("stationOpen")?.value || "";
+    const close_time = document.getElementById("stationClose")?.value || "";
 
     // ===============================
-    // Validações
+    // VALIDAÇÃO DE CEP
     // ===============================
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      msg.innerText = "Digite um email válido!";
-      msg.style.color = "red";
-      return;
-    }
-    if (password.length < 8) {
-      msg.innerText = "A senha deve ter pelo menos 8 caracteres!";
-      msg.style.color = "red";
-      return;
-    }
-    if (password !== confirmPass) {
-      msg.innerText = "As senhas não coincidem!";
-      msg.style.color = "red";
+    if (!cep || cep.length !== 8) {
+      mostrarErroBloqueandoBotao("Digite um CEP válido antes de continuar!", "erro");
+      cepInput.focus();
       return;
     }
 
-    // Converte valores numéricos
+    try {
+      const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await resp.json();
+
+      if (data.erro) {
+        mostrarErroBloqueandoBotao("CEP não encontrado. Verifique e tente novamente!", "erro");
+        cepInput.focus();
+        return;
+      }
+    } catch (err) {
+      console.error("❌ Erro ao validar CEP:", err);
+      mostrarErroBloqueandoBotao("Erro ao validar o CEP. Tente novamente mais tarde.", "erro");
+      return;
+    }
+
+    // ===============================
+    // OUTRAS VALIDAÇÕES
+    // ===============================
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
+      return mostrarErroBloqueandoBotao("Digite um email válido!", "erro");
+
+    if (password.length < 8)
+      return mostrarErroBloqueandoBotao("A senha deve ter pelo menos 8 caracteres!", "erro");
+
+    if (password !== confirmPass)
+      return mostrarErroBloqueandoBotao("As senhas não coincidem!", "erro");
+
+    // ✅ Número
+    if (!number)
+      return mostrarErroBloqueandoBotao("O campo número é obrigatório!", "erro");
+
+    if (!/^\d+$/.test(number))
+      return mostrarErroBloqueandoBotao("Digite apenas números no campo número!", "erro");
+
+    if (parseInt(number) <= 0)
+      return mostrarErroBloqueandoBotao("Digite um número válido para o endereço!", "erro");
+
+    // Preço 
+    let valorStr = priceRaw.replace(/[^\d,]/g, "").replace(",", ".");
+    let price = parseFloat(valorStr);
+
+    // Se o usuário não digitou nada, assume 0.00
+    if (isNaN(price)) price = 0.0;;
+
+    // Outros valores opcionais
     const power = parseFloat(powerRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
-    const price = parseFloat(priceRaw.replace(/[^\d.,]/g, "").replace(",", ".") || 0);
     const wait_time = parseInt(waitRaw.replace(/[^\d]/g, "") || "0");
 
     // ===============================
-    // Geocodificação (Google Maps)
+    // GEOLOCALIZAÇÃO
     // ===============================
     const enderecoCompleto = `${address}, ${number}, ${district}, ${city} - ${state}, ${cep}`;
-    let lat = null;
-    let lng = null;
+    let lat = null, lng = null;
 
     try {
       const geocodeURL = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
@@ -616,8 +860,29 @@ if (registerStationForm) {
       console.error("❌ Erro no geocoding:", err);
     }
 
+
     // ===============================
-    // Monta objeto final
+    // CHECA SE EMAIL JÁ EXISTE (em usuário OU estação)
+    // ===============================
+    try {
+      const [userCheck, stationCheck] = await Promise.all([
+        fetch(`${API_BASE}/users/${encodeURIComponent(email)}`),
+        fetch(`${API_BASE}/stations/${encodeURIComponent(email)}`)
+      ]);
+
+      if (userCheck.ok || stationCheck.ok) {
+        mostrarErroBloqueandoBotao("❌ Este e-mail já está em uso! Tente outro.", "erro");
+        return;
+      }
+    } catch (err) {
+      console.error("❌ Erro ao verificar e-mail:", err);
+      mostrarErroBloqueandoBotao("Erro ao verificar disponibilidade do e-mail.", "erro");
+      return;
+    }
+
+
+    // ===============================
+    // MONTAGEM E ENVIO
     // ===============================
     const novaEstacao = {
       full_name,
@@ -650,16 +915,15 @@ if (registerStationForm) {
       if (!response.ok) {
         const erro = await response.text();
         console.error("Erro do servidor:", erro);
-        msg.innerText = `Erro ao registrar estação: ${erro}`;
-        msg.style.color = "red";
+        mostrarErroBloqueandoBotao(`Erro ao registrar estação: ${erro}`, "erro");
         return;
       }
 
       const data = await response.json();
       console.log("✅ Estação registrada:", data);
-      msg.innerText = "✅ Estação registrada com sucesso!";
-      msg.style.color = "green";
+      mostrarMensagem("✅ Estação registrada com sucesso!", "sucesso");
 
+      // Armazenamento local
       localStorage.setItem("logado", "true");
       localStorage.setItem("logado_como", "estacao");
       localStorage.setItem("usuario", data.name || data.email);
@@ -675,31 +939,131 @@ if (registerStationForm) {
 
     } catch (error) {
       console.error("❌ Erro ao conectar com o servidor:", error);
-      msg.innerText = "Erro ao conectar com o servidor!";
-      msg.style.color = "red";
+      mostrarMensagem("Erro ao conectar com o servidor!", "erro");
     }
   });
+
 }
 
+
+
 // ===============================
-// CEP automático (ViaCEP)
+// CEP automático + Gaveta animada + Validação no registro
 // ===============================
-document.getElementById("stationCep")?.addEventListener("blur", function () {
-  const cep = this.value.replace(/\D/g, "");
-  if (cep.length === 8) {
-    fetch(`https://viacep.com.br/ws/${cep}/json/`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data.erro) {
-          document.getElementById("stationAddress").value = data.logradouro;
-          document.getElementById("stationDistrict").value = data.bairro;
-          document.getElementById("stationCity").value = data.localidade;
-          document.getElementById("stationState").value = data.uf;
-        }
-      })
-      .catch(() => console.log("Erro ao buscar CEP"));
+document.addEventListener("DOMContentLoaded", () => {
+  const cepInput = document.getElementById("stationCep");
+  const endereco = document.getElementById("stationAddress");
+  const bairro = document.getElementById("stationDistrict");
+  const cidade = document.getElementById("stationCity");
+  const estado = document.getElementById("stationState");
+  const gaveta = document.getElementById("enderecoGaveta");
+  const toggleEndereco = document.getElementById("toggleEndereco");
+  const formEstacao = document.getElementById("registerStationForm");
+  const erroSpan = document.getElementById("cepErro");
+
+  let cepValido = false;
+  let ultimoCepBuscado = ""; // último CEP validado com sucesso
+
+  // 🔹 Verifica se os elementos existem
+  if (!cepInput || !gaveta || !toggleEndereco || !erroSpan) {
+    console.warn("⚠️ Elementos de endereço não encontrados no DOM.");
+    return;
   }
+
+  // ---------- Funções auxiliares ----------
+  const mostrarErro = (mensagem) => {
+    erroSpan.textContent = mensagem;
+    erroSpan.classList.add("visivel");
+  };
+
+  const limparErro = () => {
+    erroSpan.textContent = "";
+    erroSpan.classList.remove("visivel");
+  };
+
+  // ---------- Abre/fecha a gaveta ----------
+  toggleEndereco.addEventListener("click", () => {
+    gaveta.classList.toggle("ativa");
+    toggleEndereco.classList.toggle("ativo");
+
+    toggleEndereco.textContent = toggleEndereco.classList.contains("ativo")
+      ? "- Ocultar Informações"
+      : "+ Informações do Endereço";
+  });
+
+  // ---------- Busca automática de CEP ----------
+  async function validarCep(cepDigitado) {
+    const cep = cepDigitado.replace(/\D/g, "");
+    cepValido = false;
+
+    if (cep.length !== 8) {
+      mostrarErro("CEP deve ter 8 dígitos.");
+      return false;
+    }
+
+    try {
+      const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await resp.json();
+
+      if (!data.erro) {
+        limparErro();
+        endereco.value = data.logradouro || "";
+        bairro.value = data.bairro || "";
+        cidade.value = data.localidade || "";
+        estado.value = data.uf || "";
+
+        gaveta.classList.add("ativa");
+        toggleEndereco.classList.add("ativo");
+        toggleEndereco.textContent = "- Ocultar Endereço";
+
+        cepValido = true;
+        ultimoCepBuscado = cep;
+        return true;
+      } else {
+        endereco.value = bairro.value = cidade.value = estado.value = "";
+        mostrarErro("CEP não encontrado.");
+        return false;
+      }
+    } catch (err) {
+      console.error("❌ Erro ao buscar CEP:", err);
+      mostrarErro("Erro ao buscar o CEP. Tente novamente mais tarde.");
+      return false;
+    }
+  }
+
+  // ---------- Validação ao sair do campo ----------
+  cepInput.addEventListener("blur", async () => {
+    const cep = cepInput.value.trim();
+    if (!cep) return;
+    await validarCep(cep);
+  });
+
+  // ---------- Validação antes de enviar o formulário ----------
+  formEstacao.addEventListener("submit", async (e) => {
+    const cep = cepInput.value.replace(/\D/g, "");
+
+    // Se o CEP mudou desde a última validação, revalida antes de enviar
+    if (cep !== ultimoCepBuscado) {
+      const ok = await validarCep(cep);
+      if (!ok) {
+        e.preventDefault();
+        cepInput.focus();
+        return;
+      }
+    }
+
+    if (!cepValido) {
+      e.preventDefault();
+      cepInput.focus();
+      return;
+    }
+
+    limparErro(); // ✅ tudo certo, prossegue
+  });
 });
+
+
+
 
 // ===============================
 // Formatação

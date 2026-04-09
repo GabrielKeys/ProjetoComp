@@ -119,7 +119,7 @@ function initMap() {
 
       userMarker = new google.maps.Marker({
         position: userLocation, map, title: "Você está aqui",
-        icon: { url: "../assets/carro-icone.png", scaledSize: new google.maps.Size(60, 60), anchor: new google.maps.Point(25, 50) }
+        icon: { url: "../assets/carro-icone.png", scaledSize: new google.maps.Size(40, 40), anchor: new google.maps.Point(25, 50) }
       });
 
       carregarEstacoesDoBanco(userLocation);
@@ -352,7 +352,7 @@ function adicionarEstacaoNoMapa(estacao) {
 
     const marker = new google.maps.Marker({
       position, map, title: nomeExibicao,
-      icon: { url: "../assets/bateria-azul.png", scaledSize: new google.maps.Size(40, 40) }
+      icon: { url: "../assets/bateria-azul.png", scaledSize: new google.maps.Size(30, 30) }
     });
     marker._estacao = estacao;
 
@@ -437,7 +437,7 @@ async function carregarEstacoesReais(location) {
         title: place.displayName,
         icon: {
           url: "../assets/bateria-cinza.png",
-          scaledSize: new google.maps.Size(40, 40),
+          scaledSize: new google.maps.Size(30, 30),
         },
       });
 

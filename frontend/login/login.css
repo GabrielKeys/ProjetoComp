@@ -430,3 +430,129 @@ input[readonly] {
   outline: 3px solid rgba(0, 166, 255, 0.14);
   outline-offset: 2px;
 }
+
+
+
+/* ======================
+   CEP + Número lado a lado
+   ====================== */
+.linha-endereco {
+  display: flex;
+  gap: 10px;
+}
+
+.linha-endereco .half {
+  flex: 1;
+}
+
+/* ======================
+   Botão estilo "Adicionar Veículo"
+   ====================== */
+.add-vehicle-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid #00bcd4;
+  border-radius: 10px;
+  color: #00bcd4;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-vehicle-btn:hover {
+  background: rgba(0, 188, 212, 0.1);
+}
+
+.add-vehicle-btn.ativo {
+  background: #00bcd4;
+  color: white;
+}
+
+/* ======================
+   Gaveta do Endereço
+   ====================== */
+.endereco-gaveta {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  margin-left: 16px; /* recuo visual para parecer dentro */
+  transition: all 0.3s ease;
+  opacity: 0;
+}
+
+.endereco-gaveta.ativa {
+  display: flex;
+  opacity: 1;
+}
+
+/* Cada linha de campo lado a lado */
+.linha-endereco {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.linha-endereco label {
+  width: 85px;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.linha-endereco input {
+  flex: 1;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+
+/* Botão da gaveta */
+#toggleEndereco {
+  margin-top: 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+#toggleEndereco:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#toggleEndereco.ativo {
+  border-color: #00d1ff;
+  color: #00d1ff;
+}
+
+/* ======================
+   Mensagem de erro do CEP
+   ====================== */
+.cep-group {
+  position: relative;
+}
+
+.cep-erro {
+  position: absolute;
+  bottom: -18px;  
+  left: 0;
+  color: #ff4d4d;
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.cep-erro.visivel {
+  opacity: 1;
+}
