@@ -300,7 +300,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnAgendar) {
     btnAgendar.addEventListener("click", () => {
-      if (agendamentoModal) agendamentoModal.style.display = "flex";
+      if (agendamentoModal) {
+        // 🔄 Reinicia o estado interno do modal
+        const form = agendamentoModal.querySelector("form");
+        if (form) form.reset(); // limpa todos os campos
+
+        // Remove mensagens de erro, sucesso, ou qualquer conteúdo dinâmico
+        const mensagens = agendamentoModal.querySelectorAll(".mensagem, .alert, .erro");
+        mensagens.forEach(msg => msg.remove());
+
+        // Se tiver checkboxes, selects, etc.
+        const checkboxes = agendamentoModal.querySelectorAll("input[type='checkbox']");
+        checkboxes.forEach(cb => (cb.checked = false));
+
+        const selects = agendamentoModal.querySelectorAll("select");
+        selects.forEach(sel => (sel.selectedIndex = 0));
+
+        // 🔁 (Opcional) força recarregar dados dinâmicos se precisar
+        // carregarDadosDoModal();
+
+        agendamentoModal.style.display = "flex";
+      }
     });
   }
 

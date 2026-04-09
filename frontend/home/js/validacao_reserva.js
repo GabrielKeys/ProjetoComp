@@ -228,23 +228,31 @@ function intervalosSeSobrepoem(a1, a2, b1, b2) {
 function reservaToInterval(r) {
   if (!r) return null;
 
-  // se já tem início/fim em string "HH:MM"
+  // 🕒 Campos vindos do banco
   if (r.inicio && r.fim) {
-    return { inicioMin: horaParaMinutos(r.inicio), fimMin: horaParaMinutos(r.fim) };
+    return {
+      inicioMin: horaParaMinutos(r.inicio),
+      fimMin: horaParaMinutos(r.fim)
+    };
   }
 
-  // se já salvou em minutos (compatibilidade)
-  if (typeof r.inicioMin === "number" && typeof r.fimMin === "number") {
-    return { inicioMin: r.inicioMin, fimMin: r.fimMin };
+  // Caso só tenha "inicio" e duração
+  if (r.inicio && (r.duracao_horas || r.duracao_minutos)) {
+    const inicioMin = horaParaMinutos(r.inicio);
+    const dur = (parseInt(r.duracao_horas || 0) * 60) + parseInt(r.duracao_minutos || 0);
+    return {
+      inicioMin,
+      fimMin: inicioMin + dur
+    };
   }
 
-  // se salvou duracao em minutos junto com hora
+  // Compatibilidade antiga
   if (r.hora && typeof r.duracaoMin === "number") {
     const inicioMin = horaParaMinutos(r.hora);
     return { inicioMin, fimMin: inicioMin + Number(r.duracaoMin) };
   }
 
-  // se só tem hora (legado) assume 60 min
+  // Reserva legada (sem fim)
   if (r.hora) {
     const inicioMin = horaParaMinutos(r.hora);
     return { inicioMin, fimMin: inicioMin + 60 };
@@ -252,6 +260,7 @@ function reservaToInterval(r) {
 
   return null;
 }
+
 
 
 // --- BLOCO FINAL: atualização de horários que considera duração das reservas ---
@@ -291,17 +300,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+
+  async function carregarReservasDoBanco(estacaoEmail) {
+    try {
+      const resp = await fetch(`${API_BASE}/reservas/estacao/${encodeURIComponent(estacaoEmail)}`);
+      if (!resp.ok) throw new Error("Erro ao buscar reservas do banco");
+
+      const reservas = await resp.json();
+
+      console.log("📦 Reservas do banco recebidas:", reservas);
+      return reservas || [];
+    } catch (err) {
+      console.error("❌ Falha ao carregar reservas do banco:", err);
+      return [];
+    }
+  }
+
   // Função que atualiza o selectHora bloqueando slots que conflitam com reservas existentes e com a duração selecionada
-  function atualizarHorarios() {
+async function atualizarHorarios() {
     const dataSelecionada = inputData.value;
     const usuarioAtual = localStorage.getItem("usuario") || localStorage.getItem("usuarioEmail") || "";
     const estacaoSelRaw = localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`);
     const estacaoSelecionada = estacaoSelRaw ? JSON.parse(estacaoSelRaw) : {};
 
-    const keyGlobais = `reservasGlobais_${getEstacaoKey(estacaoSelecionada)}`;
-    const reservasGlobais = JSON.parse(localStorage.getItem(keyGlobais) || "[]");
-    const usuarioReservas = JSON.parse(localStorage.getItem(`reservas_${usuarioAtual}`) || "[]");
-    const reservasCompletas = [...reservasGlobais, ...usuarioReservas];
+    // Carregar reservas da estação do banco de dados
+    let reservasCompletas = [];
+    if (estacaoSelecionada && estacaoSelecionada.email) {
+      reservasCompletas = await carregarReservasDoBanco(estacaoSelecionada.email);
+    }
 
     // cria intervalos em minutos para a data selecionada
     const intervalos = reservasCompletas
@@ -356,13 +382,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-  // listeners
-  inputData.addEventListener("change", atualizarHorarios);
-  durHoras.addEventListener("change", atualizarHorarios);
-  durMin.addEventListener("change", atualizarHorarios);
+  setTimeout(() => atualizarHorarios(), 0);
+inputData.addEventListener("change", () => atualizarHorarios());
+durHoras.addEventListener("change", () => atualizarHorarios());
+durMin.addEventListener("change", () => atualizarHorarios());
 
-  // Atualiza imediatamente
-  setTimeout(atualizarHorarios, 0);
 });
 
 // Referências
