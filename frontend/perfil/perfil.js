@@ -1,8 +1,9 @@
+const API_BASE = "https://voltway-backend.onrender.com";
+
 // ======================================
 // perfil.js (versão integrada com backend)
 // ======================================
 document.addEventListener("DOMContentLoaded", async () => {
-  const API_BASE = "http://localhost:4000"; // ajuste se o backend estiver em outro host
   const usuarioEmail = localStorage.getItem("usuarioEmail") || localStorage.getItem("usuario");
   if (!usuarioEmail) return;
 

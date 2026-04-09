@@ -1,6 +1,7 @@
 // ====================================
 // reserva.js (usuário)
 // ====================================
+const API_BASE = "https://voltway-backend.onrender.com";
 
 // ====================================
 // pequenos utilitários
@@ -402,7 +403,7 @@ async function dadosVeiculoPreenchidos(usuarioEmail) {
   if (!usuarioEmail) return false;
 
   try {
-    const resp = await fetch(`http://localhost:4000/veiculos/${usuarioEmail}`);
+    const resp = await fetch(`${API_BASE}/veiculos/${usuarioEmail}`);
     if (!resp.ok) {
       console.warn("⚠️ Erro ao buscar veículo:", resp.status);
       return false;
@@ -1183,7 +1184,7 @@ document.addEventListener("DOMContentLoaded", () => {
         usuario_nome: usuarioAtual,
         usuario_telefone: telefoneUsuario,
         estacao_email: estacaoEmail,
-        estacao_nome: estacao?.nome || estacaoSel?.nome || "Sem nome",
+        estacao_nome: estacao?.nome || estacao?.name || estacaoSel?.nome || estacaoSel?.name || "Sem nome",
         estacao_telefone: estacao?.telefone || null,
         data,
         inicio,
@@ -1224,7 +1225,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btnConfirmar.innerText = "Confirmar";
     }
   }
-  
+
   });
 });
 

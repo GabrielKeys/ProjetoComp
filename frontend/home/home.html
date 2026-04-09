@@ -24,10 +24,6 @@
   
   <div class="container">
 
-    <script>
-      const API_BASE = "http://localhost:4000";
-    </script>
-
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
@@ -259,12 +255,6 @@
   </div>
 
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      verificarCancelamentosAutomaticos();                  // Executa assim que abre o Home
-      setInterval(verificarCancelamentosAutomaticos, 5000); // Continua checando a cada 5s
-    });
-  </script>
 
   <!-- Google Pay API -->
   <script async src="https://pay.google.com/gp/p/js/pay.js"></script>
@@ -275,7 +265,6 @@
   <script src="js/validacao_reserva.js"></script>
   <script src="js/veiculo.js"></script>
   <script src="js/carteira.js"></script>
-  <script src="js/main.js"></script>
 
 </body>
 

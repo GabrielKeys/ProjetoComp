@@ -2,11 +2,12 @@ self.addEventListener("install", event => {
   event.waitUntil(
     caches.open("voltway-cache-v1").then(cache => {
       return cache.addAll([
-        "/frontend/index.html",
-        "/frontend/login/login.html",
-        "/frontend/home/home.html",
-        "/frontend/global/global.js",
-        "/frontend/global/Layout.css"
+        "/",
+        "/index.html",
+        "/login/login.html",
+        "/home/home.html",
+        "/global/global.js",
+        "/global/Layout.css"
       ]);
     })
   );

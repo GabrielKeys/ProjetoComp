@@ -11,7 +11,6 @@ dotenv.config();
 const PORT = process.env.PORT || 4000;
 const app = express();
 
-// 🧠 Estes devem vir antes de QUALQUER rota
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
@@ -20,6 +19,8 @@ app.use(express.urlencoded({ limit: '20mb', extended: true }));
 // HEALTH CHECK
 // ==========================================
 app.get('/', (req, res) => res.json({ ok: true, version: 'voltway-backend-1' }));
+
+app.get('/health', (req, res) => res.send('OK'));
 
 // ==========================================
 // USERS
@@ -557,11 +558,9 @@ app.put("/reservas/:id/status", async (req, res) => {
 });
 
 
-
-
 // ==========================================
-// START SERVER 
+// START SERVER
 // ==========================================
 app.listen(PORT, () => {
-  console.log(`⚡ VoltWay backend rodando em http://localhost:${PORT}`);
+  console.log(`VoltWay backend rodando na porta ${PORT}`);
 });
