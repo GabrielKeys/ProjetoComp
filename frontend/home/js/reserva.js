@@ -299,31 +299,56 @@ document.addEventListener("DOMContentLoaded", () => {
   const agendamentoModal = document.getElementById("agendamentoModal");
   const closeBtns = document.querySelectorAll("#agendamentoModal .close");
 
-  if (btnAgendar) {
+    if (btnAgendar) {
     btnAgendar.addEventListener("click", () => {
-      if (agendamentoModal) {
-        // 🔄 Reinicia o estado interno do modal
-        const form = agendamentoModal.querySelector("form");
-        if (form) form.reset(); // limpa todos os campos
+      if (!agendamentoModal) return;
 
-        // Remove mensagens de erro, sucesso, ou qualquer conteúdo dinâmico
-        const mensagens = agendamentoModal.querySelectorAll(".mensagem, .alert, .erro");
-        mensagens.forEach(msg => msg.remove());
+      const usuarioAtual = localStorage.getItem("usuario");
 
-        // Se tiver checkboxes, selects, etc.
-        const checkboxes = agendamentoModal.querySelectorAll("input[type='checkbox']");
-        checkboxes.forEach(cb => (cb.checked = false));
+      const estacaoSel = JSON.parse(
+        localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`) || "null"
+      );
 
-        const selects = agendamentoModal.querySelectorAll("select");
-        selects.forEach(sel => (sel.selectedIndex = 0));
-
-        // 🔁 (Opcional) força recarregar dados dinâmicos se precisar
-        // carregarDadosDoModal();
-
-        agendamentoModal.style.display = "flex";
+      if (!estacaoSel) {
+        mostrarMensagem?.("❌ Selecione uma estação antes de agendar.", "erro");
+        return;
       }
+
+      const stations = JSON.parse(localStorage.getItem("stations")) || [];
+
+      const estacao =
+        stations.find(s => namesEqual(s.nome, estacaoSel.nome)) ||
+        (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome)) ||
+        estacaoSel;
+
+      const abertura =
+        estacao.open_time ||
+        estacao.openTime ||
+        estacao.open ||
+        estacao.abertura ||
+        estacao.horarioAbertura;
+
+      const fechamento =
+        estacao.close_time ||
+        estacao.closeTime ||
+        estacao.close ||
+        estacao.fechamento ||
+        estacao.horarioFechamento;
+
+      const form = agendamentoModal.querySelector("form");
+      if (form) form.reset();
+
+      const mensagens = agendamentoModal.querySelectorAll(".mensagem, .alert, .erro");
+      mensagens.forEach(msg => msg.remove());
+
+      const checkboxes = agendamentoModal.querySelectorAll("input[type='checkbox']");
+      checkboxes.forEach(cb => (cb.checked = false));
+
+      preencherHorariosPermitidos(abertura, fechamento);
+
+      agendamentoModal.style.display = "flex";
     });
-  }
+}
 
   closeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -1230,7 +1255,307 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+// ====================================
+// Gerar e manter horários permitidos da estação
+// ====================================
 
+let horarioAberturaAtual = null;
+let horarioFechamentoAtual = null;
+let observadorHorarioAtivo = null;
+let filtrandoHorarios = false;
+let ultimoHorarioSelecionadoValido = "";
+
+function normalizarHoraSelect(hora) {
+  if (!hora) return null;
+
+  const texto = String(hora).trim();
+  const match = texto.match(/^(\d{1,2}):(\d{2})/);
+
+  if (!match) return null;
+
+  const h = String(Number(match[1])).padStart(2, "0");
+  const m = match[2];
+
+  return `${h}:${m}`;
+}
+
+function horaParaMinutosSelect(hora) {
+  const normalizada = normalizarHoraSelect(hora);
+  if (!normalizada) return null;
+
+  const [h, m] = normalizada.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function minutosParaHoraSelect(minutosTotais) {
+  const horas = Math.floor(minutosTotais / 60);
+  const minutos = minutosTotais % 60;
+
+  return `${String(horas).padStart(2, "0")}:${String(minutos).padStart(2, "0")}`;
+}
+
+function criarPlaceholderHorario(selectHora) {
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Selecione um horário";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  placeholder.hidden = true;
+
+  selectHora.appendChild(placeholder);
+}
+
+function horarioEstaDentroDoFuncionamento(hora) {
+  const minutos = horaParaMinutosSelect(hora);
+
+  if (
+    minutos === null ||
+    horarioAberturaAtual === null ||
+    horarioFechamentoAtual === null
+  ) {
+    return false;
+  }
+
+  return minutos >= horarioAberturaAtual && minutos < horarioFechamentoAtual;
+}
+
+function filtrarHorariosForaDoFuncionamento() {
+  const selectHora = document.getElementById("horaReserva");
+  if (!selectHora || filtrandoHorarios) return;
+
+  filtrandoHorarios = true;
+
+  const valorAtual = selectHora.value;
+  const valorDesejado = valorAtual || ultimoHorarioSelecionadoValido;
+
+  const opcoes = Array.from(selectHora.options);
+
+  opcoes.forEach(option => {
+    if (option.value === "") return;
+
+    if (!horarioEstaDentroDoFuncionamento(option.value)) {
+      option.remove();
+    }
+  });
+
+  const existePlaceholder = Array.from(selectHora.options).some(
+    option => option.value === ""
+  );
+
+  if (!existePlaceholder) {
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Selecione um horário";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.hidden = true;
+
+    selectHora.insertBefore(placeholder, selectHora.firstChild);
+  }
+
+  const valorNormalizado = normalizarHoraSelect(valorDesejado);
+
+  const valorAindaExiste =
+    valorNormalizado &&
+    Array.from(selectHora.options).some(option => option.value === valorNormalizado);
+
+  if (valorAindaExiste && horarioEstaDentroDoFuncionamento(valorNormalizado)) {
+    selectHora.value = valorNormalizado;
+    ultimoHorarioSelecionadoValido = valorNormalizado;
+  } else {
+    selectHora.value = "";
+  }
+
+  filtrandoHorarios = false;
+}
+
+function ativarProtecaoDoSelectHorario() {
+  const selectHora = document.getElementById("horaReserva");
+  if (!selectHora) return;
+
+  if (observadorHorarioAtivo) {
+    observadorHorarioAtivo.disconnect();
+  }
+
+  observadorHorarioAtivo = new MutationObserver(() => {
+    filtrarHorariosForaDoFuncionamento();
+  });
+
+  observadorHorarioAtivo.observe(selectHora, {
+    childList: true,
+    subtree: true
+  });
+}
+
+function preencherHorariosPermitidos(openTime, closeTime, horarioParaManter = null) {
+  const selectHora = document.getElementById("horaReserva");
+
+  if (!selectHora) {
+    console.warn("Select horaReserva não encontrado.");
+    return;
+  }
+
+  const horarioDesejado =
+    horarioParaManter ||
+    ultimoHorarioSelecionadoValido ||
+    selectHora.value ||
+    "";
+
+  horarioAberturaAtual = horaParaMinutosSelect(openTime);
+  horarioFechamentoAtual = horaParaMinutosSelect(closeTime);
+
+  console.log("Horários da estação:", {
+    openTime,
+    closeTime,
+    abertura: horarioAberturaAtual,
+    fechamento: horarioFechamentoAtual,
+    horarioDesejado
+  });
+
+  selectHora.innerHTML = "";
+  criarPlaceholderHorario(selectHora);
+
+  if (
+    horarioAberturaAtual === null ||
+    horarioFechamentoAtual === null ||
+    horarioAberturaAtual >= horarioFechamentoAtual
+  ) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Horários indisponíveis";
+    option.disabled = true;
+    selectHora.appendChild(option);
+    return;
+  }
+
+  const intervalo = 30;
+
+  for (
+    let minutos = horarioAberturaAtual;
+    minutos < horarioFechamentoAtual;
+    minutos += intervalo
+  ) {
+    const horaFormatada = minutosParaHoraSelect(minutos);
+
+    const option = document.createElement("option");
+    option.value = horaFormatada;
+    option.textContent = horaFormatada;
+
+    selectHora.appendChild(option);
+  }
+
+  const horarioNormalizado = normalizarHoraSelect(horarioDesejado);
+
+  const horarioExiste =
+    horarioNormalizado &&
+    Array.from(selectHora.options).some(option => option.value === horarioNormalizado);
+
+  if (horarioExiste && horarioEstaDentroDoFuncionamento(horarioNormalizado)) {
+    selectHora.value = horarioNormalizado;
+    ultimoHorarioSelecionadoValido = horarioNormalizado;
+  } else {
+    selectHora.value = "";
+  }
+
+  ativarProtecaoDoSelectHorario();
+}
+
+// deixa acessível para o mapa.js
+window.preencherHorariosPermitidos = preencherHorariosPermitidos;
+
+function obterHorariosDaEstacaoSelecionada() {
+  const usuarioAtual = localStorage.getItem("usuario");
+
+  const estacaoSel = JSON.parse(
+    localStorage.getItem(`estacaoSelecionada_${usuarioAtual}`) || "null"
+  );
+
+  if (!estacaoSel) return null;
+
+  const stations = JSON.parse(localStorage.getItem("stations")) || [];
+
+  const estacao =
+    stations.find(s => namesEqual(s.nome, estacaoSel.nome)) ||
+    (window.estacoes || []).find(s => namesEqual(s.nome, estacaoSel.nome)) ||
+    estacaoSel;
+
+  const abertura =
+    estacao.open_time ||
+    estacao.openTime ||
+    estacao.open ||
+    estacao.abertura ||
+    estacao.horarioAbertura;
+
+  const fechamento =
+    estacao.close_time ||
+    estacao.closeTime ||
+    estacao.close ||
+    estacao.fechamento ||
+    estacao.horarioFechamento;
+
+  return { abertura, fechamento };
+}
+
+function reaplicarHorariosDaEstacaoSelecionada(horarioParaManter = null) {
+  const horarios = obterHorariosDaEstacaoSelecionada();
+
+  if (!horarios) {
+    console.warn("Nenhuma estação selecionada para preencher horários.");
+    return;
+  }
+
+  preencherHorariosPermitidos(
+    horarios.abertura,
+    horarios.fechamento,
+    horarioParaManter
+  );
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const dataReserva = document.getElementById("dataReserva");
+  const selectHora = document.getElementById("horaReserva");
+
+  if (selectHora) {
+    selectHora.addEventListener("change", () => {
+      if (
+        selectHora.value &&
+        horarioEstaDentroDoFuncionamento(selectHora.value)
+      ) {
+        ultimoHorarioSelecionadoValido = selectHora.value;
+      }
+    });
+  }
+
+  if (!dataReserva) return;
+
+  dataReserva.addEventListener("change", () => {
+    const horarioAntesDaData =
+      document.getElementById("horaReserva")?.value ||
+      ultimoHorarioSelecionadoValido ||
+      "";
+
+    if (horarioAntesDaData) {
+      ultimoHorarioSelecionadoValido = horarioAntesDaData;
+    }
+
+    reaplicarHorariosDaEstacaoSelecionada(horarioAntesDaData);
+
+    setTimeout(() => {
+      reaplicarHorariosDaEstacaoSelecionada(horarioAntesDaData);
+      filtrarHorariosForaDoFuncionamento();
+    }, 100);
+
+    setTimeout(() => {
+      reaplicarHorariosDaEstacaoSelecionada(horarioAntesDaData);
+      filtrarHorariosForaDoFuncionamento();
+    }, 500);
+
+    setTimeout(() => {
+      reaplicarHorariosDaEstacaoSelecionada(horarioAntesDaData);
+      filtrarHorariosForaDoFuncionamento();
+    }, 1000);
+  });
+});
 // ===================================
 // Inicialização Automática
 // ====================================

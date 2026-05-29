@@ -383,9 +383,34 @@ function adicionarEstacaoNoMapa(estacao) {
         if (btn) {
           btn.onclick = null;
           btn.addEventListener("click", () => {
-            localStorage.setItem(`estacaoSelecionada_${safeUserKey()}`, JSON.stringify(estacao));
+            localStorage.setItem(
+              `estacaoSelecionada_${safeUserKey()}`,
+              JSON.stringify(estacao)
+            );
+
+            const abertura =
+              estacao.open_time ||
+              estacao.openTime ||
+              estacao.open ||
+              estacao.abertura ||
+              estacao.horarioAbertura;
+
+            const fechamento =
+              estacao.close_time ||
+              estacao.closeTime ||
+              estacao.close ||
+              estacao.fechamento ||
+              estacao.horarioFechamento;
+
+            if (typeof window.preencherHorariosPermitidos === "function") {
+              window.preencherHorariosPermitidos(abertura, fechamento);
+            } else {
+              console.warn("Função preencherHorariosPermitidos não encontrada.");
+            }
+
             const modal = document.getElementById("agendamentoModal");
             if (modal) modal.style.display = "flex";
+
             atualizarEstacao();
           });
         }
