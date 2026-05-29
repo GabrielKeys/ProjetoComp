@@ -38,7 +38,13 @@
       <div class="extra-actions">
         <a href="#" id="goToRegister">Registrar-se</a>
       </div>
-    </form>
+
+      <footer class="legal-footer">
+        <a href="../legal/termos.html" target="_blank">Termos de Uso</a>
+        <span>•</span>
+        <a href="../legal/privacidade.html" target="_blank">Política de Privacidade</a>
+      </footer>
+      </form>
 
     <!-- ==================== REGISTRO DE USUÁRIO ==================== -->
     <form id="registerForm" class="form" autocomplete="off">
@@ -93,6 +99,16 @@
         <input type="text" id="carPower" name="carPower" placeholder="Ex: 150 kW" autocomplete="off">
       </div>
 
+        <label class="terms-checkbox">
+          <input type="checkbox" id="acceptTerms" required>
+          <span class="terms-text">
+            Li e aceito os
+            <a href="../legal/termos.html" target="_blank">Termos de Uso</a>
+            e a
+            <a href="../legal/privacidade.html" target="_blank">Política de Privacidade</a>.
+          </span>
+        </label>
+          
       <p id="registerMsg" class="msg"></p>
       <button type="submit" class="btn">Registrar</button>
 
@@ -203,6 +219,15 @@
         <input type="text" id="stationWait" placeholder="Ex: 15 min" />
       </div>-->
 
+        <label class="terms-checkbox">
+          <input type="checkbox" id="acceptStationTerms" required>
+          <span class="terms-text">
+            Li e aceito os
+            <a href="../legal/termos.html" target="_blank">Termos de Uso</a>
+            e a
+            <a href="../legal/privacidade.html" target="_blank">Política de Privacidade</a>.
+          </span>
+        </label>
       <p id="stationMsg" class="msg"></p>
       <button type="submit" class="btn">Registrar Estação</button>
 
@@ -214,7 +239,6 @@
 
   </div>
   <script src="login.js"></script>
-
 
 </body>
 

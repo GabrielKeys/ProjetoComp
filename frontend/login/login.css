@@ -579,3 +579,97 @@ input[readonly] {
 .input-error {
   border: 1px solid #e53935 !important;
 }
+
+/* ===============================
+   Termos de Uso e Privacidade
+================================ */
+
+.terms-checkbox {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: start;
+  column-gap: 10px;
+
+  width: 100%;
+  margin: 6px 0 2px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #ffffff;
+}
+
+.terms-checkbox input {
+  width: 14px;
+  height: 14px;
+  margin: 3px 0 0 0;
+  cursor: pointer;
+}
+
+.terms-checkbox .terms-text {
+  display: block;
+  color: #ffffff;
+}
+
+.terms-checkbox a {
+  color: #00a86b;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.terms-checkbox a:hover {
+  text-decoration: underline;
+}
+
+/* Ajusta o espaçamento entre termos, mensagem e botão */
+.terms-checkbox + .msg {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  min-height: 14px;
+}
+
+.terms-checkbox + .msg + .btn {
+  margin-top: 2px;
+}
+
+/* Rodapé legal da tela de login/cadastro */
+.legal-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  text-align: center;
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.legal-footer a {
+  color: #00a86b;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.legal-footer a:hover {
+  text-decoration: underline;
+}
+
+.legal-footer span {
+  margin: 0 6px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ===============================
+   Ajuste fino dos Termos no Registro
+================================ */
+
+.terms-checkbox {
+  margin: 4px 0 -8px !important;
+}
+
+.terms-checkbox + .msg {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: 0 !important;
+}
+
+.terms-checkbox + .msg + .btn {
+  margin-top: 8px !important;
+}

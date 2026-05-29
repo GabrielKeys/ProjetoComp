@@ -243,6 +243,16 @@ if (registerForm) {
 
     const msg = document.getElementById("registerMsg");
 
+    const acceptTerms = document.getElementById("acceptTerms");
+
+    if (!acceptTerms || !acceptTerms.checked) {
+      msg.textContent = "Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.";
+      msg.style.color = "red";
+
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Registrar";
+      return;
+    }
     // ===============================
     // VALIDAÇÃO DE CONFIRMAÇÃO DE SENHA
     // ===============================
@@ -803,11 +813,23 @@ if (registerStationForm) {
     const open_time = document.getElementById("stationOpen")?.value || "";
     const close_time = document.getElementById("stationClose")?.value || "";
 
+    const stationMsg = document.getElementById("stationMsg");
+    const acceptStationTerms = document.getElementById("acceptStationTerms");
+
+    if (!acceptStationTerms || !acceptStationTerms.checked) {
+      stationMsg.textContent = "Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.";
+      stationMsg.style.color = "red";
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Registrar Estação";
+      }
+
+      return;
+    }
     // ===============================
     // VALIDAÇÃO DE CONFIRMAÇÃO DE SENHA DA ESTAÇÃO
     // ===============================
-    const stationMsg = document.getElementById("stationMsg");
-
     if (password !== confirmPass) {
       stationMsg.textContent = "As senhas não coincidem.";
       stationMsg.style.color = "red";

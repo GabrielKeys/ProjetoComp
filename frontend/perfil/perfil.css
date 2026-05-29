@@ -26,7 +26,25 @@
   transform: scale(1.1);
 }
 
+.profile-legal-links {
+  margin-top: 10px;
+  font-size: 14px;
+}
 
+.profile-legal-links a {
+  color: #007f5f;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.profile-legal-links a:hover {
+  text-decoration: underline;
+}
+
+.profile-legal-links span {
+  margin: 0 8px;
+  color: #777;
+}
 
 
 /*Ajuste Mobile Pagina de perfil */
