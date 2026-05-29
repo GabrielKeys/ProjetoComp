@@ -556,3 +556,26 @@ input[readonly] {
 .cep-erro.visivel {
   opacity: 1;
 }
+
+/* ======================
+   Erro confirmação de senha
+   ====================== */
+.password-match-msg {
+  display: block;
+  margin-top: 5px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.password-match-msg.error {
+  color: #e53935;
+}
+
+.password-match-msg.success {
+  color: #00a86b;
+}
+
+.input-error {
+  border: 1px solid #e53935 !important;
+}

@@ -244,6 +244,29 @@ if (registerForm) {
     const msg = document.getElementById("registerMsg");
 
     // ===============================
+    // VALIDAÇÃO DE CONFIRMAÇÃO DE SENHA
+    // ===============================
+    if (newPass !== confirmPass) {
+      msg.textContent = "As senhas não coincidem.";
+      msg.style.color = "red";
+
+      const passwordMatchMsg = document.getElementById("passwordMatchMsg");
+      if (passwordMatchMsg) {
+        passwordMatchMsg.textContent = "As senhas não coincidem.";
+        passwordMatchMsg.classList.remove("success");
+        passwordMatchMsg.classList.add("error");
+      }
+
+      const confirmPassInput = document.getElementById("confirmPass");
+      if (confirmPassInput) {
+        confirmPassInput.classList.add("input-error");
+      }
+
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Registrar";
+      return;
+    }
+    // ===============================
     // Validações básicas
     // ===============================
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
@@ -781,6 +804,34 @@ if (registerStationForm) {
     const close_time = document.getElementById("stationClose")?.value || "";
 
     // ===============================
+    // VALIDAÇÃO DE CONFIRMAÇÃO DE SENHA DA ESTAÇÃO
+    // ===============================
+    const stationMsg = document.getElementById("stationMsg");
+
+    if (password !== confirmPass) {
+      stationMsg.textContent = "As senhas não coincidem.";
+      stationMsg.style.color = "red";
+
+      const stationPasswordMatchMsg = document.getElementById("stationPasswordMatchMsg");
+      if (stationPasswordMatchMsg) {
+        stationPasswordMatchMsg.textContent = "As senhas não coincidem.";
+        stationPasswordMatchMsg.classList.remove("success");
+        stationPasswordMatchMsg.classList.add("error");
+      }
+
+      const confirmStationPassInput = document.getElementById("confirmStationPass");
+      if (confirmStationPassInput) {
+        confirmStationPassInput.classList.add("input-error");
+      }
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Registrar Estação";
+      }
+
+      return;
+    }
+    // ===============================
     // VALIDAÇÃO DE CEP
     // ===============================
     if (!cep || cep.length !== 8) {
@@ -1098,6 +1149,57 @@ function configurarCampoMoeda(input) {
   input.addEventListener("focus", () => {
     input.value = input.value.replace("R$ ", "");
   });
+}
+
+// ===============================
+// Erro Confirmação de senha
+// ===============================
+
+document.addEventListener("DOMContentLoaded", () => {
+  configurarValidacaoSenhaTempoReal({
+    senhaId: "newPass",
+    confirmacaoId: "confirmPass",
+    mensagemId: "passwordMatchMsg"
+  });
+
+  configurarValidacaoSenhaTempoReal({
+    senhaId: "stationPass",
+    confirmacaoId: "confirmStationPass",
+    mensagemId: "stationPasswordMatchMsg"
+  });
+});
+
+function configurarValidacaoSenhaTempoReal({ senhaId, confirmacaoId, mensagemId }) {
+  const senhaInput = document.getElementById(senhaId);
+  const confirmacaoInput = document.getElementById(confirmacaoId);
+  const mensagem = document.getElementById(mensagemId);
+
+  if (!senhaInput || !confirmacaoInput || !mensagem) return;
+
+  function validar() {
+    const senha = senhaInput.value;
+    const confirmacao = confirmacaoInput.value;
+
+    mensagem.classList.remove("error", "success");
+    confirmacaoInput.classList.remove("input-error");
+
+    if (confirmacao.length === 0) {
+      mensagem.textContent = "";
+      return;
+    }
+
+    if (senha !== confirmacao) {
+      mensagem.textContent = "As senhas não coincidem.";
+      mensagem.classList.add("error");
+      confirmacaoInput.classList.add("input-error");
+    } else {
+      mensagem.textContent = "As senhas coincidem.";
+      mensagem.classList.add("success");
+    }
+  }
+
+  senhaInput.addEventListener("input", validar);
+  confirmacaoInput.addEventListener("input", validar);
 }
 
 configurarCampoNumeroComSufixo(document.getElementById("stationPower"), "kW");
