@@ -72,10 +72,7 @@ function initMap() {
   let ultimoZoom = map.getZoom();
   console.log("🗺️ Mapa inicializado.");
 
-  // Remover Label do google
-  google.maps.event.addListenerOnce(map, 'idle', () => {
-    limparFeedbackDoMapa();
-  });
+
 
   function limparFeedbackDoMapa() {
     const tentarRemover = () => {
@@ -105,7 +102,6 @@ function initMap() {
   });
 
 
-  google.maps.event.addListenerOnce(map, 'idle', limparFeedbackDoMapa);
   google.maps.event.addListenerOnce(map, 'tilesloaded', () => document.getElementById('map')?.classList.add('loaded'));
 
   // Geolocalização do usuário
@@ -208,16 +204,28 @@ function safeUserKey() {
 /* ===============================
    Geocode (Promise)
 =============================== */
-function geocodeEnderecoPromise(endereco) {
-  return new Promise(resolve => {
-    try {
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address: endereco }, (results, status) => {
-        if (status === "OK" && results && results[0]) resolve(results[0].geometry.location);
-        else resolve(null);
-      });
-    } catch { resolve(null); }
-  });
+async function geocodeEnderecoPromise(endereco) {
+  try {
+    const { Place } = await google.maps.importLibrary("places");
+
+    const { places } = await Place.searchByText({
+      textQuery: endereco,
+      fields: ["location"],
+      region: "br",
+      maxResultCount: 1
+    });
+
+    if (places && places.length > 0 && places[0].location) {
+      return places[0].location;
+    }
+
+    console.warn("Endereço não localizado:", endereco);
+    return null;
+
+  } catch (erro) {
+    console.error("Erro ao localizar endereço:", endereco, erro);
+    return null;
+  }
 }
 
 /* ===============================
