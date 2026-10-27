@@ -487,27 +487,47 @@ document.head.appendChild(script);
 // ===============================
 // Pré-preencher registro com dados do Google
 // ===============================
+// Controla o cadastro iniciado pelo Google apenas na página atual
+let emailGoogleCadastro = null;
+
 document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const isGoogleRegister = urlParams.get("registerGoogle");
 
-  if (isGoogleRegister) {
-    const googleData = JSON.parse(localStorage.getItem("googleCadastro") || "{}");
+  if (urlParams.get("registerGoogle") !== "true") return;
 
-    if (googleData.email) {
-      // Mostra aba de registro
-      document.getElementById("loginForm").classList.remove("active");
-      document.getElementById("registerForm").classList.add("active");
+  const googleData = JSON.parse(
+    localStorage.getItem("googleCadastro") || "{}"
+  );
 
-      // Preenche campos
-      document.getElementById("newEmail").value = googleData.email;
-      document.getElementById("newEmail").setAttribute("readonly", "true");
+  if (!googleData.email) return;
 
-      if (googleData.name) {
-        document.getElementById("fullName").value = googleData.name;
-      }
-    }
+  emailGoogleCadastro = googleData.email;
+
+  // Mostra o formulário de cadastro
+  document.getElementById("loginForm").classList.remove("active");
+  document.getElementById("registerForm").classList.add("active");
+
+  // Preenche e bloqueia o e-mail do Google
+  const newEmail = document.getElementById("newEmail");
+  newEmail.value = googleData.email;
+  newEmail.readOnly = true;
+
+  if (googleData.name) {
+    document.getElementById("fullName").value = googleData.name;
   }
+
+  // Remove os dados temporários para não reutilizá-los depois
+  localStorage.removeItem("googleCadastro");
+
+  // Remove o parâmetro de cadastro Google da URL
+  const url = new URL(window.location.href);
+  url.searchParams.delete("registerGoogle");
+
+  window.history.replaceState(
+    null,
+    "",
+    url.pathname + url.search + url.hash
+  );
 });
 
 // Se trocar para "Registrar Estação" após login do Google
